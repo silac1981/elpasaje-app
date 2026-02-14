@@ -1,4 +1,4 @@
- """
+"""
 EL PASAJE CONTROL CENTER v1.0
 Sistema de Gestion Integral para Manufactura 3D
 """
