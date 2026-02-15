@@ -1,397 +1,460 @@
 """
-EL PASAJE CONTROL CENTER v1.0
-Sistema de Gestion Integral para Manufactura 3D
+EL PASAJE 3D STUDIO - Sistema de Gestión Empresarial v2.0
+Bartolomé Mitre 1500, Buenos Aires
 """
 
 import streamlit as st
 import pandas as pd
 import sqlite3
-import os
 import hashlib
-import json
-from datetime import datetime, date, timedelta
-import plotly.express as px
-import plotly.graph_objects as go
+import os
+from datetime import datetime
+from pathlib import Path
 
 st.set_page_config(
-    page_title="EPCC v1.0 | El Pasaje 3D Studio",
+    page_title="El Pasaje 3D Studio | EPCC v2.0",
     layout="wide",
     page_icon="🏛️",
     initial_sidebar_state="expanded"
 )
 
-VERSION = "1.0 Enterprise"
-FECHA_SISTEMA = datetime.now().strftime("%d/%m/%Y %H:%M")
+VERSION = "2.0 Enterprise"
+FECHA = datetime.now().strftime("%d/%m/%Y")
 
 COLORES = {
     'oro_viejo': '#B8860B',
     'oro_brillante': '#DAA520',
-    'negro_carbon': '#1A1A1A',
+    'negro': '#1A1A1A',
+    'blanco': '#FFFFF0'
 }
 
-IMG_PASAJE = "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Pasaje_La_Piedad.JPG/1024px-Pasaje_La_Piedad.JPG"
-IMG_OASIS = "https://images.unsplash.com/photo-1544568100-847a948585b9?auto=format&fit=crop&q=80&w=1600"
-IMG_HIDROPONIA = "https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?auto=format&fit=crop&q=80&w=1600"
-IMG_TURNTABLE = "https://images.unsplash.com/photo-1603048588665-791ca8aea617?auto=format&fit=crop&q=80&w=1600"
-IMG_PHARMA = "https://images.unsplash.com/photo-1587854692152-cbe660dbbb88?auto=format&fit=crop&q=80&w=1600"
+# Logo EP oficial (del HTML)
+LOGO_EP = '''<svg width="100%" height="220" viewBox="0 0 600 700" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0px 8px 20px rgba(0,0,0,0.4));">
+<defs>
+<linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+<stop offset="0%" style="stop-color:#DAA520;stop-opacity:1" />
+<stop offset="50%" style="stop-color:#F9E498;stop-opacity:1" />
+<stop offset="100%" style="stop-color:#B8860B;stop-opacity:1" />
+</linearGradient>
+<radialGradient id="depthCenter">
+<stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1" />
+<stop offset="70%" style="stop-color:#F5F5F5;stop-opacity:1" />
+<stop offset="100%" style="stop-color:#E8E8E8;stop-opacity:1" />
+</radialGradient>
+<filter id="shadow">
+<feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+<feOffset dx="2" dy="2" result="offsetblur"/>
+<feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+</filter>
+</defs>
+<circle cx="300" cy="260" r="200" fill="url(#depthCenter)"/>
+<circle cx="300" cy="260" r="195" fill="none" stroke="#1A1A1A" stroke-width="9" filter="url(#shadow)"/>
+<circle cx="300" cy="260" r="175" fill="none" stroke="url(#goldGrad)" stroke-width="5"/>
+<line x1="300" y1="75" x2="300" y2="445" stroke="#B8B8B8" stroke-width="3"/>
+<line x1="115" y1="260" x2="485" y2="260" stroke="#B8B8B8" stroke-width="3"/>
+<g filter="url(#shadow)">
+<path d="M 300 70 L 310 110 L 300 122 L 290 110 Z" fill="#1A1A1A"/>
+<path d="M 300 70 L 310 110 L 300 105 L 290 110 Z" fill="#B8860B"/>
+</g>
+<g transform="translate(300, 260)" filter="url(#shadow)">
+<path d="M -52 -54 L -12 -54 L -12 -42 L -38 -42 L -38 -8 L -18 -8 L -18 4 L -38 4 L -38 44 L -12 44 L -12 56 L -52 56 Z" fill="#1A1A1A"/>
+<path d="M 12 -54 L 12 56 L 20 56 L 20 2 L 50 2 Q 70 2 70 -27 Q 70 -54 50 -54 Z M 20 -48 L 48 -48 Q 64 -48 64 -27 Q 64 -4 48 -4 L 20 -4 Z" fill="#1A1A1A"/>
+</g>
+<circle cx="300" cy="260" r="12" fill="#B8860B" filter="url(#shadow)"/>
+<circle cx="300" cy="260" r="4" fill="#1A1A1A"/>
+<text x="300" y="540" font-family="Georgia, serif" font-size="64" font-weight="400" fill="#1A1A1A" text-anchor="middle" letter-spacing="15">EL PASAJE</text>
+<text x="300" y="585" font-family="Arial, sans-serif" font-size="18" font-weight="600" fill="url(#goldGrad)" text-anchor="middle" letter-spacing="10">3D STUDIO</text>
+</svg>'''
 
-LOGO_HTML = '<div style="text-align:center; padding:50px;"><h1 style="color:#B8860B; font-family:Cormorant Garamond, serif; font-size:82px; letter-spacing:25px; margin:0; text-shadow:2px 2px 4px rgba(0,0,0,0.3);">EL PASAJE</h1><p style="color:#666; font-size:22px; letter-spacing:10px; margin:15px 0 0 0; font-weight:600;">3D STUDIO</p><div style="width:80px; height:3px; background:linear-gradient(90deg, #B8860B, #DAA520); margin:20px auto;"></div></div>'
+DB_PATH = 'database/elpasaje.db'
 
-def inject_custom_css():
+def inject_css():
     st.markdown(f'''
     <style>
-    @import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&display=swap");
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&display=swap');
     .stApp {{
-        background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url("{IMG_PASAJE}");
+        background: linear-gradient(rgba(0,0,0,0.65), rgba(0,0,0,0.65)), 
+                    url("https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Pasaje_La_Piedad.JPG/1920px-Pasaje_La_Piedad.JPG");
         background-size: cover;
         background-position: center;
         background-attachment: fixed;
     }}
     .glass-card {{
-        background: rgba(255, 255, 255, 0.97);
+        background: rgba(255,255,255,0.98);
+        padding: 60px 50px;
         border-radius: 30px;
-        padding: 50px;
-        border: 2px solid {COLORES['oro_viejo']};
-        box-shadow: 0 30px 80px rgba(0,0,0,0.5);
-        backdrop-filter: blur(15px);
+        border: 3px solid {COLORES['oro_viejo']};
+        box-shadow: 0 40px 100px rgba(0,0,0,0.7);
+        backdrop-filter: blur(25px);
     }}
-    .metric-card {{
+    .metric-gold {{
         background: linear-gradient(135deg, {COLORES['oro_viejo']}, {COLORES['oro_brillante']});
         color: white;
-        padding: 30px;
+        padding: 35px;
         border-radius: 20px;
         text-align: center;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        box-shadow: 0 20px 50px rgba(0,0,0,0.4);
         margin-bottom: 20px;
     }}
-    .metric-card h2 {{
+    .metric-gold h2 {{
         margin: 0;
-        font-size: 42px;
+        font-size: 52px;
         color: white !important;
         font-weight: bold;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
     }}
-    .metric-card h4 {{
-        margin: 0 0 10px 0;
-        font-size: 15px;
+    .metric-gold h4 {{
+        margin: 0 0 15px 0;
+        font-size: 16px;
         color: white !important;
-        opacity: 0.9;
+        opacity: 0.95;
+        letter-spacing: 2px;
     }}
     .stButton>button {{
         background: linear-gradient(135deg, {COLORES['oro_viejo']}, {COLORES['oro_brillante']}) !important;
         color: white !important;
         border: none !important;
         border-radius: 50px !important;
-        padding: 14px 40px !important;
+        padding: 16px 50px !important;
         font-weight: bold !important;
-        font-size: 16px !important;
-        letter-spacing: 2px !important;
-        transition: all 0.3s !important;
+        font-size: 18px !important;
+        letter-spacing: 3px !important;
+        text-transform: uppercase !important;
+        transition: all 0.3s ease !important;
+        box-shadow: 0 10px 30px rgba(184, 134, 11, 0.4) !important;
     }}
     .stButton>button:hover {{
-        transform: scale(1.05) !important;
-        box-shadow: 0 10px 30px rgba(212, 175, 55, 0.5) !important;
+        transform: scale(1.08) translateY(-3px) !important;
+        box-shadow: 0 20px 50px rgba(184, 134, 11, 0.6) !important;
     }}
     h1, h2, h3 {{
         color: {COLORES['oro_viejo']} !important;
-        font-family: "Cormorant Garamond", serif !important;
+        font-family: 'Cormorant Garamond', serif !important;
+        letter-spacing: 3px !important;
+    }}
+    .producto-card {{
+        background: white;
+        border: 2px solid #e8e8e8;
+        border-radius: 25px;
+        padding: 30px;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        height: 100%;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+    }}
+    .producto-card:hover {{
+        border-color: {COLORES['oro_viejo']};
+        transform: translateY(-12px);
+        box-shadow: 0 25px 50px rgba(184, 134, 11, 0.35);
+    }}
+    .categoria-header {{
+        background: linear-gradient(135deg, {COLORES['oro_viejo']}, {COLORES['oro_brillante']});
+        color: white;
+        padding: 20px 30px;
+        border-radius: 15px;
+        margin: 30px 0 20px 0;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }}
+    .categoria-header h2 {{
+        margin: 0;
+        color: white !important;
+        font-size: 32px;
+        letter-spacing: 5px;
     }}
     </style>
     ''', unsafe_allow_html=True)
 
-DB_PATH = 'database/elpasaje.db'
-
-def init_database():
+def init_db():
     os.makedirs('database', exist_ok=True)
-    os.makedirs('uploads_clientes', exist_ok=True)
-    os.makedirs('uploads_proyectos', exist_ok=True)
-    
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     
     c.execute('''CREATE TABLE IF NOT EXISTS clientes (
-        id_cliente TEXT PRIMARY KEY,
-        nombre TEXT NOT NULL,
-        tipo TEXT DEFAULT 'B2B',
-        usuario TEXT UNIQUE,
+        id TEXT PRIMARY KEY,
+        nombre TEXT,
+        tipo TEXT,
+        usuario TEXT,
         password_hash TEXT,
         email TEXT,
         telefono TEXT,
-        fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        activo BOOLEAN DEFAULT 1
+        categoria TEXT
     )''')
     
-    c.execute('''CREATE TABLE IF NOT EXISTS productos_frecuentes (
-        id_producto TEXT PRIMARY KEY,
-        nombre TEXT NOT NULL,
+    c.execute('''CREATE TABLE IF NOT EXISTS productos (
+        id TEXT PRIMARY KEY,
+        nombre TEXT,
         cliente_id TEXT,
-        categoria TEXT,
+        marca TEXT,
         descripcion TEXT,
-        precio_base REAL,
-        gramos_material REAL,
-        tiempo_impresion_min INTEGER,
-        colores_disponibles TEXT,
-        stock_actual INTEGER DEFAULT 0,
-        imagen_url TEXT,
-        activo BOOLEAN DEFAULT 1,
-        FOREIGN KEY (cliente_id) REFERENCES clientes(id_cliente)
+        precio REAL,
+        stock INTEGER,
+        imagen TEXT,
+        categoria TEXT
     )''')
-    
-    c.execute('''CREATE TABLE IF NOT EXISTS pedidos (
-        id_pedido TEXT PRIMARY KEY,
-        cliente_id TEXT,
-        fecha_pedido TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        estado TEXT DEFAULT 'Pendiente',
-        total REAL,
-        metodo_pago TEXT,
-        pagado BOOLEAN DEFAULT 0,
-        FOREIGN KEY (cliente_id) REFERENCES clientes(id_cliente)
-    )''')
-    
-    c.execute('''CREATE TABLE IF NOT EXISTS inventario_materiales (
-        id_material INTEGER PRIMARY KEY AUTOINCREMENT,
-        tipo_material TEXT,
-        color TEXT,
-        precio_kg REAL,
-        stock_actual_kg REAL,
-        stock_minimo_kg REAL DEFAULT 0.5
-    )''')
-    
-    c.execute('''CREATE TABLE IF NOT EXISTS proyectos_stl (
-        id_proyecto TEXT PRIMARY KEY,
-        cliente_id TEXT,
-        nombre_archivo TEXT,
-        gramos_brutos REAL,
-        precio_calculado REAL,
-        fecha_carga TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (cliente_id) REFERENCES clientes(id_cliente)
-    )''')
-    
-    conn.commit()
-    conn.close()
-
-def seed_data():
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
     
     c.execute("SELECT COUNT(*) FROM clientes")
-    if c.fetchone()[0] > 0:
-        conn.close()
-        return
+    if c.fetchone()[0] == 0:
+        # FAMILIA EL PASAJE (5)
+        clientes_familia = [
+            ('EP-FAM-001', 'Fernando Melómanos', 'FAMILIA', 'melomanos', hashlib.sha256('audio2024'.encode()).hexdigest(), 
+             'fernando@elpasaje.com', '+54 11 5555-1001', 'LINEAS_FAMILIA'),
+            ('EP-FAM-002', 'Olivia Coquette', 'FAMILIA', 'coquette', hashlib.sha256('olivia2024'.encode()).hexdigest(),
+             'olivia@elpasaje.com', '+54 11 5555-1002', 'LINEAS_FAMILIA'),
+            ('EP-FAM-003', 'Estudio Constantino', 'FAMILIA', 'constantino', hashlib.sha256('tech2024'.encode()).hexdigest(),
+             'constantino@elpasaje.com', '+54 11 5555-1003', 'LINEAS_FAMILIA'),
+            ('EP-FAM-004', 'Francisco Deportes', 'FAMILIA', 'francisco', hashlib.sha256('sport2024'.encode()).hexdigest(),
+             'francisco@elpasaje.com', '+54 11 5555-1004', 'LINEAS_FAMILIA'),
+        ]
+        
+        # SOCIOS B2B (4)
+        clientes_b2b = [
+            ('EP-B2B-001', 'Oasis Animal', 'B2B', 'oasis', hashlib.sha256('perros'.encode()).hexdigest(),
+             'contacto@oasisanimal.com', '+54 11 5555-2001', 'SOCIOS_B2B'),
+            ('EP-B2B-002', 'Oasis del Estero', 'B2B', 'estero', hashlib.sha256('plantas'.encode()).hexdigest(),
+             'contacto@oasisestero.com', '+54 11 5555-2002', 'SOCIOS_B2B'),
+            ('EP-B2B-003', 'Pharma DeLux', 'B2B', 'pharmadelux', hashlib.sha256('medicina'.encode()).hexdigest(),
+             'lucas@pharmadelux.com', '+54 11 5555-2003', 'SOCIOS_B2B'),
+            ('EP-B2B-004', 'Aviation Pro', 'B2B', 'aviation_pro', hashlib.sha256('nando2024'.encode()).hexdigest(),
+             'nando@aviationpro.com', '+54 11 5555-2004', 'SOCIOS_B2B'),
+        ]
+        
+        c.executemany("INSERT INTO clientes VALUES (?,?,?,?,?,?,?,?)", clientes_familia + clientes_b2b)
+        
+        # Productos ejemplo
+        productos = [
+            ('PROD-001', 'Soporte LP-Display Premium', 'EP-FAM-001', 'Melómanos',
+             'Exhibidor minimalista para vinilos con cable management', 1500.00, 12, 
+             'lineas_familia/melomanos/soporte_lp.jpg', 'LINEAS_FAMILIA'),
+            
+            ('PROD-002', 'Tarjeta QR Coquette Rosa', 'EP-FAM-002', 'Coquette',
+             'Tarjeta personalizable con código QR, acabado Silk', 350.00, 100,
+             'lineas_familia/coquette/tarjeta_qr.jpg', 'LINEAS_FAMILIA'),
+            
+            ('PROD-003', 'Soporte Técnico Modular', 'EP-FAM-003', 'Constantino',
+             'Sistema de organización para herramientas técnicas', 2200.00, 8,
+             'lineas_familia/constantino/soporte_tech.jpg', 'LINEAS_FAMILIA'),
+            
+            ('PROD-004', 'Llavero Porta-Bolsas', 'EP-B2B-001', 'Oasis Animal',
+             'Llavero ergonómico con compartimento para bolsas', 450.00, 50,
+             'socios_b2b/oasis/llavero.jpg', 'SOCIOS_B2B'),
+            
+            ('PROD-005', 'Maceta Hidropónica', 'EP-B2B-002', 'Oasis del Estero',
+             'Sistema de cultivo hidropónico modular', 2800.00, 8,
+             'socios_b2b/estero/maceta.jpg', 'SOCIOS_B2B'),
+        ]
+        
+        c.executemany("INSERT INTO productos VALUES (?,?,?,?,?,?,?,?,?)", productos)
+        conn.commit()
     
-    clientes = [
-        ('EP-2026-001', 'Oasis Animal', 'B2B', 'oasis', hashlib.sha256('perros'.encode()).hexdigest(), 'contacto@oasisanimal.com', '+54 9 11 5555-0001'),
-        ('EP-2026-002', 'Oasis del Estero', 'B2B', 'estero', hashlib.sha256('plantas'.encode()).hexdigest(), 'contacto@oasisestero.com', '+54 9 11 5555-0002'),
-        ('EP-2026-003', 'Pharma DeLux', 'B2B', 'pharmadelux', hashlib.sha256('medicina'.encode()).hexdigest(), 'lucas@pharmadelux.com', '+54 9 11 5555-0003'),
-        ('EP-2026-004', 'Aviation & Audio', 'B2B', 'aviation', hashlib.sha256('fernando'.encode()).hexdigest(), 'fernando@aviationaudio.com', '+54 9 11 5555-0004'),
-    ]
-    c.executemany("INSERT INTO clientes (id_cliente, nombre, tipo, usuario, password_hash, email, telefono) VALUES (?,?,?,?,?,?,?)", clientes)
-    
-    productos = [
-        ('PROD-2026-001', 'Llavero Porta-Bolsas Premium', 'EP-2026-001', 'Oasis Animal', 'Llavero ergonomico para bolsas biodegradables', 450.00, 15.0, 25, '["Negro", "Verde", "Azul", "Rosa"]', 50, IMG_OASIS, 1),
-        ('PROD-2026-002', 'Base Elevada Comedero', 'EP-2026-001', 'Oasis Animal', 'Soporte elevado ajustable', 1200.00, 85.0, 180, '["Blanco", "Gris", "Negro"]', 15, IMG_OASIS, 1),
-        ('PROD-2026-003', 'Maceta Hidroponica Modular', 'EP-2026-002', 'Oasis del Estero', 'Sistema de cultivo hidroponico', 2800.00, 220.0, 480, '["Blanco", "Verde", "Terracota"]', 8, IMG_HIDROPONIA, 1),
-        ('PROD-2026-004', 'Soporte LP-Display', 'EP-2026-004', 'Aviation & Audio', 'Exhibidor para vinilos', 1500.00, 95.0, 210, '["Negro", "Blanco", "Madera"]', 12, IMG_TURNTABLE, 1),
-        ('PROD-2026-005', 'Organizador Medico', 'EP-2026-003', 'Pharma DeLux', 'Sistema organizador medico', 3200.00, 180.0, 360, '["Blanco", "Azul"]', 5, IMG_PHARMA, 1),
-    ]
-    c.executemany("INSERT INTO productos_frecuentes VALUES (?,?,?,?,?,?,?,?,?,?,?,?)", productos)
-    
-    materiales = [
-        ('PLA', 'Blanco', 4500.00, 5.2, 0.5),
-        ('PLA', 'Negro', 4500.00, 3.8, 0.5),
-        ('PLA', 'Verde Oasis', 5200.00, 2.1, 0.5),
-        ('PLA', 'Rosa Coquette', 5200.00, 0.3, 0.5),
-        ('PETG', 'Transparente', 6800.00, 1.2, 0.5),
-    ]
-    c.executemany("INSERT INTO inventario_materiales (tipo_material, color, precio_kg, stock_actual_kg, stock_minimo_kg) VALUES (?,?,?,?,?)", materiales)
-    
-    conn.commit()
     conn.close()
 
-def verificar_credenciales(usuario, password):
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    
+def login(usuario, password):
     if usuario == 'admin' and password == 'piedad2024':
-        conn.close()
-        return {'logged': True, 'role': 'Admin', 'name': 'Direccion Arcano (Alejandra)', 'id': 'ADMIN'}
+        return {'logged': True, 'role': 'Admin', 'name': 'Dirección Arcano', 'id': 'ADMIN'}
     
     if usuario == 'operaciones' and password == 'fer2024':
-        conn.close()
-        return {'logged': True, 'role': 'Admin', 'name': 'Operaciones Tecnicas (Fernando)', 'id': 'OPERATIONS'}
+        return {'logged': True, 'role': 'Admin', 'name': 'Operaciones Técnicas', 'id': 'OPS'}
     
-    c.execute("SELECT id_cliente, nombre, tipo, password_hash FROM clientes WHERE usuario=? AND activo=1", (usuario,))
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("SELECT id, nombre, tipo, password_hash, categoria FROM clientes WHERE usuario=?", (usuario,))
     result = c.fetchone()
     conn.close()
     
-    if result:
-        password_hash = hashlib.sha256(password.encode()).hexdigest()
-        if result[3] == password_hash:
-            return {'logged': True, 'role': 'B2B', 'name': result[1], 'id': result[0]}
-    
+    if result and result[3] == hashlib.sha256(password.encode()).hexdigest():
+        return {'logged': True, 'role': result[2], 'name': result[1], 'id': result[0], 'categoria': result[4]}
     return None
 
-inject_custom_css()
-init_database()
-seed_data()
+def get_imagen_url(ruta):
+    """Retorna URL de imagen (local o fallback)"""
+    fallbacks = {
+        'melomanos': 'https://images.unsplash.com/photo-1603048588665-791ca8aea617?w=800',
+        'coquette': 'https://images.unsplash.com/photo-1526047932273-341f2a7631f9?w=800',
+        'constantino': 'https://images.unsplash.com/photo-1497215728101-856f4ea42174?w=800',
+        'francisco': 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=800',
+        'oasis': 'https://images.unsplash.com/photo-1544568100-847a948585b9?w=800',
+        'estero': 'https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?w=800',
+        'pharma': 'https://images.unsplash.com/photo-1587854692152-cbe660dbbb88?w=800',
+        'aviation': 'https://images.unsplash.com/photo-1569154941061-e231b4725ef1?w=800'
+    }
+    
+    for key, url in fallbacks.items():
+        if key in ruta:
+            return url
+    
+    return 'https://images.unsplash.com/photo-1497215728101-856f4ea42174?w=800'
+
+inject_css()
+init_db()
 
 if 'auth' not in st.session_state:
     st.session_state.auth = {'logged': False}
-if 'view' not in st.session_state:
-    st.session_state.view = None
+if 'menu' not in st.session_state:
+    st.session_state.menu = '📊 Dashboard'
 
+# LOGIN
 if not st.session_state.auth['logged']:
-    st.markdown("<br><br>", unsafe_allow_html=True)
-    col1, col2, col3 = st.columns([1, 2.5, 1])
-    
+    col1, col2, col3 = st.columns([1, 2.2, 1])
     with col2:
-        st.markdown(f'<div class="glass-card">{LOGO_HTML}', unsafe_allow_html=True)
-        st.markdown("<br>", unsafe_allow_html=True)
-        st.markdown(f"<p style='text-align: center; color: #888; font-size:14px;'>Sistema v{VERSION}</p>", unsafe_allow_html=True)
+        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+        st.markdown(LOGO_EP, unsafe_allow_html=True)
+        st.markdown('<br>', unsafe_allow_html=True)
+        st.markdown(f'<p style="text-align:center; color:#888; font-size:16px; letter-spacing:2px;">EPCC v{VERSION} | {FECHA}</p>', 
+                   unsafe_allow_html=True)
         
-        perfil = st.selectbox("Protocolo de Acceso", ["Invitado de Honor", "Socio Estrategico B2B", "Direccion Arcano"], label_visibility="collapsed")
+        perfil = st.selectbox("🔐 Protocolo de Acceso", 
+                             ["Dirección Arcano", "Líneas Familia", "Socios B2B", "Invitado"],
+                             label_visibility="collapsed")
         
-        if perfil == "Direccion Arcano":
-            st.caption("**Usuarios:** admin / operaciones")
-            with st.form("admin_login"):
+        if perfil != "Invitado":
+            with st.form("login"):
+                if perfil == "Dirección Arcano":
+                    st.caption("**Usuarios:** admin / operaciones")
+                elif perfil == "Líneas Familia":
+                    st.caption("**Usuarios:** melomanos / coquette / constantino / francisco")
+                else:
+                    st.caption("**Usuarios:** oasis / estero / pharmadelux / aviation_pro")
+                
                 usuario = st.text_input("Usuario", placeholder="admin")
-                password = st.text_input("Contrasena", type="password", placeholder="•••••")
-                submit = st.form_submit_button("🔓 Activar Gobierno", use_container_width=True)
+                password = st.text_input("Contraseña", type="password")
+                submit = st.form_submit_button("🔓 Ingresar", use_container_width=True)
                 
                 if submit:
-                    auth = verificar_credenciales(usuario, password)
+                    auth = login(usuario, password)
                     if auth:
                         st.session_state.auth = auth
                         st.rerun()
                     else:
-                        st.error("❌ Credenciales invalidas")
-        
-        elif perfil == "Socio Estrategico B2B":
-            st.caption("**Usuarios:** oasis / estero / pharmadelux / aviation")
-            with st.form("b2b_login"):
-                usuario = st.text_input("Socio", placeholder="oasis")
-                password = st.text_input("Clave", type="password", placeholder="•••••")
-                submit = st.form_submit_button("🤝 Vincular Cuenta", use_container_width=True)
-                
-                if submit:
-                    auth = verificar_credenciales(usuario, password)
-                    if auth:
-                        st.session_state.auth = auth
-                        st.rerun()
-                    else:
-                        st.error("❌ Credenciales invalidas")
+                        st.error("❌ Credenciales inválidas")
         else:
-            st.info("👁️ Modo Publico: Acceso al catalogo institucional")
-            if st.button("🏛️ Explorar El Pasaje", use_container_width=True):
+            if st.button("🏛️ Explorar Catálogo", use_container_width=True):
                 st.session_state.auth = {'logged': True, 'role': 'Public', 'name': 'Invitado', 'id': 'PUBLIC'}
                 st.rerun()
         
-        st.markdown("</div>", unsafe_allow_html=True)
-        st.caption("© 2026 El Pasaje 3D Studio | Bartolome Mitre 1500, Buenos Aires")
+        st.markdown('</div>', unsafe_allow_html=True)
+        st.caption("© 2026 El Pasaje 3D Studio | Bartolomé Mitre 1500, Buenos Aires")
 
+# APLICACIÓN
 else:
     with st.sidebar:
-        st.markdown(LOGO_HTML, unsafe_allow_html=True)
+        st.markdown(f'<div style="transform: scale(0.35); margin: -120px -140px -100px -140px;">{LOGO_EP}</div>', 
+                   unsafe_allow_html=True)
         st.markdown(f"### 👤 {st.session_state.auth['name']}")
+        st.caption(f"**Rol:** {st.session_state.auth['role']}")
         st.caption(f"**Sistema:** EPCC v{VERSION}")
-        st.caption(f"**Fecha:** {FECHA_SISTEMA}")
         
-        if st.button("🚪 Cerrar Sesion", use_container_width=True):
+        if st.button("🚪 Cerrar Sesión", use_container_width=True):
             st.session_state.auth = {'logged': False}
-            st.session_state.view = None
             st.rerun()
         
         st.markdown("---")
         
         if st.session_state.auth['role'] == 'Admin':
-            menu = ["📊 Dashboard Financiero", "📦 Inventario & Stock", "📋 Gestion de Pedidos", "🎨 Proyectos STL", "🛍️ Catalogo El Pasaje", "👥 Gestion de Clientes"]
-            selected = st.radio("Panel", menu, label_visibility="collapsed")
-            st.session_state.view = selected
+            st.session_state.menu = st.radio("Navegación", 
+                ["📊 Dashboard", "🛍️ Catálogo Completo", "📦 Inventario", "👥 Gestión", "🎨 Proyectos STL"],
+                label_visibility="collapsed")
+    
+    st.title("🏛️ El Pasaje 3D Studio")
     
     if st.session_state.auth['role'] == 'Admin':
-        st.title(f"🏛️ {st.session_state.view if st.session_state.view else 'Panel Principal'}")
-        
-        if "Dashboard" in str(st.session_state.view):
-            conn = sqlite3.connect(DB_PATH)
+        if st.session_state.menu == "📊 Dashboard":
+            st.success(f"✅ Bienvenid@, {st.session_state.auth['name']}")
+            
             col1, col2, col3, col4 = st.columns(4)
-            
             with col1:
-                ingresos = pd.read_sql("SELECT COALESCE(SUM(total), 0) as total FROM pedidos WHERE pagado=1", conn)['total'][0]
-                st.markdown(f'<div class="metric-card"><h4>💰 Ingresos</h4><h2>${ingresos:,.0f}</h2></div>', unsafe_allow_html=True)
-            
+                st.markdown('<div class="metric-gold"><h4>💰 INGRESOS</h4><h2>$0</h2></div>', unsafe_allow_html=True)
             with col2:
-                pedidos = pd.read_sql("SELECT COUNT(*) as cnt FROM pedidos WHERE estado!='Completado'", conn)['cnt'][0]
-                st.markdown(f'<div class="metric-card" style="background: linear-gradient(135deg, #4682B4, #5F9EA0);"><h4>📦 Pedidos</h4><h2>{pedidos}</h2></div>', unsafe_allow_html=True)
-            
+                st.markdown('<div class="metric-gold" style="background: linear-gradient(135deg, #4682B4, #5F9EA0);"><h4>📦 PEDIDOS</h4><h2>0</h2></div>', unsafe_allow_html=True)
             with col3:
-                alertas = pd.read_sql("SELECT COUNT(*) as cnt FROM inventario_materiales WHERE stock_actual_kg < stock_minimo_kg", conn)['cnt'][0]
-                st.markdown(f'<div class="metric-card" style="background: linear-gradient(135deg, #dc3545, #c82333);"><h4>⚠️ Alertas</h4><h2>{alertas}</h2></div>', unsafe_allow_html=True)
-            
+                st.markdown('<div class="metric-gold" style="background: linear-gradient(135deg, #28a745, #218838);"><h4>🎨 PROYECTOS</h4><h2>0</h2></div>', unsafe_allow_html=True)
             with col4:
-                proyectos = pd.read_sql("SELECT COUNT(*) as cnt FROM proyectos_stl", conn)['cnt'][0]
-                st.markdown(f'<div class="metric-card" style="background: linear-gradient(135deg, #28a745, #218838);"><h4>🎨 Proyectos</h4><h2>{proyectos}</h2></div>', unsafe_allow_html=True)
+                st.markdown('<div class="metric-gold" style="background: linear-gradient(135deg, #dc3545, #c82333);"><h4>⚠️ ALERTAS</h4><h2>0</h2></div>', unsafe_allow_html=True)
             
-            conn.close()
             st.markdown("---")
-            st.success("✅ El Pasaje 3D Studio - Sistema operativo")
-            st.info("📊 Base de datos: elpasaje.db | IDs: EP-2026-XXX")
-        
-        elif "Inventario" in str(st.session_state.view):
-            st.subheader("📦 Control de Inventario")
+            
             conn = sqlite3.connect(DB_PATH)
-            stock_bajo = pd.read_sql("SELECT tipo_material, color, stock_actual_kg, stock_minimo_kg FROM inventario_materiales WHERE stock_actual_kg < stock_minimo_kg", conn)
+            familia = pd.read_sql("SELECT COUNT(*) as total FROM clientes WHERE categoria='LINEAS_FAMILIA'", conn)
+            b2b = pd.read_sql("SELECT COUNT(*) as total FROM clientes WHERE categoria='SOCIOS_B2B'", conn)
+            conn.close()
             
-            if not stock_bajo.empty:
-                st.warning(f"⚠️ {len(stock_bajo)} material(es) bajo stock minimo")
-                st.dataframe(stock_bajo, use_container_width=True, hide_index=True)
-            else:
-                st.success("✅ Todos los materiales con stock suficiente")
+            col1, col2 = st.columns(2)
+            with col1:
+                st.info(f"👨‍👩‍👧‍👦 **Líneas Familia:** {familia['total'].values[0]} marcas")
+            with col2:
+                st.info(f"🤝 **Socios B2B:** {b2b['total'].values[0]} empresas")
             
-            st.markdown("---")
-            inventario = pd.read_sql("SELECT * FROM inventario_materiales", conn)
-            st.dataframe(inventario, use_container_width=True, hide_index=True)
+            st.success("✅ Sistema operativo | Base de datos: elpasaje.db | IDs: EP-XXX-XXX")
+            
+        elif st.session_state.menu == "🛍️ Catálogo Completo":
+            conn = sqlite3.connect(DB_PATH)
+            
+            st.markdown('<div class="categoria-header"><h2>👨‍👩‍👧‍👦 LÍNEAS FAMILIA EL PASAJE</h2></div>', unsafe_allow_html=True)
+            
+            productos_familia = pd.read_sql("SELECT * FROM productos WHERE categoria='LINEAS_FAMILIA'", conn)
+            
+            if not productos_familia.empty:
+                for i in range(0, len(productos_familia), 3):
+                    cols = st.columns(3)
+                    for j in range(3):
+                        if i + j < len(productos_familia):
+                            prod = productos_familia.iloc[i + j]
+                            with cols[j]:
+                                st.markdown('<div class="producto-card">', unsafe_allow_html=True)
+                                st.image(get_imagen_url(prod['imagen']), use_container_width=True)
+                                st.markdown(f"### {prod['nombre']}")
+                                st.caption(f"🏷️ {prod['marca']}")
+                                st.write(prod['descripcion'])
+                                st.markdown(f"**💰 ${prod['precio']:,.0f}**")
+                                st.caption(f"📦 Stock: {prod['stock']}")
+                                st.markdown('</div>', unsafe_allow_html=True)
+            
+            st.markdown('<div class="categoria-header"><h2>🤝 SOCIOS B2B</h2></div>', unsafe_allow_html=True)
+            
+            productos_b2b = pd.read_sql("SELECT * FROM productos WHERE categoria='SOCIOS_B2B'", conn)
+            
+            if not productos_b2b.empty:
+                for i in range(0, len(productos_b2b), 3):
+                    cols = st.columns(3)
+                    for j in range(3):
+                        if i + j < len(productos_b2b):
+                            prod = productos_b2b.iloc[i + j]
+                            with cols[j]:
+                                st.markdown('<div class="producto-card">', unsafe_allow_html=True)
+                                st.image(get_imagen_url(prod['imagen']), use_container_width=True)
+                                st.markdown(f"### {prod['nombre']}")
+                                st.caption(f"🏷️ {prod['marca']}")
+                                st.write(prod['descripcion'])
+                                st.markdown(f"**💰 ${prod['precio']:,.0f}**")
+                                st.caption(f"📦 Stock: {prod['stock']}")
+                                st.markdown('</div>', unsafe_allow_html=True)
+            
             conn.close()
         
         else:
-            st.info(f"✨ Modulo: {st.session_state.view}")
-            st.write("Funcionalidad en desarrollo")
+            st.info(f"✨ Módulo en desarrollo: {st.session_state.menu}")
     
-    elif st.session_state.auth['role'] == 'B2B':
-        st.title(f"🤝 Portal de Socios - {st.session_state.auth['name']}")
-        st.success("✅ Acceso B2B habilitado")
+    elif st.session_state.auth['role'] in ['FAMILIA', 'B2B']:
+        st.success(f"✅ Portal: {st.session_state.auth['name']}")
+        
         conn = sqlite3.connect(DB_PATH)
-        productos = pd.read_sql(f"SELECT nombre, descripcion, precio_base, stock_actual FROM productos_frecuentes WHERE cliente_id = '{st.session_state.auth['id']}'", conn)
+        productos = pd.read_sql(f"SELECT * FROM productos WHERE cliente_id='{st.session_state.auth['id']}'", conn)
+        conn.close()
         
         if not productos.empty:
             st.subheader("🛍️ Tus Productos")
-            st.dataframe(productos, use_container_width=True, hide_index=True)
+            for _, prod in productos.iterrows():
+                col1, col2 = st.columns([1, 3])
+                with col1:
+                    st.image(get_imagen_url(prod['imagen']), use_container_width=True)
+                with col2:
+                    st.markdown(f"### {prod['nombre']}")
+                    st.write(prod['descripcion'])
+                    st.markdown(f"**${prod['precio']:,.0f}** | Stock: {prod['stock']}")
         else:
-            st.info("📭 No hay productos asignados")
-        conn.close()
+            st.info("📭 No hay productos asignados aún")
     
     else:
-        st.title("🏛️ El Pasaje 3D Studio")
-        st.caption("Manufactura Aditiva de Alta Precision | Bartolome Mitre 1500, Buenos Aires")
-        st.markdown("---")
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            st.image(IMG_OASIS, use_container_width=True)
-            st.markdown("### 🐾 Oasis Animal")
-            st.caption("Productos Premium para Mascotas")
-        
-        with col2:
-            st.image(IMG_HIDROPONIA, use_container_width=True)
-            st.markdown("### 🌱 Oasis del Estero")
-            st.caption("Hidroponia Tecnica")
-        
-        with col3:
-            st.image(IMG_TURNTABLE, use_container_width=True)
-            st.markdown("### ✈️ Aviation & Audio")
-            st.caption("Modelismo & Audio Elite")
-        
-        st.markdown("---")
-        st.info("🔐 Inicia sesion para acceder al sistema completo")
-
-if st.session_state.auth.get('logged'):
+        st.caption("Manufactura Aditiva de Alta Precisión | Bartolomé Mitre 1500, Buenos Aires")
+        st.info("🔐 Iniciá sesión para acceder al sistema completo")
+    
     st.markdown("---")
     st.caption(f"© 2026 El Pasaje 3D Studio | EPCC v{VERSION}")
