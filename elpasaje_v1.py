@@ -8,6 +8,7 @@ import pandas as pd
 import sqlite3
 import hashlib
 import os
+import logging
 from datetime import datetime
 from pathlib import Path
 
@@ -67,6 +68,20 @@ LOGO_EP = '''<svg width="100%" height="220" viewBox="0 0 600 700" xmlns="http://
 </svg>'''
 
 DB_PATH = 'database/elpasaje.db'
+ALLOWED_ID_TABLES = {'clientes', 'productos', 'proyectos_stl'}
+
+ADMIN_USER = os.getenv('EP_ADMIN_USER', 'admin')
+ADMIN_PASSWORD = os.getenv('EP_ADMIN_PASSWORD', 'piedad2024')
+OPS_USER = os.getenv('EP_OPS_USER', 'operaciones')
+OPS_PASSWORD = os.getenv('EP_OPS_PASSWORD', 'fer2024')
+
+os.makedirs('logs', exist_ok=True)
+logging.basicConfig(
+    filename='logs/elpasaje.log',
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)s %(message)s'
+)
+logger = logging.getLogger('elpasaje')
 
 def inject_css():
     st.markdown(f'''
@@ -190,6 +205,26 @@ def init_db():
         imagen TEXT,
         categoria TEXT
     )''')
+
+    c.execute('''CREATE TABLE IF NOT EXISTS movimientos_stock (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        producto_id TEXT,
+        cambio INTEGER,
+        motivo TEXT,
+        usuario TEXT,
+        fecha TEXT
+    )''')
+
+    c.execute('''CREATE TABLE IF NOT EXISTS proyectos_stl (
+        id TEXT PRIMARY KEY,
+        cliente_id TEXT,
+        nombre TEXT,
+        estado TEXT,
+        prioridad TEXT,
+        fecha_compromiso TEXT,
+        notas TEXT,
+        creado_en TEXT
+    )''')
     
     c.execute("SELECT COUNT(*) FROM clientes")
     if c.fetchone()[0] == 0:
@@ -247,11 +282,61 @@ def init_db():
     
     conn.close()
 
+
+def next_id(prefix, table_name):
+    if table_name not in ALLOWED_ID_TABLES:
+        raise ValueError('Tabla no permitida para generación de IDs')
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute(f"SELECT COUNT(*) FROM {table_name}")
+    total = c.fetchone()[0] + 1
+    conn.close()
+    return f"{prefix}-{total:03d}"
+
+
+def get_clientes(tipo=None):
+    conn = sqlite3.connect(DB_PATH)
+    query = "SELECT id, nombre, tipo, usuario, email, telefono, categoria FROM clientes"
+    params = ()
+    if tipo:
+        query += " WHERE tipo=?"
+        params = (tipo,)
+    df = pd.read_sql(query, conn, params=params)
+    conn.close()
+    return df
+
+
+def get_productos(categoria=None):
+    conn = sqlite3.connect(DB_PATH)
+    query = "SELECT id, nombre, cliente_id, marca, descripcion, precio, stock, imagen, categoria FROM productos"
+    params = ()
+    if categoria:
+        query += " WHERE categoria=?"
+        params = (categoria,)
+    df = pd.read_sql(query, conn, params=params)
+    conn.close()
+    return df
+
+
+def get_proyectos():
+    conn = sqlite3.connect(DB_PATH)
+    df = pd.read_sql(
+        '''SELECT p.id, p.nombre, c.nombre as cliente, p.estado, p.prioridad, p.fecha_compromiso, p.notas, p.creado_en
+           FROM proyectos_stl p
+           LEFT JOIN clientes c ON p.cliente_id = c.id
+           ORDER BY p.creado_en DESC''',
+        conn,
+    )
+    conn.close()
+    return df
+
 def login(usuario, password):
-    if usuario == 'admin' and password == 'piedad2024':
+    if usuario == ADMIN_USER and password == ADMIN_PASSWORD:
+        logger.info('Login admin exitoso para usuario=%s', usuario)
         return {'logged': True, 'role': 'Admin', 'name': 'Dirección Arcano', 'id': 'ADMIN'}
     
-    if usuario == 'operaciones' and password == 'fer2024':
+    if usuario == OPS_USER and password == OPS_PASSWORD:
+        logger.info('Login operaciones exitoso para usuario=%s', usuario)
         return {'logged': True, 'role': 'Admin', 'name': 'Operaciones Técnicas', 'id': 'OPS'}
     
     conn = sqlite3.connect(DB_PATH)
@@ -261,11 +346,17 @@ def login(usuario, password):
     conn.close()
     
     if result and result[3] == hashlib.sha256(password.encode()).hexdigest():
+        logger.info('Login cliente exitoso para usuario=%s tipo=%s', usuario, result[2])
         return {'logged': True, 'role': result[2], 'name': result[1], 'id': result[0], 'categoria': result[4]}
+    logger.warning('Login fallido para usuario=%s', usuario)
     return None
 
 def get_imagen_url(ruta):
     """Retorna URL de imagen (local o fallback)"""
+    local_path = Path('assets/productos') / ruta
+    if local_path.exists():
+        return str(local_path)
+
     fallbacks = {
         'melomanos': 'https://images.unsplash.com/photo-1603048588665-791ca8aea617?w=800',
         'coquette': 'https://images.unsplash.com/photo-1526047932273-341f2a7631f9?w=800',
@@ -282,6 +373,18 @@ def get_imagen_url(ruta):
             return url
     
     return 'https://images.unsplash.com/photo-1497215728101-856f4ea42174?w=800'
+
+
+def save_uploaded_image(uploaded_file, categoria, marca):
+    if uploaded_file is None:
+        return None
+
+    marca_slug = marca.strip().lower().replace(' ', '_') if marca else 'general'
+    carpeta = Path('assets/productos') / categoria.lower() / marca_slug
+    carpeta.mkdir(parents=True, exist_ok=True)
+    destino = carpeta / uploaded_file.name
+    destino.write_bytes(uploaded_file.getbuffer())
+    return str(destino.relative_to('assets/productos'))
 
 inject_css()
 init_db()
@@ -308,7 +411,7 @@ if not st.session_state.auth['logged']:
         if perfil != "Invitado":
             with st.form("login"):
                 if perfil == "Dirección Arcano":
-                    st.caption("**Usuarios:** admin / operaciones")
+                    st.caption(f"**Usuarios:** {ADMIN_USER} / {OPS_USER}")
                 elif perfil == "Líneas Familia":
                     st.caption("**Usuarios:** melomanos / coquette / constantino / francisco")
                 else:
@@ -358,6 +461,15 @@ else:
     if st.session_state.auth['role'] == 'Admin':
         if st.session_state.menu == "📊 Dashboard":
             st.success(f"✅ Bienvenid@, {st.session_state.auth['name']}")
+
+            with st.expander("🚀 Pasos rápidos para operar hoy", expanded=True):
+                st.markdown("""
+                1. **Gestión** → crear cliente nuevo (tipo FAMILIA o B2B).  
+                2. **Inventario** → alta de producto y carga de foto.  
+                3. **Inventario** → ajuste de stock con motivo.  
+                4. **Proyectos STL** → crear proyecto y mover estado.  
+                5. **Catálogo Completo** → verificar cómo se ve publicado.
+                """)
             
             col1, col2, col3, col4 = st.columns(4)
             with col1:
@@ -428,7 +540,169 @@ else:
                                 st.markdown('</div>', unsafe_allow_html=True)
             
             conn.close()
-        
+
+        elif st.session_state.menu == "📦 Inventario":
+            st.subheader("📦 Inventario")
+            productos = get_productos()
+            st.dataframe(productos, use_container_width=True, hide_index=True)
+
+            st.markdown("### ➕ Alta de producto")
+            clientes = get_clientes()
+            clientes_map = {f"{row['nombre']} ({row['id']})": row['id'] for _, row in clientes.iterrows()}
+            with st.form("alta_producto"):
+                nombre = st.text_input("Nombre")
+                cliente_sel = st.selectbox("Cliente", list(clientes_map.keys()))
+                marca = st.text_input("Marca")
+                descripcion = st.text_area("Descripción")
+                precio = st.number_input("Precio", min_value=0.0, step=100.0)
+                stock = st.number_input("Stock inicial", min_value=0, step=1)
+                categoria = st.selectbox("Categoría", ["LINEAS_FAMILIA", "SOCIOS_B2B"])
+                imagen_file = st.file_uploader("Foto del producto (opcional)", type=["png", "jpg", "jpeg", "webp"])
+                imagen_manual = st.text_input("Ruta imagen manual (opcional)", value="")
+                submit_prod = st.form_submit_button("Guardar producto", use_container_width=True)
+                if submit_prod and nombre and marca:
+                    try:
+                        prod_id = next_id("PROD", "productos")
+                        imagen = save_uploaded_image(imagen_file, categoria, marca) or imagen_manual or f"{categoria.lower()}/default.jpg"
+                        conn = sqlite3.connect(DB_PATH)
+                        c = conn.cursor()
+                        c.execute(
+                            "INSERT INTO productos VALUES (?,?,?,?,?,?,?,?,?)",
+                            (prod_id, nombre, clientes_map[cliente_sel], marca, descripcion, float(precio), int(stock), imagen, categoria),
+                        )
+                        conn.commit()
+                        conn.close()
+                        logger.info('Alta producto id=%s cliente=%s', prod_id, clientes_map[cliente_sel])
+                        st.success(f"Producto {prod_id} creado")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"No se pudo guardar el producto: {e}")
+
+            st.markdown("### 🔄 Ajuste de stock")
+            if not productos.empty:
+                prod_map = {f"{row['nombre']} ({row['id']})": row['id'] for _, row in productos.iterrows()}
+                with st.form("ajuste_stock"):
+                    prod_sel = st.selectbox("Producto", list(prod_map.keys()))
+                    cambio = st.number_input("Cambio (usar negativo para descontar)", value=0, step=1)
+                    motivo = st.text_input("Motivo")
+                    submit_stock = st.form_submit_button("Aplicar ajuste", use_container_width=True)
+                    if submit_stock and cambio != 0 and motivo:
+                        try:
+                            conn = sqlite3.connect(DB_PATH)
+                            c = conn.cursor()
+                            c.execute("SELECT stock FROM productos WHERE id=?", (prod_map[prod_sel],))
+                            actual = c.fetchone()
+                            if not actual:
+                                raise ValueError('Producto inexistente')
+                            nuevo_stock = int(actual[0]) + int(cambio)
+                            if nuevo_stock < 0:
+                                raise ValueError('El stock no puede quedar negativo')
+
+                            c.execute("UPDATE productos SET stock = ? WHERE id=?", (nuevo_stock, prod_map[prod_sel]))
+                            c.execute(
+                                "INSERT INTO movimientos_stock (producto_id, cambio, motivo, usuario, fecha) VALUES (?,?,?,?,?)",
+                                (prod_map[prod_sel], int(cambio), motivo, st.session_state.auth['id'], datetime.now().isoformat()),
+                            )
+                            conn.commit()
+                            conn.close()
+                            logger.info('Ajuste stock producto=%s cambio=%s usuario=%s', prod_map[prod_sel], int(cambio), st.session_state.auth['id'])
+                            st.success("Stock actualizado")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"No se pudo actualizar el stock: {e}")
+
+            conn = sqlite3.connect(DB_PATH)
+            movimientos = pd.read_sql("SELECT producto_id, cambio, motivo, usuario, fecha FROM movimientos_stock ORDER BY id DESC LIMIT 20", conn)
+            conn.close()
+            st.markdown("### 🧾 Últimos movimientos")
+            st.dataframe(movimientos, use_container_width=True, hide_index=True)
+
+        elif st.session_state.menu == "👥 Gestión":
+            st.subheader("👥 Gestión de clientes")
+            tab1, tab2 = st.tabs(["Clientes", "Alta cliente"])
+            with tab1:
+                tipo_filtro = st.selectbox("Filtrar por tipo", ["TODOS", "FAMILIA", "B2B"])
+                df_clientes = get_clientes(None if tipo_filtro == "TODOS" else tipo_filtro)
+                st.dataframe(df_clientes, use_container_width=True, hide_index=True)
+            with tab2:
+                with st.form("alta_cliente"):
+                    nombre = st.text_input("Nombre")
+                    tipo = st.selectbox("Tipo", ["FAMILIA", "B2B"])
+                    usuario = st.text_input("Usuario")
+                    password = st.text_input("Contraseña temporal", type="password")
+                    email = st.text_input("Email")
+                    telefono = st.text_input("Teléfono")
+                    categoria = "LINEAS_FAMILIA" if tipo == "FAMILIA" else "SOCIOS_B2B"
+                    submit_cliente = st.form_submit_button("Crear cliente", use_container_width=True)
+                    if submit_cliente and nombre and usuario and password:
+                        try:
+                            pref = "EP-FAM" if tipo == "FAMILIA" else "EP-B2B"
+                            cliente_id = next_id(pref, "clientes")
+                            conn = sqlite3.connect(DB_PATH)
+                            c = conn.cursor()
+                            c.execute(
+                                "INSERT INTO clientes VALUES (?,?,?,?,?,?,?,?)",
+                                (cliente_id, nombre, tipo, usuario, hashlib.sha256(password.encode()).hexdigest(), email, telefono, categoria),
+                            )
+                            conn.commit()
+                            conn.close()
+                            logger.info('Alta cliente id=%s tipo=%s usuario=%s', cliente_id, tipo, usuario)
+                            st.success(f"Cliente {cliente_id} creado")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"No se pudo crear el cliente: {e}")
+
+        elif st.session_state.menu == "🎨 Proyectos STL":
+            st.subheader("🎨 Proyectos STL")
+            proyectos = get_proyectos()
+            st.dataframe(proyectos, use_container_width=True, hide_index=True)
+
+            clientes = get_clientes()
+            if not clientes.empty:
+                clientes_map = {f"{row['nombre']} ({row['id']})": row['id'] for _, row in clientes.iterrows()}
+                with st.form("alta_proyecto"):
+                    nombre = st.text_input("Nombre del proyecto")
+                    cliente_sel = st.selectbox("Cliente", list(clientes_map.keys()))
+                    prioridad = st.selectbox("Prioridad", ["baja", "media", "alta"])
+                    fecha_compromiso = st.date_input("Fecha compromiso")
+                    notas = st.text_area("Notas")
+                    submit_proy = st.form_submit_button("Crear proyecto", use_container_width=True)
+                    if submit_proy and nombre:
+                        try:
+                            proyecto_id = next_id("STL", "proyectos_stl")
+                            conn = sqlite3.connect(DB_PATH)
+                            c = conn.cursor()
+                            c.execute(
+                                "INSERT INTO proyectos_stl VALUES (?,?,?,?,?,?,?,?)",
+                                (proyecto_id, clientes_map[cliente_sel], nombre, "nuevo", prioridad, str(fecha_compromiso), notas, datetime.now().isoformat()),
+                            )
+                            conn.commit()
+                            conn.close()
+                            logger.info('Alta proyecto id=%s cliente=%s prioridad=%s', proyecto_id, clientes_map[cliente_sel], prioridad)
+                            st.success(f"Proyecto {proyecto_id} creado")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"No se pudo crear el proyecto: {e}")
+
+            if not proyectos.empty:
+                estados = ["nuevo", "en_revision", "en_produccion", "entregado"]
+                with st.form("actualizar_estado"):
+                    proyecto_sel = st.selectbox("Proyecto", proyectos['id'].tolist())
+                    nuevo_estado = st.selectbox("Nuevo estado", estados)
+                    submit_estado = st.form_submit_button("Actualizar estado", use_container_width=True)
+                    if submit_estado:
+                        try:
+                            conn = sqlite3.connect(DB_PATH)
+                            c = conn.cursor()
+                            c.execute("UPDATE proyectos_stl SET estado=? WHERE id=?", (nuevo_estado, proyecto_sel))
+                            conn.commit()
+                            conn.close()
+                            logger.info('Cambio estado proyecto=%s estado=%s', proyecto_sel, nuevo_estado)
+                            st.success("Estado actualizado")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"No se pudo actualizar el estado: {e}")
+
         else:
             st.info(f"✨ Módulo en desarrollo: {st.session_state.menu}")
     
@@ -436,7 +710,7 @@ else:
         st.success(f"✅ Portal: {st.session_state.auth['name']}")
         
         conn = sqlite3.connect(DB_PATH)
-        productos = pd.read_sql(f"SELECT * FROM productos WHERE cliente_id='{st.session_state.auth['id']}'", conn)
+        productos = pd.read_sql("SELECT * FROM productos WHERE cliente_id=?", conn, params=(st.session_state.auth['id'],))
         conn.close()
         
         if not productos.empty:
