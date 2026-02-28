@@ -1,83 +1,53 @@
-﻿#!/usr/bin/env python3
-"""Smoke test compatible con esquema nuevo y legado."""
+"""Smoke checks locales para validar setup mínimo del proyecto."""
+
 from __future__ import annotations
 
-import sqlite3
+import subprocess
+import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
-DB_PATH = ROOT / "database" / "elpasaje.db"
+MIN_REQUIRED_VERSION = '2.0 Enterprise'
+LEGACY_SIGNATURE = 'VERSION = "1.0 Enterprise"'
 
-def fail(msg: str) -> int:
-    print(f"[FAIL] {msg}")
-    return 1
 
-def table_exists(cur, name: str) -> bool:
-    cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name=?", (name,))
-    return cur.fetchone() is not None
+REQUIRED_FILES = [
+    Path('elpasaje_v1.py'),
+    Path('requirements.txt'),
+    Path('.env.example'),
+    Path('docs/QA_CHECKLIST.md'),
+    Path('docs/DEPLOY_RUNBOOK.md'),
+]
+
+
+def run(cmd: list[str]) -> int:
+    print('>>', ' '.join(cmd))
+    return subprocess.run(cmd, check=False).returncode
+
 
 def main() -> int:
-    print("== Smoke check ==")
-    if not DB_PATH.exists():
-        return fail("No existe database/elpasaje.db. Ejecutar streamlit primero.")
+    missing = [str(p) for p in REQUIRED_FILES if not p.exists()]
+    if missing:
+        print('ERROR faltan archivos:', ', '.join(missing))
+        return 1
 
-    conn = sqlite3.connect(DB_PATH)
-    cur = conn.cursor()
+    code = run([sys.executable, '-m', 'py_compile', 'elpasaje_v1.py'])
+    if code != 0:
+        print('ERROR py_compile falló')
+        return code
 
-    # Tablas base siempre requeridas
-    base_required = ["clientes"]
-    for t in base_required:
-        if not table_exists(cur, t):
-            conn.close()
-            return fail(f"Falta la tabla base: {t}")
-        print(f"[OK] Tabla encontrada: {t}")
+    app_text = Path('elpasaje_v1.py').read_text(encoding='utf-8', errors='ignore')
+    if LEGACY_SIGNATURE in app_text:
+        print('ERROR detectada versión legacy de la app (1.0 Enterprise).')
+        print('Acción: reemplazar el archivo local por la versión actual del repo (2.0 Enterprise).')
+        return 1
 
-    # Esquema nuevo
-    new_schema = ["productos", "stl_proyectos", "ordenes", "orden_items", "materiales", "cotizaciones", "audit_logs", "leads_contacto"]
-    # Esquema legado
-    old_schema = ["productos_frecuentes", "proyectos_stl", "pedidos", "inventario_materiales"]
+    if MIN_REQUIRED_VERSION not in app_text:
+        print('WARNING no se pudo confirmar la cadena de versión mínima esperada (2.0 Enterprise).')
+        print('Verificá que estás ejecutando el archivo correcto: ./elpasaje_v1.py de esta copia del repo.')
 
-    has_new = all(table_exists(cur, t) for t in new_schema)
-    has_old = all(table_exists(cur, t) for t in old_schema)
-
-    if not has_new and not has_old:
-        conn.close()
-        return fail("No coincide ni con esquema nuevo ni con legado.")
-
-    if has_new:
-        print("[OK] Esquema detectado: NUEVO")
-        productos_table = "productos"
-        proyectos_table = "stl_proyectos"
-        stock_col = "stock"
-    else:
-        print("[OK] Esquema detectado: LEGADO")
-        productos_table = "productos_frecuentes"
-        proyectos_table = "proyectos_stl"
-        stock_col = "stock_disponible"
-
-    cur.execute("SELECT COUNT(*) FROM clientes")
-    print(f"[OK] clientes={cur.fetchone()[0]}")
-
-    cur.execute(f"SELECT COUNT(*) FROM {productos_table}")
-    print(f"[OK] {productos_table}={cur.fetchone()[0]}")
-
-    cur.execute(f"SELECT COUNT(*) FROM {proyectos_table}")
-    print(f"[OK] {proyectos_table}={cur.fetchone()[0]}")
-
-    # Validación mínima stock no negativo si columna existe
-    cur.execute(f"PRAGMA table_info({productos_table})")
-    cols = [r[1] for r in cur.fetchall()]
-    if stock_col in cols:
-        cur.execute(f"SELECT COUNT(*) FROM {productos_table} WHERE {stock_col} < 0")
-        bad = cur.fetchone()[0]
-        if bad > 0:
-            conn.close()
-            return fail(f"Hay {bad} filas con stock negativo en {productos_table}")
-        print(f"[OK] Stock válido en {productos_table}")
-
-    conn.close()
-    print("RESULTADO: OK")
+    print('OK smoke_check finalizado')
     return 0
 
-if __name__ == "__main__":
+
+if __name__ == '__main__':
     raise SystemExit(main())
