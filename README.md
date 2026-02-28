@@ -44,5 +44,5 @@ Variables usadas por la app:
 
 - QA manual de cierre MVP: `docs/QA_CHECKLIST.md`
 - Runbook de despliegue/operación: `docs/DEPLOY_RUNBOOK.md`
-- Smoke check local: `python scripts/smoke_check.py`
+- Smoke check local: `python scripts/smoke_check.py` (también alerta si detecta versión legacy `1.0 Enterprise`)
 - Backup manual de SQLite: `python scripts/backup_sqlite.py`
