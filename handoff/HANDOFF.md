@@ -1,0 +1,1 @@
+﻿# HANDOFF - Entrega operable
