@@ -1,0 +1,16 @@
+[
+  {
+    "contact_name": "Federico Gomez Aguilera",
+    "email": "oasisdelestero@gmail.com",
+    "company_name": "Oasis del Estero",
+    "phone": "11.6367.0002",
+    "type": "individual"
+  },
+  {
+    "contact_name": "Lucas Peluffo",
+    "email": "lucas.peluffo@gmail.com",
+    "company_name": "Pharma DeLux",
+    "phone": "1159287598",
+    "type": "individual"
+  }
+]
