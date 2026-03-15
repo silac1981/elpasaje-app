@@ -942,7 +942,7 @@ footer{padding:20px 56px;background:var(--ink);border-top:1px solid rgba(154,112
   <div class="c-firma reveal" style="transition-delay:.2s">Coquette · El Pasaje La Piedad · Buenos Aires · Desde 1880</div>
   <div class="c-wrap reveal" style="transition-delay:.35s">
     <a href="https://wa.me/541165497234?text=Hola! Quiero conocer la colección Coquette 🌸" class="c-cta" target="_blank">Quiero esta colección</a>
-    <a href="index.html" class="c-back">← Volver al universo El Pasaje</a>
+    <a href="index.html" class="c-back">← Ver todas las líneas de El Pasaje</a>
   </div>
 </section>
 <footer>
@@ -1128,6 +1128,42 @@ async function callIA(tipo){
     </div>
   </div>
 </div>
+
+
+<!-- Banner volver al inicio — aparece al scrollear -->
+<div id="back-banner" style="
+  position:fixed;top:70px;left:20px;z-index:250;
+  opacity:0;transform:translateX(-10px);
+  transition:opacity .4s,transform .4s;
+  pointer-events:none;
+">
+  <a href="index.html" style="
+    display:flex;align-items:center;gap:8px;
+    background:rgba(26,13,16,.88);backdrop-filter:blur(8px);
+    border:1px solid rgba(120,85,0,.3);
+    padding:8px 16px;
+    font-family:'Raleway',sans-serif;font-size:.55rem;
+    letter-spacing:3px;text-transform:uppercase;
+    color:rgba(201,168,76,.8);text-decoration:none;
+    transition:all .3s;
+  ">← El Pasaje</a>
+</div>
+
+<script>
+// Mostrar banner al scrollear más de 300px
+window.addEventListener('scroll', function(){
+  const banner = document.getElementById('back-banner');
+  if(window.scrollY > 300){
+    banner.style.opacity='1';
+    banner.style.transform='translateX(0)';
+    banner.style.pointerEvents='auto';
+  } else {
+    banner.style.opacity='0';
+    banner.style.transform='translateX(-10px)';
+    banner.style.pointerEvents='none';
+  }
+});
+</script>
 
 </body>
 </html>
