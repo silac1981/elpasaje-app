@@ -189,7 +189,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:300;padding:16px 52px;display:fl
 
 /* SINERGIA */
 #s-sinergia{background:var(--carbon);padding:64px 80px}
-.sin-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;background:rgba(0,243,255,.06);margin-top:32px}
+.sin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;background:rgba(0,243,255,.06);margin-top:32px}
 .scard{background:var(--deep);padding:28px 22px;text-decoration:none;color:inherit;display:block;transition:background .3s;cursor:none;position:relative;overflow:hidden}
 .scard::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--sc,var(--cyan));transform:scaleX(0);transform-origin:left;transition:transform .4s}
 .scard:hover{background:var(--surface)}
@@ -253,6 +253,30 @@ footer{padding:20px 80px;background:var(--deep);border-top:1px solid var(--brd2)
 .fl{font-family:'Orbitron',sans-serif;font-size:.65rem;font-weight:700;letter-spacing:4px;color:rgba(240,248,255,.2)}
 .fl em{color:var(--cyan);font-style:normal}
 .fr{font-size:.48rem;letter-spacing:3px;color:rgba(240,248,255,.12);text-transform:uppercase;font-family:'Orbitron',sans-serif}
+
+
+/* ── Sublínea Colecciones ── */
+.col-section{margin-top:56px;padding-top:40px;border-top:1px solid var(--brd)}
+.col-intro{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;margin-bottom:32px}
+.col-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;background:rgba(0,243,255,.06)}
+.col-card{background:var(--surface);padding:22px 18px;cursor:none;transition:all .3s;border-top:1px solid transparent;position:relative}
+.col-card:hover{background:var(--lift);border-top-color:var(--gold)}
+.col-card-badge{font-family:'Orbitron',sans-serif;font-size:.48rem;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:8px;display:block}
+.col-card-name{font-family:'Orbitron',sans-serif;font-size:.78rem;font-weight:700;color:var(--white);margin-bottom:6px;letter-spacing:1px}
+.col-card-desc{font-size:.72rem;color:var(--muted);line-height:1.65;margin-bottom:12px}
+.col-card-price{font-family:'Orbitron',sans-serif;font-size:1rem;font-weight:700;color:var(--cyan)}
+.col-card-cta{display:block;margin-top:10px;font-family:'Orbitron',sans-serif;font-size:.48rem;letter-spacing:3px;text-transform:uppercase;color:var(--cyan);text-decoration:none;transition:color .3s;cursor:none}
+.col-card-cta:hover{color:var(--white)}
+
+/* ── Sublínea Soluciones Cotidianas ── */
+.sol-section{margin-top:56px;padding-top:40px;border-top:1px solid var(--brd)}
+.sol-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;background:rgba(0,243,255,.04)}
+.sol-card{background:var(--surface);padding:24px 20px;cursor:none;transition:background .3s;border-left:1px solid transparent;transition:all .3s}
+.sol-card:hover{background:var(--lift);border-left-color:var(--cyan)}
+.sol-card-sym{font-family:'Orbitron',sans-serif;font-size:1.4rem;color:var(--cyan);opacity:.5;margin-bottom:10px;display:block}
+.sol-card-name{font-family:'Orbitron',sans-serif;font-size:.75rem;font-weight:700;color:var(--white);margin-bottom:6px;letter-spacing:1px}
+.sol-card-desc{font-size:.72rem;color:var(--muted);line-height:1.65;margin-bottom:10px}
+.sol-card-price{font-family:'Orbitron',sans-serif;font-size:.95rem;color:var(--cyan)}
 
 .wa-float{position:fixed;bottom:28px;right:28px;width:50px;height:50px;background:#25D366;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:500;text-decoration:none;animation:waPulse 3s infinite;transition:transform .3s;cursor:none}
 .wa-float:hover{transform:scale(1.1)}
@@ -443,6 +467,100 @@ footer{padding:20px 80px;background:var(--deep);border-top:1px solid var(--brd2)
 
     </div>
 
+
+    <!-- SUBLÍNEA: Coleccionismo -->
+    <div class="col-section reveal">
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:28px">
+        <div>
+          <div class="eye" style="margin-bottom:6px;font-size:.5rem">Sub-línea · Coleccionismo</div>
+          <div style="font-family:'Orbitron',sans-serif;font-size:1.2rem;font-weight:900;color:var(--white)">Lo que querés <em style="font-style:normal;color:var(--gold)">colgar.</em></div>
+        </div>
+        <div style="font-size:.72rem;color:var(--muted);text-align:right;max-width:200px;line-height:1.6">Máscaras, bustos y figuras en 3D. Cultura pop con sello El Pasaje.</div>
+      </div>
+      <div class="col-grid">
+        <div class="col-card">
+          <span class="col-card-badge">★ Icónico</span>
+          <div class="col-card-name">Máscaras 3D</div>
+          <div class="col-card-desc">Réplicas de máscaras icónicas de la cultura pop y el cine. Tamaño real, acabado mate. Para colgar, no para esconder.</div>
+          <div class="col-card-price">A cotizar</div>
+          <a href="https://wa.me/541165497234?text=Hola! Quiero una máscara 3D personalizada de F-Zone" class="col-card-cta" target="_blank">Pedir →</a>
+        </div>
+        <div class="col-card">
+          <span class="col-card-badge">Cultura Pop</span>
+          <div class="col-card-name">Bustos de Personajes</div>
+          <div class="col-card-desc">Bustos impresos capa por capa. Diseños clásicos — el universo que te apasiona, en tu escritorio para siempre.</div>
+          <div class="col-card-price">A cotizar</div>
+          <a href="https://wa.me/541165497234?text=Hola! Quiero un busto de personaje de F-Zone" class="col-card-cta" target="_blank">Pedir →</a>
+        </div>
+        <div class="col-card">
+          <span class="col-card-badge" style="color:var(--cyan)">Sci-Fi</span>
+          <div class="col-card-name">Naves & Vehículos</div>
+          <div class="col-card-desc">Réplicas de naves espaciales, autos de carrera o aviones icónicos. Edición limitada numerada.</div>
+          <div class="col-card-price">A cotizar</div>
+          <a href="https://wa.me/541165497234?text=Hola! Quiero una nave o vehículo 3D de F-Zone" class="col-card-cta" target="_blank">Pedir →</a>
+        </div>
+        <div class="col-card" style="border-style:dashed;opacity:.7">
+          <span class="col-card-badge" style="color:rgba(0,243,255,.4)">Próximamente</span>
+          <div class="col-card-name">Mini Estadios</div>
+          <div class="col-card-desc">El estadio de tu equipo en tamaño de escritorio. Impreso con detalle arquitectónico real.</div>
+          <div class="col-card-price" style="color:rgba(0,243,255,.4)">En desarrollo</div>
+          <a href="https://wa.me/541165497234?text=Hola! Quiero avisarme del Mini Estadio de F-Zone" class="col-card-cta" style="color:rgba(0,243,255,.4)" target="_blank">Avisarme →</a>
+        </div>
+      </div>
+      <div style="margin-top:12px;font-family:'Orbitron',sans-serif;font-size:.52rem;letter-spacing:3px;text-transform:uppercase;color:rgba(0,243,255,.3);text-align:center">
+        Diseños personalizados bajo pedido · Consultá tu idea por WA
+      </div>
+    </div>
+
+    <!-- SUBLÍNEA: Soluciones Cotidianas -->
+    <div class="sol-section reveal">
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:28px">
+        <div>
+          <div class="eye" style="margin-bottom:6px;font-size:.5rem">Sub-línea · Cuarto & Vida</div>
+          <div style="font-family:'Orbitron',sans-serif;font-size:1.2rem;font-weight:900;color:var(--white)">Lo que resuelve <em style="font-style:normal;color:var(--cyan)">el día a día.</em></div>
+        </div>
+        <div style="font-size:.72rem;color:var(--muted);text-align:right;max-width:220px;line-height:1.6">Ganchos, percheros, carteles y organizadores. F-Zone también organiza tu mundo.</div>
+      </div>
+      <div class="sol-grid">
+        <div class="sol-card">
+          <span class="sol-card-sym">◈</span>
+          <div class="sol-card-name">Perchero de Pared</div>
+          <div class="sol-card-desc">Diseño geométrico con 3 ganchos. Para la campera, la mochila y el escudo del equipo. Impresión de alta resistencia.</div>
+          <div class="sol-card-price">$1.400</div>
+        </div>
+        <div class="sol-card">
+          <span class="sol-card-sym">▣</span>
+          <div class="sol-card-name">Cartel de Cuarto</div>
+          <div class="sol-card-desc">Tu nombre, tu frase, tu número de camiseta. En relieve 3D. Para la pared del cuarto que dice quién sos.</div>
+          <div class="sol-card-price">A cotizar</div>
+        </div>
+        <div class="sol-card">
+          <span class="sol-card-sym">⬡</span>
+          <div class="sol-card-name">Organizador de Escritorio</div>
+          <div class="sol-card-desc">Compartimentos para lapiceras, cables y controles. Diseño gamer. Para el setup que también tiene orden.</div>
+          <div class="sol-card-price">$1.600</div>
+        </div>
+        <div class="sol-card">
+          <span class="sol-card-sym">✦</span>
+          <div class="sol-card-name">Porta Credencial / ID</div>
+          <div class="sol-card-desc">Para el pase del estadio, el carnet del club o la credencial escolar. Con clip de metal incluido.</div>
+          <div class="sol-card-price">$600</div>
+        </div>
+        <div class="sol-card">
+          <span class="sol-card-sym">◎</span>
+          <div class="sol-card-name">Soporte de Pelota</div>
+          <div class="sol-card-desc">Para exhibir la pelota firmada o la de entrenamiento. Diseño aerodinámico. Para el coleccionista serio.</div>
+          <div class="sol-card-price">$900</div>
+        </div>
+        <div class="sol-card" style="border:1px dashed rgba(0,243,255,.15);opacity:.65">
+          <span class="sol-card-sym" style="color:rgba(0,243,255,.3)">+</span>
+          <div class="sol-card-name" style="color:rgba(255,255,255,.4)">¿Necesitás algo específico?</div>
+          <div class="sol-card-desc">Si tenés una idea de algo que necesitás en tu cuarto y no existe en el mercado, Francisco lo diseña.</div>
+          <div class="sol-card-price" style="color:rgba(0,243,255,.4)">Hacé tu pedido</div>
+        </div>
+      </div>
+    </div>
+
     <!-- IA Setup en Catálogo -->
     <div class="ia-box reveal">
       <div>
@@ -495,7 +613,7 @@ footer{padding:20px 80px;background:var(--deep);border-top:1px solid var(--brd2)
       <div class="drop-card">
         <div class="drop-badge-wrap">
           <span class="drop-badge drop-badge-ltd">Edición Limitada</span>
-          <span class="drop-timer">30 piezas</span>
+          <span class="drop-timer" style="color:var(--gold);animation:pulse 1.5s infinite">⚡ MUNDIAL 2026</span>
         </div>
         <div class="drop-name">Estadio 3D · Serie General</div>
         <div class="drop-desc">Cuadro calado que muestra el mapa o la silueta de un estadio icónico. Personalizable: pedís el estadio que querés. Colgá la historia.</div>
@@ -601,7 +719,7 @@ footer{padding:20px 80px;background:var(--deep);border-top:1px solid var(--brd2)
       <p style="font-size:.95rem;color:var(--muted);line-height:1.8;max-width:560px">Dentro de El Pasaje hay otras líneas con las que F-Zone hace match natural. Combinás productos y armás el kit perfecto.</p>
     </div>
     <div class="sin-grid reveal">
-      <a href="index.html#nivel2" class="scard" style="--sc:#64748B">
+      <a href="index.html" class="scard" style="--sc:#64748B">
         <span class="sc-sym">⚙</span>
         <div class="sc-tag">Core Tech · Constantino</div>
         <div class="sc-name">Ingeniería de Élite</div>
@@ -615,14 +733,21 @@ footer{padding:20px 80px;background:var(--deep);border-top:1px solid var(--brd2)
         <div class="sc-why">Mientras Francisco domina el setup, Olivia domina el estilo. Para la hermana, la novia o la amiga que quiere algo de Coquette. Dos mundos, una familia.</div>
         <span class="sc-arr">→</span>
       </a>
-      <a href="index.html#blacklabel" class="scard" style="--sc:#C9A84C">
+      <a href="index.html" class="scard" style="--sc:#C9A84C">
         <span class="sc-sym" style="color:#C9A84C">▣</span>
         <div class="sc-tag">Magnitud 19 · Alejandra</div>
         <div class="sc-name">El escritorio de élite</div>
         <div class="sc-why">Si ya tenés el setup de Francisco, el siguiente nivel es el organizador Kaizen de Magnitud 19. Para cuando el juego se convierte en trabajo serio.</div>
         <span class="sc-arr">→</span>
       </a>
-      <a href="index.html#nivel1" class="scard" style="--sc:#4CAF50">
+      <a href="oasis-estero.html" class="scard" style="--sc:#2D5A27">
+        <span class="sc-sym" style="color:#5A8A54">🌿</span>
+        <div class="sc-tag">Oasis del Estero · Fede</div>
+        <div class="sc-name">Setup verde</div>
+        <div class="sc-why">¿Querés un setup con naturaleza inteligente? Las macetas gamer de Fede combinan perfecto con el escritorio de Francisco. Tecnología y verde en el mismo espacio.</div>
+        <span class="sc-arr">→</span>
+      </a>
+      <a href="index.html" class="scard" style="--sc:#4CAF50">
         <span class="sc-sym" style="color:#4CAF50">◎</span>
         <div class="sc-tag">Oasis Animal · Agustina</div>
         <div class="sc-name">Jugá con propósito</div>
@@ -814,7 +939,9 @@ Productos disponibles:
 - Cap-Hanger Pro ($1.800): soporte aerodinámico para gorras, no deforma la visera, personalizable
 - Parche Flexible ($900): aplique 3D para mochila/campera, personalizable con nombre/número/equipo
 - Aplique Gamer ($1.200): soporte para auriculares con sello El Pasaje
-- Cuadros 3D Estadios: cuadros calados de estadios o copas del mundo, edición limitada, a cotizar
+- Cuadros 3D Estadios Edición Mundial 2026: cuadros calados de estadios o copas del mundo, edición limitada numerada, a cotizar
+- Coleccionismo: máscaras 3D ($a cotizar), bustos de personajes, naves y vehículos icónicos
+- Soluciones cotidianas: Perchero de Pared $1.400, Cartel de Cuarto (a cotizar), Organizador de Escritorio $1.600, Porta Credencial $600, Soporte de Pelota $900
 - Copa del Mundo 3D 2026: edición especial numerada, a cotizar
 
 Líneas amigas en El Pasaje:
