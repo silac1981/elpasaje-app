@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Oasis Animal · El Pasaje 3D Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600&family=Raleway:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --terra:  #8B4A2A;
+  --terra2: #C4784A;
+  --sand:   #D4B896;
+  --cream:  #F5EFE6;
+  --paper:  #FAF6F0;
+  --bark:   #5A3018;
+  --dark:   #2A1408;
+  --warm:   #E8D4BC;
+  --heart:  #C45A3A;
+  --green:  #4A7A3A;
+  --brd:    rgba(139,74,42,.2);
+  --brd2:   rgba(139,74,42,.1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--paper);color:var(--dark);font-family:'Raleway',sans-serif;font-weight:300;overflow-x:hidden;cursor:none}
+
+#cur{width:8px;height:8px;background:var(--terra);border-radius:50%;position:fixed;top:0;left:0;pointer-events:none;z-index:9999;transition:width .2s,height .2s}
+#cur2{width:30px;height:30px;border:1px solid rgba(139,74,42,.35);border-radius:50%;position:fixed;top:0;left:0;pointer-events:none;z-index:9998}
+
+/* Nav */
+nav{position:fixed;top:0;left:0;right:0;z-index:300;padding:16px 56px;display:flex;justify-content:space-between;align-items:center;background:rgba(250,246,240,.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--brd)}
+.nav-logo{font-family:'Cormorant Garamond',serif;font-size:.85rem;font-weight:300;letter-spacing:6px;text-transform:uppercase;color:var(--dark)}
+.nav-logo em{font-style:italic;color:var(--terra)}
+.nav-pills{display:flex;gap:4px}
+.nav-pill{font-size:.52rem;letter-spacing:3px;text-transform:uppercase;color:var(--sand);padding:6px 14px;cursor:none;transition:all .3s;border-bottom:1px solid transparent;font-family:'Raleway',sans-serif}
+.nav-pill:hover,.nav-pill.active{color:var(--terra);border-bottom-color:var(--terra)}
+.nav-back{font-size:.52rem;letter-spacing:3px;text-transform:uppercase;color:var(--sand);text-decoration:none;display:flex;align-items:center;gap:6px;transition:color .3s}
+.nav-back::before{content:'←';color:var(--terra)}
+.nav-back:hover{color:var(--terra)}
+
+/* HERO */
+#screen-hero{min-height:100vh;display:grid;grid-template-columns:1fr 1fr;position:relative;overflow:hidden}
+.hero-left{background:linear-gradient(160deg,#3A1A08 0%,#5A3018 60%,#8B4A2A 100%);display:flex;flex-direction:column;justify-content:center;padding:120px 64px 80px;position:relative;overflow:hidden}
+.hero-left::before{content:'';position:absolute;inset:0;background-image:radial-gradient(circle at 30% 60%,rgba(196,120,74,.15) 0%,transparent 60%)}
+/* Huella decorativa de fondo */
+.hero-left::after{content:'🐾';position:absolute;bottom:40px;right:40px;font-size:8rem;opacity:.06;transform:rotate(-15deg)}
+.hero-eye{font-size:.55rem;letter-spacing:6px;text-transform:uppercase;color:rgba(212,184,150,.6);margin-bottom:20px;display:flex;align-items:center;gap:12px;font-weight:500}
+.hero-eye::before{content:'';width:18px;height:1px;background:var(--terra2)}
+.hero-title{font-family:'Cormorant Garamond',serif;font-size:clamp(3rem,5vw,5.5rem);font-weight:300;line-height:.9;color:#FAF6F0;margin-bottom:24px}
+.hero-title em{font-style:italic;color:var(--terra2);display:block}
+.hero-div{width:40px;height:1px;background:linear-gradient(to right,var(--terra2),transparent);margin:0 0 20px}
+.hero-sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.05rem;color:rgba(212,184,150,.75);line-height:1.85;max-width:380px;margin-bottom:32px}
+/* Stats solidarios */
+.hero-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(212,184,150,.15);margin-bottom:32px}
+.hstat{padding:16px;text-align:center;background:rgba(255,255,255,.04)}
+.hstat-n{font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:300;color:var(--terra2)}
+.hstat-l{font-size:.5rem;letter-spacing:3px;text-transform:uppercase;color:rgba(212,184,150,.5)}
+.hero-cta{display:inline-flex;align-items:center;gap:10px;padding:13px 32px;background:var(--terra);color:#FAF6F0;font-size:.6rem;font-weight:500;letter-spacing:4px;text-transform:uppercase;text-decoration:none;transition:all .3s;cursor:none}
+.hero-cta:hover{background:var(--terra2)}
+
+.hero-right{background:var(--cream);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.hero-right-img{width:100%;height:100%;object-fit:cover}
+/* Logo placeholder elegante */
+.hero-logo-placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:60px}
+.logo-paw{font-size:8rem;line-height:1;filter:drop-shadow(0 4px 12px rgba(139,74,42,.2))}
+.logo-name{font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:300;letter-spacing:8px;text-transform:uppercase;color:var(--terra)}
+.logo-sub{font-size:.55rem;letter-spacing:6px;text-transform:uppercase;color:var(--sand)}
+/* Solidario badge */
+.solidario-badge{position:absolute;bottom:32px;left:32px;background:rgba(90,48,24,.9);backdrop-filter:blur(8px);border:1px solid rgba(196,120,74,.3);padding:14px 20px;max-width:260px}
+.sb-t{font-size:.5rem;letter-spacing:4px;text-transform:uppercase;color:var(--terra2);margin-bottom:6px;font-weight:600}
+.sb-d{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.85rem;color:rgba(250,246,240,.75);line-height:1.6}
+
+.sep{height:1px;background:linear-gradient(to right,transparent,var(--brd),transparent)}
+.sep-terra{height:1px;background:linear-gradient(to right,transparent,var(--terra),transparent)}
+.eye{font-size:.54rem;letter-spacing:6px;text-transform:uppercase;color:var(--terra);margin-bottom:10px;display:flex;align-items:center;gap:12px;font-weight:600}
+.eye::before{content:'';width:18px;height:1px;background:var(--terra)}
+
+/* MENU */
+#screen-menu{background:var(--warm);padding:64px 80px}
+.menu-ttl{font-family:'Cormorant Garamond',serif;font-size:clamp(1.8rem,3vw,2.8rem);font-weight:300;color:var(--dark);margin-bottom:36px}
+.menu-ttl em{font-style:italic;color:var(--terra)}
+.menu-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--brd)}
+.mcard{background:var(--warm);padding:28px 22px;cursor:none;transition:all .35s;position:relative;display:flex;flex-direction:column;border-top:2px solid transparent}
+.mcard:hover,.mcard.sel{background:var(--terra);border-top-color:var(--sand);transform:translateY(-4px);box-shadow:0 12px 28px rgba(139,74,42,.25)}
+.mcard:hover .mc-ttl,.mcard.sel .mc-ttl{color:#FAF6F0}
+.mcard:hover .mc-desc,.mcard.sel .mc-desc{color:rgba(250,246,240,.75)}
+.mcard:hover .mc-arr,.mcard.sel .mc-arr{color:var(--sand);border-top-color:rgba(212,184,150,.3)}
+.mc-n{font-family:'Cormorant Garamond',serif;font-size:2.5rem;font-weight:300;color:transparent;-webkit-text-stroke:1px rgba(139,74,42,.25);line-height:1;margin-bottom:12px}
+.mc-sym{font-size:1.3rem;margin-bottom:10px;display:block}
+.mc-ttl{font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-weight:600;color:var(--dark);margin-bottom:6px;transition:color .35s}
+.mc-desc{font-size:.82rem;color:#4A2A10;line-height:1.65;margin-bottom:14px;flex:1;transition:color .35s}
+.mc-arr{font-size:.58rem;letter-spacing:3px;color:var(--terra);display:flex;align-items:center;gap:8px;border-top:1px solid var(--brd2);padding-top:12px;transition:all .3s}
+.mcard:hover .mc-arr{gap:14px}
+
+/* SECCIONES */
+.csec{display:none;opacity:0;transform:translateY(12px);transition:opacity .5s,transform .5s}
+.csec.active{display:block;opacity:1;transform:translateY(0)}
+
+/* PRODUCTOS */
+#s-productos{background:var(--paper);padding:64px 80px}
+.sec-ttl{font-family:'Cormorant Garamond',serif;font-size:clamp(2rem,3.5vw,3rem);font-weight:300;color:var(--dark)}
+.sec-ttl em{font-style:italic;color:var(--terra)}
+
+/* ESTRELLA — Soporte Evolutivo */
+.estrella{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;margin-bottom:56px;padding-bottom:48px;border-bottom:1px solid var(--brd)}
+.est-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(139,74,42,.1);border:1px solid var(--brd);padding:6px 16px;border-radius:99px;font-size:.52rem;letter-spacing:3px;text-transform:uppercase;color:var(--terra);margin-bottom:14px;font-weight:600}
+.est-badge::before{content:'★';color:var(--terra)}
+.est-ttl{font-family:'Cormorant Garamond',serif;font-size:clamp(1.8rem,3vw,2.8rem);font-weight:300;color:var(--dark);line-height:1.05;margin-bottom:16px}
+.est-ttl em{font-style:italic;color:var(--terra)}
+.est-body{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.05rem;color:#4A2A10;line-height:1.9;margin-bottom:24px}
+/* Beneficios */
+.est-bens{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:28px}
+.est-ben{background:var(--warm);border:1px solid var(--brd);border-left:2px solid var(--terra);padding:12px 14px}
+.est-ben-t{font-size:.6rem;letter-spacing:3px;text-transform:uppercase;color:var(--terra);font-weight:600;margin-bottom:3px}
+.est-ben-d{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.82rem;color:#4A2A10;line-height:1.5}
+/* Módulos de altura */
+.est-modulos{background:var(--warm);border:1px solid var(--brd);padding:20px 24px;margin-bottom:24px}
+.est-mod-t{font-size:.58rem;letter-spacing:4px;text-transform:uppercase;color:var(--terra);font-weight:600;margin-bottom:14px}
+.est-mod-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.est-mod{text-align:center;padding:12px 8px;background:var(--paper);border:1px solid var(--brd);transition:all .3s;cursor:none}
+.est-mod:hover{background:var(--terra);border-color:var(--terra)}
+.est-mod:hover .est-mod-name{color:#FAF6F0}
+.est-mod:hover .est-mod-desc{color:rgba(250,246,240,.7)}
+.est-mod-sym{font-size:1.4rem;margin-bottom:6px}
+.est-mod-name{font-family:'Cormorant Garamond',serif;font-size:.88rem;font-weight:600;color:var(--dark);margin-bottom:3px;transition:color .3s}
+.est-mod-desc{font-size:.65rem;color:#4A2A10;transition:color .3s}
+/* Foto placeholder producto */
+.est-img{aspect-ratio:4/5;background:linear-gradient(160deg,var(--warm) 0%,var(--sand) 100%);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;position:relative;border:1px solid var(--brd)}
+.est-img::before{content:'';position:absolute;inset:12px;border:1px solid rgba(139,74,42,.12)}
+.est-img-sym{font-size:5rem}
+.est-img-caption{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.78rem;color:var(--terra);letter-spacing:2px;text-align:center;padding:0 20px}
+.est-img-badge{position:absolute;bottom:20px;left:20px;right:20px;background:rgba(90,48,24,.85);backdrop-filter:blur(4px);padding:10px 14px;border-left:2px solid var(--terra2)}
+.est-img-badge-t{font-size:.5rem;letter-spacing:3px;text-transform:uppercase;color:var(--terra2);margin-bottom:2px}
+.est-img-badge-d{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.78rem;color:rgba(250,246,240,.75)}
+
+/* Otros productos */
+.prod-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--brd);margin-top:8px}
+.pcard{background:var(--warm);overflow:hidden;cursor:none;transition:all .3s;position:relative}
+.pcard:hover{background:#C8A07A;transform:translateY(-3px);box-shadow:0 8px 24px rgba(139,74,42,.18)}
+.pcard::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(to right,var(--terra),transparent);opacity:0;transition:opacity .3s;z-index:3}
+.pcard:hover::before{opacity:1}
+.pimg{aspect-ratio:4/5;background:var(--cream);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;position:relative}
+.pimg-sym{font-size:3.5rem;line-height:1}
+.pbadge{position:absolute;top:14px;left:14px;background:rgba(250,246,240,.9);border:1px solid var(--brd);padding:4px 12px;font-size:.5rem;letter-spacing:3px;text-transform:uppercase;color:var(--terra)}
+.poverlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(42,20,8,.75) 0%,transparent 55%);opacity:0;transition:opacity .35s;display:flex;align-items:flex-end;padding:18px}
+.pcard:hover .poverlay{opacity:1}
+.pbtn{width:100%;background:transparent;border:1px solid rgba(250,246,240,.6);color:#FAF6F0;padding:10px;font-family:'Raleway',sans-serif;font-size:.58rem;font-weight:400;letter-spacing:4px;text-transform:uppercase;cursor:pointer;transition:all .3s}
+.pbtn:hover{background:var(--terra);border-color:var(--terra)}
+.pinfo{padding:18px 20px 22px}
+.pname{font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-weight:700;color:var(--dark);margin-bottom:6px}
+.pdesc{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.9rem;color:#4A2A10;line-height:1.75;margin-bottom:10px}
+.pprice{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:700;color:var(--terra)}
+
+/* IA BOX */
+.ia-box{background:var(--warm);border:1px solid var(--brd);border-left:2px solid var(--terra);padding:40px 48px;margin-top:48px;display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center}
+.ib-ttl{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:300;color:var(--dark);margin-bottom:6px}
+.ib-sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.95rem;color:#4A2A10;line-height:1.8}
+.ia-chip{display:inline-flex;align-items:center;gap:8px;background:rgba(139,74,42,.08);border:1px solid var(--brd);padding:5px 14px;border-radius:99px;font-size:.5rem;letter-spacing:3px;text-transform:uppercase;color:var(--terra);margin-bottom:14px;width:fit-content}
+.ia-chip::before{content:'●';color:var(--terra);animation:bl 2s infinite}
+@keyframes bl{0%,100%{opacity:1}50%{opacity:.2}}
+.ia-fn-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.ia-fn{background:rgba(139,74,42,.06);border:1px solid var(--brd2);padding:10px;cursor:pointer;transition:all .3s;font-size:.68rem;color:#4A2A10;text-align:center;border-radius:2px}
+.ia-fn:hover,.ia-fn.active-fn{background:rgba(139,74,42,.15);border-color:var(--terra);color:var(--terra)}
+.ia-fn-sym{display:block;font-size:.9rem;margin-bottom:4px}
+.ia-inp{width:100%;background:transparent;border:none;border-bottom:1px solid var(--brd);color:var(--dark);padding:11px 0;font-family:'Raleway',sans-serif;font-size:.8rem;font-weight:300;outline:none;transition:border-color .3s;margin-bottom:12px}
+.ia-inp:focus{border-bottom-color:var(--terra)}
+.ia-inp::placeholder{color:rgba(139,74,42,.35);font-style:italic}
+.ia-btn{background:transparent;border:1px solid var(--terra);color:var(--terra);padding:11px 24px;font-family:'Raleway',sans-serif;font-size:.6rem;font-weight:500;letter-spacing:4px;text-transform:uppercase;cursor:pointer;transition:all .3s;width:100%}
+.ia-btn:hover{background:var(--terra);color:#FAF6F0}
+.ia-resp{margin-top:12px;padding:14px 16px;background:rgba(139,74,42,.06);border-left:2px solid var(--terra);font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.9rem;color:var(--dark);line-height:1.8;display:none}
+
+/* FONDO SOLIDARIO */
+#s-fondo{background:var(--bark);padding:64px 80px;position:relative;overflow:hidden}
+#s-fondo::before{content:'🐾';position:absolute;right:80px;top:50%;transform:translateY(-50%);font-size:14rem;opacity:.05}
+.fondo-inner{max-width:680px;position:relative;z-index:1}
+.fondo-ttl{font-family:'Cormorant Garamond',serif;font-size:clamp(2rem,3.5vw,3.2rem);font-weight:300;color:#FAF6F0;line-height:1.05;margin-bottom:20px}
+.fondo-ttl em{font-style:italic;color:var(--terra2)}
+.fondo-body{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.05rem;color:rgba(250,246,240,.65);line-height:1.9;margin-bottom:32px}
+/* Termómetro de meta */
+.termometro{background:rgba(255,255,255,.06);border:1px solid rgba(196,120,74,.2);padding:24px 28px;margin-bottom:24px}
+.term-t{font-size:.55rem;letter-spacing:4px;text-transform:uppercase;color:var(--terra2);font-weight:600;margin-bottom:12px}
+.term-bar-wrap{background:rgba(255,255,255,.08);height:10px;border-radius:99px;overflow:hidden;margin-bottom:8px}
+.term-bar{height:100%;border-radius:99px;background:linear-gradient(to right,var(--terra),var(--terra2));transition:width 2s ease}
+.term-meta{display:flex;justify-content:space-between;font-family:'Cormorant Garamond',serif;font-size:.78rem;color:rgba(250,246,240,.45)}
+.term-meta span{color:var(--terra2);font-weight:600}
+.fondo-chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px}
+.fondo-chip{padding:6px 16px;border:1px solid rgba(196,120,74,.3);border-radius:99px;font-size:.58rem;letter-spacing:2px;text-transform:uppercase;color:rgba(250,246,240,.5);font-family:'Raleway',sans-serif;cursor:pointer;transition:all .3s}
+.fondo-chip.sel{background:rgba(196,120,74,.2);border-color:var(--terra2);color:var(--terra2)}
+
+/* SINERGIA */
+#s-sinergia{background:var(--paper);padding:64px 80px}
+.sin-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--brd);margin-top:32px}
+.scard{background:var(--warm);padding:26px 20px;text-decoration:none;color:inherit;display:block;transition:all .3s;cursor:none;position:relative;overflow:hidden}
+.scard::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--sc,var(--terra));transform:scaleX(0);transform-origin:left;transition:transform .4s}
+.scard:hover{background:var(--terra);transform:translateY(-4px);box-shadow:0 8px 24px rgba(139,74,42,.22)}
+.scard:hover::after{transform:scaleX(1)}
+.scard:hover .sc-name{color:#FAF6F0}
+.scard:hover .sc-why{color:rgba(250,246,240,.75)}
+.sc-sym{font-size:1.1rem;color:var(--sc,var(--terra));margin-bottom:10px;display:block}
+.sc-tag{font-size:.5rem;letter-spacing:4px;text-transform:uppercase;color:var(--sc,var(--terra));margin-bottom:5px}
+.sc-name{font-family:'Cormorant Garamond',serif;font-size:1rem;font-weight:700;color:var(--dark);margin-bottom:8px;transition:color .3s}
+.sc-why{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.85rem;color:#4A2A10;line-height:1.65;transition:color .3s}
+.sc-arr{position:absolute;bottom:12px;right:14px;font-size:.6rem;color:var(--sc,var(--terra));opacity:0;transition:opacity .3s,transform .3s;transform:translateX(-4px)}
+.scard:hover .sc-arr{opacity:1;transform:translateX(0)}
+
+/* HISTORIA */
+.historia{display:grid;grid-template-columns:1fr 1fr;min-height:60vh}
+.hleft{background:var(--warm);padding:80px 64px;display:flex;flex-direction:column;justify-content:center;border-right:1px solid var(--brd)}
+.hright{background:var(--paper);padding:80px 64px;display:flex;flex-direction:column;justify-content:center}
+.h-ttl{font-family:'Cormorant Garamond',serif;font-size:clamp(2rem,3vw,3rem);font-weight:300;color:var(--dark);line-height:1.05;margin-bottom:20px}
+.h-ttl em{font-style:italic;color:var(--terra)}
+.h-body{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.05rem;color:#4A2A10;line-height:2;margin-bottom:28px}
+.h-slogan{padding-top:24px;border-top:1px solid var(--brd)}
+.h-sq{font-size:2.5rem;color:var(--terra);font-family:'Cormorant Garamond',serif;line-height:.8;margin-bottom:8px;display:block;opacity:.5}
+.h-st{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.05rem;color:var(--dark)}
+
+/* CIERRE */
+.cierre{background:linear-gradient(160deg,#3A1A08 0%,#5A3018 100%);padding:90px 80px;text-align:center;position:relative;overflow:hidden}
+.cierre::before{content:'🐾';position:absolute;left:10%;top:50%;transform:translateY(-50%);font-size:12rem;opacity:.04}
+.cierre::after{content:'🐾';position:absolute;right:8%;bottom:10%;font-size:8rem;opacity:.04;transform:rotate(20deg)}
+.c-line{width:48px;height:1px;background:linear-gradient(to right,transparent,rgba(212,184,150,.4),transparent);margin:0 auto 36px}
+.c-quote{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:clamp(1.8rem,3.5vw,3rem);font-weight:300;color:#FAF6F0;line-height:1.3;max-width:680px;margin:0 auto;position:relative;z-index:1}
+.c-quote em{font-style:normal;color:var(--terra2)}
+.c-firma{margin-top:20px;font-size:.52rem;letter-spacing:6px;text-transform:uppercase;color:rgba(250,246,240,.3);position:relative;z-index:1}
+.c-wrap{margin-top:40px;display:flex;flex-direction:column;align-items:center;gap:12px;position:relative;z-index:1}
+.c-cta{display:inline-flex;align-items:center;gap:12px;padding:13px 44px;border:1px solid rgba(196,120,74,.4);color:#FAF6F0;font-size:.58rem;letter-spacing:5px;text-transform:uppercase;text-decoration:none;transition:all .3s;cursor:none}
+.c-cta:hover{background:rgba(196,120,74,.2)}
+.c-back{font-size:.5rem;letter-spacing:4px;text-transform:uppercase;color:rgba(250,246,240,.25);text-decoration:none;transition:color .3s}
+.c-back:hover{color:#FAF6F0}
+
+footer{padding:20px 80px;background:#2A1408;border-top:1px solid rgba(139,74,42,.2);display:flex;justify-content:space-between;align-items:center}
+.fl{font-family:'Cormorant Garamond',serif;font-size:.82rem;letter-spacing:5px;color:rgba(250,246,240,.2)}
+.fl em{color:var(--terra2);font-style:normal}
+.fr{font-size:.46rem;letter-spacing:3px;color:rgba(250,246,240,.1);text-transform:uppercase}
+.wa-float{position:fixed;bottom:28px;right:28px;width:50px;height:50px;background:#25D366;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:500;text-decoration:none;animation:waPulse 3s infinite;transition:transform .3s;cursor:none}
+.wa-float:hover{transform:scale(1.1)}
+.wa-float svg{width:25px;height:25px;fill:white}
+@keyframes waPulse{0%,100%{box-shadow:0 0 0 0 rgba(37,211,102,.4)}70%{box-shadow:0 0 0 12px rgba(37,211,102,0)}}
+.reveal{opacity:0;transform:translateY(18px);transition:opacity .85s ease,transform .85s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+
+@media(max-width:960px){
+  #screen-hero{grid-template-columns:1fr}
+  .hero-right{height:50vw}
+  .hero-left{padding:90px 28px 60px}
+  #screen-menu,.historia{grid-template-columns:1fr}
+  #screen-menu,.hleft,.hright{padding:56px 28px}
+  #s-productos,#s-fondo,#s-sinergia{padding:56px 28px}
+  .estrella{grid-template-columns:1fr}
+  .ia-box{grid-template-columns:1fr;padding:28px}
+  .sin-grid,.prod-grid{grid-template-columns:1fr 1fr}
+  nav{padding:14px 20px}
+  .nav-pills{display:none}
+  footer{padding:18px 24px;flex-direction:column;gap:8px}
+  .cierre{padding:70px 28px}
+}
+@media(max-width:600px){.sin-grid,.prod-grid{grid-template-columns:1fr}.menu-grid{grid-template-columns:1fr 1fr}.est-modulos .est-mod-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="cur"></div>
+<div id="cur2"></div>
+
+<nav>
+  <div class="nav-logo"><em>Oasis Animal</em> · El Pasaje</div>
+  <div class="nav-pills">
+    <div class="nav-pill active" onclick="showSec('productos')">Productos</div>
+    <div class="nav-pill" onclick="showSec('fondo')">Fondo Solidario</div>
+    <div class="nav-pill" onclick="showSec('sinergia')">Alianzas</div>
+    <div class="nav-pill" onclick="showSec('historia')">Nosotras</div>
+  </div>
+  <a href="index.html" class="nav-back">El Pasaje</a>
+</nav>
+
+<!-- HERO -->
+<section id="screen-hero">
+  <div class="hero-left reveal">
+    <div class="hero-eye">Oasis Animal · Por Agustina · El Pasaje</div>
+    <h1 class="hero-title">
+      Diseñado por alguien<br>que sabe que<br>
+      <em>son familia.</em>
+    </h1>
+    <div class="hero-div"></div>
+    <p class="hero-sub">Accesorios 3D para mascotas diseñados con amor real. Cada compra apoya el refugio que Agustina sostiene junto a sus socias.</p>
+    <div class="hero-stats">
+      <div class="hstat"><div class="hstat-n">10%</div><div class="hstat-l">de cada venta al refugio</div></div>
+      <div class="hstat"><div class="hstat-n" id="cnt-animales">0</div><div class="hstat-l">animales ayudados</div></div>
+      <div class="hstat"><div class="hstat-n">$50k</div><div class="hstat-l">meta mensual</div></div>
+    </div>
+    <a href="https://wa.me/541165497234?text=Hola! Vi Oasis Animal y quiero consultar 🐾" class="hero-cta" target="_blank">Ver colección 🐾</a>
+  </div>
+  <div class="hero-right">
+    <div class="hero-logo-placeholder">
+      <div class="logo-paw">🐾</div>
+      <div class="logo-name">Oasis Animal</div>
+      <div class="logo-sub">El Pasaje 3D Studio</div>
+    </div>
+    <div class="solidario-badge">
+      <div class="sb-t">🤝 Línea solidaria</div>
+      <div class="sb-d">El 10% de cada venta va directo al refugio. Comprás un objeto, salvás una vida.</div>
+    </div>
+  </div>
+</section>
+<div class="sep-terra"></div>
+
+<!-- MENÚ -->
+<section id="screen-menu">
+  <div class="reveal" style="margin-bottom:32px">
+    <div class="eye">El universo Oasis Animal</div>
+    <div class="menu-ttl">Cuatro mundos <em>con propósito</em></div>
+  </div>
+  <div class="menu-grid reveal" style="transition-delay:.15s">
+    <div class="mcard" onclick="showSec('productos')">
+      <div class="mc-n">01</div>
+      <span class="mc-sym">🦴</span>
+      <div class="mc-ttl">Productos</div>
+      <div class="mc-desc">El Soporte Evolutivo y más accesorios diseñados para el bienestar real de tu mascota.</div>
+      <div class="mc-arr">Ver →</div>
+    </div>
+    <div class="mcard" onclick="showSec('fondo')">
+      <div class="mc-n">02</div>
+      <span class="mc-sym">❤️</span>
+      <div class="mc-ttl">Fondo Solidario</div>
+      <div class="mc-desc">Cada venta financia el refugio. Seguí el termómetro y elegí el destino de tu aporte.</div>
+      <div class="mc-arr">Ver →</div>
+    </div>
+    <div class="mcard" onclick="showSec('sinergia')">
+      <div class="mc-n">03</div>
+      <span class="mc-sym">✦</span>
+      <div class="mc-ttl">Alianzas</div>
+      <div class="mc-desc">Oasis del Estero, Coquette, Ánima. El ecosistema que une naturaleza, bienestar y propósito.</div>
+      <div class="mc-arr">Ver →</div>
+    </div>
+    <div class="mcard" onclick="showSec('historia')">
+      <div class="mc-n">04</div>
+      <span class="mc-sym">🐾</span>
+      <div class="mc-ttl">Nosotras</div>
+      <div class="mc-desc">La historia de Agustina y las socias que hacen posible este proyecto.</div>
+      <div class="mc-arr">Ver →</div>
+    </div>
+  </div>
+</section>
+<div class="sep-terra"></div>
+
+<!-- PRODUCTOS -->
+<section id="s-productos" class="csec active">
+  <div style="background:var(--paper);padding:64px 80px">
+    <div class="reveal" style="margin-bottom:40px">
+      <div class="eye" style="margin-bottom:8px">La colección</div>
+      <h2 class="sec-ttl">Ingeniería del <em>cuidado</em></h2>
+    </div>
+
+    <!-- ESTRELLA: Soporte Evolutivo -->
+    <div class="estrella reveal">
+      <div>
+        <div class="est-badge">Producto estrella</div>
+        <h3 class="est-ttl">Soporte Evolutivo<br><em>— crece con ellos.</em></h3>
+        <p class="est-body">Un soporte que no se queda chico. Diseñado para el cachorro de hoy y el perro adulto de mañana — o para tener agua abajo y comida arriba, o para dos perros de distintos tamaños. Sistema modular ajustable en altura.</p>
+        <div class="est-bens">
+          <div class="est-ben"><div class="est-ben-t">Postura</div><div class="est-ben-d">Altura correcta previene problemas cervicales y mejora la digestión.</div></div>
+          <div class="est-ben"><div class="est-ben-t">Modular</div><div class="est-ben-d">Ajustás la altura según el crecimiento o el tamaño de cada mascota.</div></div>
+          <div class="est-ben"><div class="est-ben-t">Dual</div><div class="est-ben-d">Comida arriba, agua abajo — o dos alturas para dos perros distintos.</div></div>
+          <div class="est-ben"><div class="est-ben-t">Fácil limpieza</div><div class="est-ben-d">Superficie lisa, sin grietas. Apto para lavar con agua y jabón.</div></div>
+        </div>
+        <div class="est-modulos">
+          <div class="est-mod-t">Módulos disponibles por tamaño</div>
+          <div class="est-mod-grid">
+            <div class="est-mod"><div class="est-mod-sym">🐶</div><div class="est-mod-name">Cachorro</div><div class="est-mod-desc">Altura inicial · Desde 0 a 6 meses</div></div>
+            <div class="est-mod"><div class="est-mod-sym">🐕</div><div class="est-mod-name">Mediano</div><div class="est-mod-desc">Módulo +1 · Para razas medianas</div></div>
+            <div class="est-mod"><div class="est-mod-sym">🦮</div><div class="est-mod-name">Grande</div><div class="est-mod-desc">Módulo +2 · Para razas grandes</div></div>
+          </div>
+        </div>
+        <a href="https://wa.me/541165497234?text=Hola! Quiero el Soporte Evolutivo de Oasis Animal 🐾" target="_blank"
+           style="display:inline-flex;align-items:center;gap:10px;padding:13px 32px;background:var(--terra);color:#FAF6F0;font-size:.6rem;letter-spacing:4px;text-transform:uppercase;text-decoration:none;cursor:none;transition:background .3s">
+          Quiero el mío → 
+        </a>
+        <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.82rem;color:rgba(74,42,16,.55);margin-top:8px">10% de esta compra va al refugio · Vos elegís el destino</div>
+      </div>
+      <div>
+        <div class="est-img">
+          <div class="est-img-sym">🐾</div>
+          <div class="est-img-caption">Soporte Evolutivo · Sistema modular 3D · Oasis Animal</div>
+          <div class="est-img-badge">
+            <div class="est-img-badge-t">✦ Producto real</div>
+            <div class="est-img-badge-d">Próximamente fotos reales de Mariana</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Otros productos -->
+    <div class="eye" style="margin-bottom:16px">También de Oasis Animal</div>
+    <div class="prod-grid">
+      <div class="pcard reveal">
+        <div class="pimg"><div class="pimg-sym">🔑</div></div>
+        <div class="pbadge">● Solidario</div>
+        <div class="poverlay"><button class="pbtn" onclick="window.open('https://wa.me/541165497234?text=Hola! Quiero el Llavero Huellita de Oasis Animal 🐾','_blank')">Consultar →</button></div>
+        <div class="pinfo">
+          <div class="pname">Llavero Huellita</div>
+          <div class="pdesc">Huella impresa en 3D con el nombre de tu mascota. El recuerdo que llevás con vos para siempre.</div>
+          <div class="pprice">$800</div>
+        </div>
+      </div>
+      <div class="pcard reveal" style="transition-delay:.12s">
+        <div class="pimg"><div class="pimg-sym">🏷️</div></div>
+        <div class="pbadge">● Personalizable</div>
+        <div class="poverlay"><button class="pbtn" onclick="window.open('https://wa.me/541165497234?text=Hola! Quiero la Chapa ID de Oasis Animal 🐾','_blank')">Consultar →</button></div>
+        <div class="pinfo">
+          <div class="pname">Chapa ID</div>
+          <div class="pdesc">Identificación para el collar con nombre, número y código QR de contacto de emergencia. Impresa en material resistente.</div>
+          <div class="pprice">$600</div>
+        </div>
+      </div>
+      <div class="pcard reveal" style="transition-delay:.24s">
+        <div class="pimg"><div class="pimg-sym">🪴</div></div>
+        <div class="pbadge">Kit Oasis</div>
+        <div class="poverlay"><button class="pbtn" onclick="window.open('https://wa.me/541165497234?text=Hola! Quiero el Kit Rincón Natural de Oasis 🐾🌿','_blank')">Consultar →</button></div>
+        <div class="pinfo">
+          <div class="pname">Kit Rincón Natural</div>
+          <div class="pdesc">Soporte Evolutivo + maceta con pasto para gatos o plantas pet-friendly de Oasis del Estero. El espacio que tu mascota merece.</div>
+          <div class="pprice">A cotizar</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- IA Pet Advisor -->
+    <div class="ia-box reveal">
+      <div>
+        <div class="eye" style="margin-bottom:8px">Pet Advisor</div>
+        <div class="ib-ttl">¿Qué mascota tenés?</div>
+        <p class="ib-sub">La IA te recomienda el soporte ideal según el tamaño y la edad de tu perro o gato. Sin complicaciones.</p>
+        <div class="ia-fn-grid" style="margin-top:16px">
+          <div class="ia-fn" onclick="setFn(this,'pet','Tengo un cachorro pequeño, ¿qué soporte le recomendás?')"><span class="ia-fn-sym">🐶</span>Cachorro</div>
+          <div class="ia-fn" onclick="setFn(this,'pet','Tengo un perro adulto grande, ¿cuál es la altura ideal?')"><span class="ia-fn-sym">🦮</span>Adulto grande</div>
+          <div class="ia-fn" onclick="setFn(this,'pet','Tengo dos perros de distintos tamaños, ¿cómo uso el soporte?')"><span class="ia-fn-sym">🐕🐕</span>Dos mascotas</div>
+          <div class="ia-fn" onclick="setFn(this,'pet','Tengo un gato, ¿hay algo para él en Oasis Animal?')"><span class="ia-fn-sym">🐱</span>Gato</div>
+        </div>
+      </div>
+      <div>
+        <div class="ia-chip">IA activa · Pet Advisor</div>
+        <input class="ia-inp" type="text" id="ia-pet" placeholder="Ej: tengo un golden de 6 meses que está creciendo rápido...">
+        <button class="ia-btn" onclick="callIA('pet')">Recomendar soporte →</button>
+        <div class="ia-resp" id="r-pet"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FONDO SOLIDARIO -->
+<section id="s-fondo" class="csec">
+  <div style="background:var(--bark);padding:64px 80px;position:relative;overflow:hidden">
+    <div style="position:absolute;inset:0;background-image:radial-gradient(circle at 80% 50%,rgba(196,120,74,.08) 0%,transparent 60%)"></div>
+    <div class="fondo-inner reveal">
+      <div class="eye" style="margin-bottom:12px;color:var(--terra2)"><span style="width:18px;height:1px;background:var(--terra2);display:inline-block;margin-right:12px"></span>El propósito</div>
+      <h2 class="fondo-ttl">Cada venta<br><em>salva una vida.</em></h2>
+      <p class="fondo-body">Agustina sostiene activamente el refugio junto a sus socias. El 10% de cada venta va directo al fondo — rescate, veterinaria, alimentación. Al comprar elegís el destino de tu aporte.</p>
+      <div class="termometro">
+        <div class="term-t">🎯 Meta mensual del Refugio Oasis Animal</div>
+        <div class="term-bar-wrap"><div class="term-bar" id="term-bar" style="width:0%"></div></div>
+        <div class="term-meta"><span>$0</span><span id="term-val">Cargando...</span><span>$50.000</span></div>
+      </div>
+      <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.9rem;color:rgba(250,246,240,.5);margin-bottom:20px">Al momento de tu compra, elegís el destino:</div>
+      <div class="fondo-chips">
+        <div class="fondo-chip sel" onclick="toggleChip(this)">🏠 Refugio Oasis Animal</div>
+        <div class="fondo-chip" onclick="toggleChip(this)">🧠 Mentes Brillantes</div>
+        <div class="fondo-chip" onclick="toggleChip(this)">✦ Fondo General</div>
+      </div>
+      <a href="https://wa.me/541165497234?text=Hola! Quiero apoyar el Refugio Oasis Animal a través de una compra 🐾" target="_blank"
+         style="display:inline-flex;align-items:center;gap:10px;padding:13px 32px;border:1px solid rgba(196,120,74,.4);color:#FAF6F0;font-size:.6rem;letter-spacing:4px;text-transform:uppercase;text-decoration:none;cursor:none;transition:all .3s">
+        Quiero apoyar →
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- SINERGIA -->
+<section id="s-sinergia" class="csec">
+  <div style="background:var(--paper);padding:64px 80px">
+    <div class="reveal" style="margin-bottom:32px">
+      <div class="eye" style="margin-bottom:10px">El ecosistema</div>
+      <h2 style="font-family:'Cormorant Garamond',serif;font-size:clamp(1.8rem,3vw,2.8rem);font-weight:300;color:var(--dark);margin-bottom:12px">Oasis Animal <em style="font-style:italic;color:var(--terra)">dialoga</em> con estas líneas</h2>
+      <p style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.95rem;color:#4A2A10;line-height:1.8;max-width:560px">Cada línea del Pasaje tiene un propósito. Algunas se encuentran naturalmente con Oasis Animal.</p>
+    </div>
+    <div class="sin-grid reveal">
+      <a href="oasis-estero.html" class="scard" style="--sc:#4A7A3A">
+        <span class="sc-sym" style="color:#4A7A3A">🌿</span>
+        <div class="sc-tag">Oasis del Estero · Fede</div>
+        <div class="sc-name">El Rincón Natural</div>
+        <div class="sc-why">Fede y Agustina son pareja. El soporte evolutivo más una maceta con pasto para gatos o plantas pet-friendly. Tecnología verde para tu mascota.</div>
+        <span class="sc-arr">→</span>
+      </a>
+      <a href="coquette.html" class="scard" style="--sc:#8B2A3A">
+        <span class="sc-sym" style="color:#8B2A3A">✦</span>
+        <div class="sc-tag">Coquette · Olivia</div>
+        <div class="sc-name">Un regalo con alma</div>
+        <div class="sc-why">Para la mamá perruna que también merece algo para ella. Llavero Huellita más un accesorio Coquette — el kit para quien ama cuidar.</div>
+        <span class="sc-arr">→</span>
+      </a>
+      <a href="index.html" class="scard" style="--sc:#8B6500">
+        <span class="sc-sym" style="color:#8B6500">◎</span>
+        <div class="sc-tag">Ánima · Nely</div>
+        <div class="sc-name">Bienestar completo</div>
+        <div class="sc-why">El espacio de meditación de Nely más el rincón de tu mascota. Cuando el bienestar propio y el de los animales se encuentran en el mismo cuarto.</div>
+        <span class="sc-arr">→</span>
+      </a>
+      <a href="index.html" class="scard" style="--sc:#2A5A1A">
+        <span class="sc-sym" style="color:#2A5A1A">🤝</span>
+        <div class="sc-tag">El Pasaje · Solidario</div>
+        <div class="sc-name">10% a tu causa</div>
+        <div class="sc-why">En cualquier línea del Pasaje podés elegir destinar el 10% de tu compra al Refugio Oasis Animal. El ecosistema completo apoya la causa.</div>
+        <span class="sc-arr">→</span>
+      </a>
+    </div>
+
+    <!-- IA Combinador -->
+    <div class="ia-box reveal">
+      <div>
+        <div class="eye" style="margin-bottom:8px">IA · Combinador</div>
+        <div class="ib-ttl">¿Para quién es el kit?</div>
+        <p class="ib-sub">La IA arma el combo perfecto entre Oasis Animal y otras líneas según la persona y la ocasión.</p>
+      </div>
+      <div>
+        <div class="ia-chip">IA activa</div>
+        <input class="ia-inp" type="text" id="ia-sin" placeholder="Ej: regalo para una amiga que ama los perros y el bienestar...">
+        <button class="ia-btn" onclick="callIA('sin')">Armar el kit →</button>
+        <div class="ia-resp" id="r-sin"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HISTORIA -->
+<section id="s-historia" class="csec">
+  <div class="historia">
+    <div class="hleft reveal">
+      <div class="eye" style="margin-bottom:16px">Quiénes somos</div>
+      <h2 class="h-ttl">Agustina y<br><em>las que cuidan.</em></h2>
+      <p class="h-body">Oasis Animal nació de la convicción de que los animales son familia. Agustina sostiene el refugio junto a sus socias — un proyecto de rescate, cuidado y adopción responsable. La línea 3D es el canal que convierte cada compra en impacto real.<br><br>Cada pieza diseñada acá tiene un propósito doble: hacerle la vida mejor a tu mascota y financiar el rescate de quienes no tienen hogar todavía.</p>
+      <div class="h-slogan">
+        <span class="h-sq">"</span>
+        <div class="h-st">Comprás un objeto. Salvás una vida.</div>
+      </div>
+    </div>
+    <div class="hright reveal" style="transition-delay:.2s">
+      <div class="ia-chip">IA activa · Pet Advisor</div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:300;color:var(--dark);margin-bottom:8px">¿Qué mascota tenés?</div>
+      <p style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.92rem;color:#4A2A10;line-height:1.8;margin-bottom:24px">Contanos el tamaño y la edad de tu compañero y te recomendamos el soporte ideal para su etapa.</p>
+      <input class="ia-inp" type="text" id="ia-hist" placeholder="Ej: tengo una beagle de 4 meses que ya está grande...">
+      <button class="ia-btn" onclick="callIA('hist')">Recomendar →</button>
+      <div class="ia-resp" id="r-hist"></div>
+    </div>
+  </div>
+</section>
+
+<!-- CIERRE -->
+<section class="cierre">
+  <div class="c-line"></div>
+  <blockquote class="c-quote reveal">"Tu mascota es familia.<br><em>Diseñamos para eso.</em>"</blockquote>
+  <div class="c-firma reveal" style="transition-delay:.2s">Oasis Animal · El Pasaje 3D Studio · Buenos Aires · Argentina</div>
+  <div class="c-wrap reveal" style="transition-delay:.35s">
+    <a href="https://wa.me/541165497234?text=Hola! Vi Oasis Animal y quiero consultar 🐾" class="c-cta" target="_blank">🐾 Quiero consultar</a>
+    <a href="index.html" class="c-back">← Ver todas las líneas de El Pasaje</a>
+  </div>
+</section>
+
+<footer>
+  <div class="fl"><em>Oasis Animal</em> · El Pasaje 3D Studio</div>
+  <div class="fr">© 2026 · Buenos Aires · Argentina</div>
+</footer>
+
+<a href="https://wa.me/541165497234?text=Hola! Vi Oasis Animal 🐾" class="wa-float" target="_blank">
+  <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+</a>
+
+<div id="back-banner" style="position:fixed;top:70px;left:20px;z-index:250;opacity:0;transform:translateX(-10px);transition:opacity .4s,transform .4s;pointer-events:none">
+  <a href="index.html" style="display:flex;align-items:center;gap:8px;background:rgba(250,246,240,.95);backdrop-filter:blur(8px);border:1px solid var(--brd);padding:8px 16px;font-family:'Raleway',sans-serif;font-size:.52rem;letter-spacing:3px;text-transform:uppercase;color:var(--terra);text-decoration:none">← El Pasaje</a>
+</div>
+
+<script>
+const cur=document.getElementById('cur'),cur2=document.getElementById('cur2');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cur.style.transform=`translate(${mx-4}px,${my-4}px)`});
+(function loop(){rx+=(mx-rx)*.1;ry+=(my-ry)*.1;cur2.style.transform=`translate(${rx-15}px,${ry-15}px)`;requestAnimationFrame(loop)})();
+document.querySelectorAll('a,button,.mcard,.pcard,.scard,.ia-fn,.est-mod,.fondo-chip').forEach(el=>{
+  el.addEventListener('mouseenter',()=>{cur.style.width='14px';cur.style.height='14px'});
+  el.addEventListener('mouseleave',()=>{cur.style.width='8px';cur.style.height='8px'});
+});
+
+const obs=new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting)x.target.classList.add('visible')})},{threshold:.06});
+document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+
+const SECS=['productos','fondo','sinergia','historia'];
+function showSec(id){
+  SECS.forEach(s=>{const el=document.getElementById('s-'+s);if(!el)return;el.classList.remove('active');setTimeout(()=>{if(!el.classList.contains('active'))el.style.display='none'},480)});
+  document.querySelectorAll('.nav-pill').forEach(n=>n.classList.remove('active'));
+  document.querySelectorAll('.mcard').forEach(c=>c.classList.remove('sel'));
+  const t=document.getElementById('s-'+id);
+  if(t){t.style.display='block';setTimeout(()=>t.classList.add('active'),10);t.scrollIntoView({behavior:'smooth',block:'start'})}
+  const idx=SECS.indexOf(id);
+  if(idx>=0){document.querySelectorAll('.nav-pill')[idx]?.classList.add('active');document.querySelectorAll('.mcard')[idx]?.classList.add('sel')}
+}
+
+// Termómetro
+setTimeout(()=>{
+  const pct=62;
+  const bar=document.getElementById('term-bar');
+  const val=document.getElementById('term-val');
+  if(bar)bar.style.width=pct+'%';
+  if(val)val.innerHTML='<span>$31.000 recaudados</span>';
+},600);
+
+// Contador animales
+const co=new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting){
+  let v=0;const t=setInterval(()=>{v=Math.min(v+2,147);document.getElementById('cnt-animales').textContent=v;if(v>=147)clearInterval(t)},25);co.disconnect();
+}})});
+const hero=document.getElementById('screen-hero');if(hero)co.observe(hero);
+
+// Chips fondo
+function toggleChip(el){
+  document.querySelectorAll('.fondo-chip').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+// Scroll banner
+window.addEventListener('scroll',function(){
+  const b=document.getElementById('back-banner');
+  if(window.scrollY>300){b.style.opacity='1';b.style.transform='translateX(0)';b.style.pointerEvents='auto'}
+  else{b.style.opacity='0';b.style.transform='translateX(-10px)';b.style.pointerEvents='none'}
+});
+
+function setFn(el,tipo,texto){
+  el.closest('.ia-fn-grid').querySelectorAll('.ia-fn').forEach(f=>f.classList.remove('active-fn'));
+  el.classList.add('active-fn');
+  const inp=document.getElementById('ia-'+tipo);
+  if(inp){inp.value=texto;inp.focus()}
+}
+
+const SYS=`Sos el asistente de Oasis Animal, la línea solidaria de Agustina dentro de El Pasaje 3D Studio. Agustina sostiene el refugio junto a sus socias. El 10% de cada venta va al refugio.
+
+Productos:
+- Soporte Evolutivo: sistema modular ajustable en altura. Cachorro pequeño → módulo inicial. Mediano → módulo +1. Grande → módulo +2. También se usa dual: comida arriba/agua abajo, o dos alturas para dos perros distintos. Mejora postura y digestión.
+- Llavero Huellita ($800): huella 3D con nombre de la mascota
+- Chapa ID ($600): con nombre, número y QR de contacto de emergencia
+- Kit Rincón Natural: Soporte + maceta pet-friendly de Oasis del Estero (Fede, pareja de Agustina)
+
+Destino del 10%: Refugio Oasis Animal (rescate/veterinaria/alimento), Mentes Brillantes, o Fondo General. El cliente elige al comprar.
+
+WA: +54 11 6549-7234. Respondés en español rioplatense, tono cálido y empático. Máximo 3 oraciones. Siempre mencionás el impacto solidario.`;
+
+const FB={
+  pet:['Para un cachorro en crecimiento, el Soporte Evolutivo módulo inicial es perfecto — cuando crezca, agregás el módulo siguiente sin comprar uno nuevo.','Para dos perros de distintos tamaños, el Soporte Evolutivo se configura dual: una altura para cada uno. Consultanos las medidas exactas por WA.','Para gatos también funciona el Kit Rincón Natural — soporte a altura baja más maceta con pasto felino de Oasis del Estero.'],
+  sin:['Para una amiga que ama los perros: Llavero Huellita + voucher para el Soporte Evolutivo. Un regalo con alma que encima apoya el refugio.','Kit completo: Soporte Evolutivo + maceta pet-friendly (Oasis del Estero) + Llavero Huellita. El rincón natural de tu mascota, completo.'],
+  hist:['Para una beagle en crecimiento, el módulo inicial del Soporte Evolutivo la acompaña de cachorra a adulta — nunca lo va a superar en altura.']
+};
+
+async function callIA(tipo){
+  const ids={pet:'ia-pet',sin:'ia-sin',hist:'ia-hist'};
+  const rid={pet:'r-pet',sin:'r-sin',hist:'r-hist'};
+  const inp=document.getElementById(ids[tipo]);
+  const resp=document.getElementById(rid[tipo]);
+  if(!inp||!resp)return;
+  const t=inp.value.trim();if(!t){inp.focus();return}
+  resp.style.display='block';resp.textContent='···';
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:220,system:SYS,messages:[{role:'user',content:t}]})
+    });
+    const d=await r.json();resp.textContent=d.content?.[0]?.text||'Escribinos al WA y te ayudamos 🐾'
+  }catch(e){
+    const arr=FB[tipo]||FB.pet;resp.textContent=arr[Math.floor(Math.random()*arr.length)]
+  }
+}
+</script>
+</body>
+</html>
