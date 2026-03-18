@@ -63,7 +63,7 @@ st.markdown("""
 # ─────────────────────────────────────────────
 #  CONEXION Y HELPERS
 # ─────────────────────────────────────────────
-engine = create_engine("sqlite:///elpasaje_v2.db")
+import os as _os; DB_PATH = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "elpasaje_v2.db"); engine = create_engine(f"sqlite:///{DB_PATH}")
 
 LINEAS = {
     "admin":            {"nombre": "Administracion",   "color": "#1E3A8A", "emoji": "🏛️"},
