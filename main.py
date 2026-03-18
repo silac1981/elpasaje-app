@@ -72,9 +72,9 @@ LINEAS = {
     "oasis_animal":     {"nombre": "Oasis Animal",     "color": "#F472B6", "emoji": "🐾"},
     "oasis_del_estero": {"nombre": "Oasis del Estero", "color": "#34D399", "emoji": "🌱"},
     "pharma_delux":     {"nombre": "Pharma DeLux",     "color": "#FBBF24", "emoji": "💊"},
-    "aviation":         {"nombre": "Aviation",         "color": "#60A5FA", "emoji": "✈️"},
+    "aviation":         {"nombre": "Aviation Pro",     "color": "#0F3460", "emoji": "✈️"},
     "olivia_coquette":  {"nombre": "Coquette",         "color": "#F9A8D4", "emoji": "🎀"},
-    "francisco_sport":  {"nombre": "Sport (Francisco)","color": "#34D399", "emoji": "⚽"},
+    "francisco_sport":  {"nombre": "Sport (Francisco)","color": "#F97316", "emoji": "⚽"},
     "constantino_tech": {"nombre": "Core Tech (Constantino)", "color": "#64748B", "emoji": "⚙️"},
 }
 
