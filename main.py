@@ -409,10 +409,16 @@ elif menu == "🛠️ Produccion (Fer)":
     }
 
     try:
-        todos_pedidos = pd.read_sql(
-            "SELECT * FROM orders WHERE status != 'Cancelado' ORDER BY date DESC",
-            engine
-        )
+        todos_pedidos = pd.read_sql("""
+            SELECT o.id, o.client_id, o.status, o.date, o.notas,
+                   oi.product_sku, oi.cantidad, oi.precio_unitario,
+                   p.name as product_name
+            FROM orders o
+            LEFT JOIN order_items oi ON oi.order_id = o.id
+            LEFT JOIN products p ON p.sku = oi.product_sku
+            WHERE o.status != 'Cancelado'
+            ORDER BY o.date DESC
+        """, engine)
     except:
         todos_pedidos = pd.DataFrame()
 
