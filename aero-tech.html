@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aero-Tech · El Pasaje 3D Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600&family=Raleway:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --aero:#0F3460;--aero2:#185FA5;--mid:#378ADD;
+  --light:#E6F1FB;--paper:#F0F6FF;--chalk:#FFFFFF;
+  --dark:#071428;--stone:#64748B;
+  --brd:rgba(15,52,96,.15);--brd2:rgba(15,52,96,.07);
+  --gold:#D97706;--gold2:#F59E0B;--orange:#F97316;
+  --green:#059669;--sage:#8FAF7A;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--chalk);color:var(--dark);font-family:'Raleway',sans-serif;font-weight:300;overflow-x:hidden;cursor:none}
+#cur{width:8px;height:8px;background:var(--mid);border-radius:50%;position:fixed;top:0;left:0;pointer-events:none;z-index:9999;transition:width .2s,height .2s}
+#cur2{width:28px;height:28px;border:1px solid rgba(15,52,96,.3);border-radius:50%;position:fixed;top:0;left:0;pointer-events:none;z-index:9998}
+
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:400;padding:16px 64px;display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,.97);backdrop-filter:blur(16px);border-bottom:1px solid var(--brd)}
+.nav-logo{font-family:'Cormorant Garamond',serif;font-size:.82rem;font-weight:300;letter-spacing:7px;text-transform:uppercase;color:var(--dark)}
+.nav-logo em{font-style:italic;color:var(--aero2)}
+.nav-back{font-size:.5rem;letter-spacing:3px;text-transform:uppercase;color:var(--stone);text-decoration:none;transition:color .3s}
+.nav-back:hover{color:var(--aero)}
+
+/* ── TABS ── */
+.tab-bar{position:sticky;top:57px;z-index:300;background:rgba(7,20,40,.97);backdrop-filter:blur(12px);display:flex;justify-content:center;border-bottom:1px solid rgba(55,138,221,.2)}
+.tab-btn{padding:14px 28px;font-family:'Raleway',sans-serif;font-size:.52rem;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.4);background:none;border:none;cursor:pointer;transition:all .3s;position:relative;font-weight:500}
+.tab-btn::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--mid);transform:scaleX(0);transition:transform .3s}
+.tab-btn.active{color:#FFFFFF}
+.tab-btn.active::after{transform:scaleX(1)}
+.tab-btn:hover{color:rgba(255,255,255,.8)}
+
+/* ── PANELS ── */
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+/* ── HERO (Inicio) ── */
+.hero{min-height:90vh;background:#071428;position:relative;overflow:hidden;display:flex;align-items:center;padding:100px 100px 80px}
+.hero::before{content:'';position:absolute;inset:0;background-image:repeating-linear-gradient(90deg,rgba(55,138,221,.04) 0,rgba(55,138,221,.04) 1px,transparent 1px,transparent 60px),repeating-linear-gradient(0,rgba(55,138,221,.04) 0,rgba(55,138,221,.04) 1px,transparent 1px,transparent 60px)}
+.hero-left{position:relative;z-index:2;max-width:600px}
+.h-eye{font-size:.54rem;letter-spacing:7px;text-transform:uppercase;color:var(--mid);margin-bottom:20px;display:flex;align-items:center;gap:12px;font-weight:500}
+.h-eye::before{content:'';width:20px;height:1px;background:var(--mid)}
+.h-title{font-family:'Cormorant Garamond',serif;font-size:clamp(3rem,5vw,5.5rem);font-weight:300;line-height:.9;color:#FFFFFF;margin-bottom:24px;letter-spacing:-1px}
+.h-title em{font-style:italic;color:var(--gold);display:block}
+.h-div{width:48px;height:1px;background:linear-gradient(to right,var(--mid),transparent);margin-bottom:22px}
+.h-sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.15rem;color:rgba(255,255,255,.7);line-height:1.9;max-width:440px;margin-bottom:40px}
+.h-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(55,138,221,.2);margin-bottom:36px}
+.hst{background:rgba(255,255,255,.05);padding:18px 12px;text-align:center;border:1px solid rgba(55,138,221,.15)}
+.hst-n{font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:300;color:var(--gold)}
+.hst-l{font-size:.46rem;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.45);margin-top:2px;line-height:1.4}
+.h-ctas{display:flex;gap:12px;flex-wrap:wrap}
+.h-cta{display:inline-flex;align-items:center;gap:10px;padding:13px 32px;background:var(--aero);color:#FFFFFF;font-size:.6rem;font-weight:500;letter-spacing:4px;text-transform:uppercase;text-decoration:none;transition:all .3s;cursor:pointer;border:none}
+.h-cta:hover{background:var(--aero2)}
+.h-cta-sec{display:inline-flex;align-items:center;gap:10px;padding:13px 28px;border:1px solid rgba(55,138,221,.35);color:var(--mid);font-size:.6rem;letter-spacing:4px;text-transform:uppercase;cursor:pointer;background:none;transition:all .3s}
+.h-cta-sec:hover{background:rgba(55,138,221,.1)}
+.hero-right{position:absolute;right:8%;top:50%;transform:translateY(-50%);z-index:2;text-align:center;opacity:.55}
+.hero-right-plane{font-size:8rem;display:block;filter:grayscale(1) brightness(3)}
+.hero-right-txt{font-family:'Cormorant Garamond',serif;font-size:3rem;font-weight:300;color:rgba(255,255,255,.12);letter-spacing:12px;text-transform:uppercase;margin-top:8px}
+
+/* ── STRIP ── */
+.strip{background:linear-gradient(to right,var(--aero),var(--aero2),var(--aero));padding:12px 64px;display:flex;align-items:center;justify-content:center;gap:36px}
+.ss-item{display:flex;align-items:center;gap:8px;font-size:.52rem;letter-spacing:3px;text-transform:uppercase;color:#FFFFFF;font-weight:600}
+.ss-dot{width:5px;height:5px;border-radius:50%;background:var(--gold);flex-shrink:0}
+
+/* ── SECCIONES GENERALES ── */
+.sec{padding:72px 100px}
+.sec-alt{background:var(--light)}
+.sec-dark{background:var(--dark)}
+.eyebrow{font-size:.52rem;letter-spacing:6px;text-transform:uppercase;color:var(--gold);margin-bottom:12px;display:flex;align-items:center;gap:12px;font-weight:700}
+.eyebrow::before{content:'';width:18px;height:1px;background:var(--gold)}
+.sec-ttl{font-family:'Cormorant Garamond',serif;font-size:clamp(2rem,3.5vw,3rem);font-weight:300;color:var(--dark);margin-bottom:28px}
+.sec-ttl em{font-style:italic;color:var(--gold)}
+.sec-dark .sec-ttl{color:#FFFFFF}
+.sec-body{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.1rem;color:#1A2D4A;line-height:1.9;margin-bottom:28px}
+
+/* ── CARDS ── */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.pcard{background:#FFFFFF;border-top:4px solid var(--mid);border:2px solid rgba(15,52,96,.18);padding:28px 24px;cursor:none;transition:all .35s;box-shadow:0 4px 16px rgba(15,52,96,.07)}
+.pcard:hover{background:#071428;border-top-color:var(--gold);transform:translateY(-5px);box-shadow:0 14px 32px rgba(15,52,96,.28)}
+.pcard-tag{font-size:.5rem;letter-spacing:3px;text-transform:uppercase;font-weight:700;margin-bottom:8px;display:inline-block;padding:3px 10px;border-radius:99px}
+.tag-taller{background:rgba(249,115,22,.1);color:var(--orange)}
+.tag-oficina{background:rgba(15,52,96,.1);color:var(--aero2)}
+.tag-tech{background:rgba(100,116,139,.1);color:var(--stone)}
+.tag-custom{background:rgba(217,119,6,.1);color:var(--gold)}
+.pcard-icon{font-size:1.8rem;display:block;margin-bottom:10px;opacity:.7}
+.pcard-name{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:700;color:#0A1628;margin-bottom:8px;transition:color .35s}
+.pcard:hover .pcard-name{color:#FFFFFF}
+.pcard-desc{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.95rem;color:#1A2D4A;line-height:1.6;margin-bottom:12px;transition:color .35s}
+.pcard:hover .pcard-desc{color:rgba(255,255,255,.65)}
+.pcard-price{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:300;color:var(--gold)}
+.pcard-cta{display:block;margin-top:10px;font-size:.5rem;letter-spacing:3px;text-transform:uppercase;color:var(--mid);text-decoration:none;transition:color .3s}
+.pcard:hover .pcard-cta{color:rgba(55,138,221,.7)}
+
+/* Producto estrella */
+.star-wrap{display:grid;grid-template-columns:1.2fr 1fr;gap:48px;align-items:start;padding:48px;background:var(--light);border:1px solid rgba(15,52,96,.15);border-left:4px solid var(--mid);margin-bottom:32px}
+.star-lbl{font-size:.5rem;letter-spacing:4px;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:14px;display:block}
+.star-ttl{font-family:'Cormorant Garamond',serif;font-size:2.6rem;font-weight:300;color:var(--dark);line-height:1;margin-bottom:16px}
+.star-ttl em{font-style:italic;color:var(--gold)}
+.star-body{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.12rem;color:#0A1628;line-height:1.85;margin-bottom:22px}
+.ben-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:24px}
+.ben{background:#FFFFFF;padding:14px 18px;border:1px solid rgba(15,52,96,.15);border-left:3px solid var(--mid)}
+.ben-t{font-size:.56rem;letter-spacing:3px;text-transform:uppercase;color:var(--dark);font-weight:700;margin-bottom:4px}
+.ben-d{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.9rem;color:#1A2D4A;line-height:1.5}
+.star-cta{display:inline-flex;align-items:center;gap:10px;padding:12px 28px;background:var(--aero);color:#FFFFFF;font-size:.58rem;font-weight:500;letter-spacing:4px;text-transform:uppercase;text-decoration:none;cursor:none;transition:all .3s}
+.star-cta:hover{background:var(--dark)}
+.star-img{background:linear-gradient(160deg,var(--light) 0%,rgba(15,52,96,.12) 100%);display:flex;align-items:center;justify-content:center;flex-direction:column;position:relative;border:1px solid var(--brd);min-height:280px;padding:32px}
+.star-img::before{content:'';position:absolute;inset:12px;border:1px solid rgba(15,52,96,.07)}
+.star-img-icon{font-size:4rem;opacity:.35;display:block;margin-bottom:12px;text-align:center}
+.star-img-name{font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:600;color:var(--aero);text-align:center;margin-bottom:6px}
+.star-img-sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.8rem;color:var(--stone);text-align:center}
+.price-row{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--brd);margin-top:16px}
+.pr-item{background:var(--light);padding:10px;text-align:center}
+.pr-n{font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:300;color:var(--aero)}
+.pr-l{font-size:.44rem;letter-spacing:3px;text-transform:uppercase;color:var(--stone)}
+
+/* ── PERSONALIZACIÓN PESTAÑAS INTERNAS ── */
+.sub-tabs{display:flex;gap:4px;margin-bottom:28px;border-bottom:1px solid var(--brd);padding-bottom:0}
+.sub-btn{padding:10px 22px;font-size:.54rem;letter-spacing:3px;text-transform:uppercase;color:var(--stone);background:none;border:none;cursor:pointer;transition:all .3s;border-bottom:2px solid transparent;margin-bottom:-1px}
+.sub-btn.active{color:var(--aero);border-bottom-color:var(--mid)}
+.sub-btn:hover{color:var(--aero2)}
+.sub-panel{display:none}
+.sub-panel.active{display:block}
+
+/* Deportivo */
+.sport-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:20px}
+.sport-card{background:var(--light);border:2px solid rgba(15,52,96,.15);border-top:3px solid var(--mid);padding:20px 16px;text-align:center;cursor:none;transition:all .3s}
+.sport-card:hover{background:var(--aero);border-top-color:var(--gold);transform:translateY(-4px)}
+.sport-card:hover .sp-name,.sport-card:hover .sp-desc{color:#FFFFFF}
+.sport-card:hover .sp-desc{color:rgba(255,255,255,.7)}
+.sp-emoji{font-size:2rem;display:block;margin-bottom:8px}
+.sp-name{font-family:'Cormorant Garamond',serif;font-size:1rem;font-weight:700;color:var(--dark);margin-bottom:4px;transition:color .3s}
+.sp-desc{font-size:.75rem;color:var(--stone);line-height:1.4;transition:color .3s}
+
+/* Legajo box */
+.legajo-box{background:var(--aero);padding:32px 40px;display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center;margin-bottom:24px}
+.lb-left{}
+.lb-label{font-size:.48rem;letter-spacing:5px;text-transform:uppercase;color:rgba(55,138,221,.7);margin-bottom:16px;display:block}
+.lb-preview{font-family:'Cormorant Garamond',serif;font-size:2.8rem;font-weight:300;color:#FFFFFF;letter-spacing:6px;margin-bottom:4px}
+.lb-sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.85rem;color:rgba(255,255,255,.4)}
+.lb-right{}
+.lb-right-ttl{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:300;color:#FFFFFF;margin-bottom:8px}
+.lb-right-body{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.9rem;color:rgba(255,255,255,.6);line-height:1.7;margin-bottom:18px}
+.lb-cta{display:inline-flex;align-items:center;gap:8px;padding:10px 24px;border:1px solid rgba(55,138,221,.4);color:#FFFFFF;font-size:.54rem;letter-spacing:4px;text-transform:uppercase;text-decoration:none;transition:all .3s;cursor:none}
+.lb-cta:hover{background:rgba(55,138,221,.15)}
+
+/* ── DONACIÓN ── */
+.don-wrap{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:start}
+.don-thermo{background:rgba(255,255,255,.04);border:1px solid rgba(55,138,221,.18);border-left:2px solid var(--sage);padding:24px 28px;margin-bottom:24px}
+.don-lbl{font-size:.5rem;letter-spacing:4px;text-transform:uppercase;color:rgba(143,175,122,.8);font-weight:600;margin-bottom:14px}
+.don-bar-bg{background:rgba(255,255,255,.06);height:6px;border-radius:99px;overflow:hidden;margin-bottom:8px}
+.don-bar{height:100%;border-radius:99px;background:linear-gradient(to right,var(--sage),#A8C594);transition:width 2.2s ease}
+.don-row{display:flex;justify-content:space-between;font-family:'Cormorant Garamond',serif;font-size:.78rem;color:rgba(255,255,255,.3)}
+.don-row span{color:rgba(143,175,122,.8)}
+.fondos-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.fondo-card{background:rgba(255,255,255,.04);border:1px solid rgba(55,138,221,.12);padding:16px 20px;cursor:none;transition:all .3s}
+.fondo-card:hover{background:rgba(143,175,122,.08);border-color:rgba(143,175,122,.3)}
+.fondo-emoji{font-size:1.2rem;display:block;margin-bottom:6px}
+.fondo-name{font-family:'Cormorant Garamond',serif;font-size:.95rem;font-weight:600;color:#FFFFFF;margin-bottom:4px}
+.fondo-desc{font-size:.72rem;color:rgba(255,255,255,.35);line-height:1.4}
+.don-info{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.05rem;color:rgba(255,255,255,.8);line-height:1.85}
+.don-pct{font-family:'Cormorant Garamond',serif;font-size:3rem;font-weight:300;color:rgba(143,175,122,.9);display:block;margin-bottom:6px}
+.don-pct-lbl{font-size:.5rem;letter-spacing:4px;text-transform:uppercase;color:rgba(143,175,122,.6)}
+
+/* ── IA ── */
+.ia-wrap{background:#FFFFFF;border:1px solid var(--brd);border-left:3px solid var(--mid);border-top:3px solid var(--mid);padding:40px 48px;display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;margin-top:40px}
+.ia-ttl{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:300;color:var(--dark);margin-bottom:6px}
+.ia-sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.9rem;color:var(--stone);line-height:1.8}
+.ia-chip{display:inline-flex;align-items:center;gap:8px;background:rgba(15,52,96,.07);border:1px solid var(--brd);padding:5px 14px;border-radius:99px;font-size:.46rem;letter-spacing:3px;text-transform:uppercase;color:var(--aero2);margin-bottom:14px}
+.ia-chip::before{content:'';width:6px;height:6px;background:var(--mid);border-radius:50%;animation:bl 2s infinite}
+@keyframes bl{0%,100%{opacity:1}50%{opacity:.2}}
+.ia-fn-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px}
+.ia-fn{background:var(--light);border:1px solid var(--brd);padding:10px;cursor:pointer;transition:all .3s;font-size:.65rem;color:#1A2D4A;text-align:center;font-weight:500}
+.ia-fn:hover,.ia-fn.active-fn{background:rgba(15,52,96,.1);border-color:var(--mid);color:var(--aero)}
+.ia-inp{width:100%;background:transparent;border:none;border-bottom:1px solid var(--brd);color:var(--dark);padding:10px 0;font-family:'Raleway',sans-serif;font-size:.8rem;outline:none;transition:border-color .3s;margin-bottom:12px}
+.ia-inp:focus{border-bottom-color:var(--mid)}
+.ia-inp::placeholder{color:rgba(15,52,96,.3);font-style:italic}
+.ia-btn{background:transparent;border:1px solid var(--aero);color:var(--aero);padding:10px;font-family:'Raleway',sans-serif;font-size:.56rem;font-weight:500;letter-spacing:4px;text-transform:uppercase;cursor:pointer;transition:all .3s;width:100%}
+.ia-btn:hover{background:var(--aero);color:#FFFFFF}
+.ia-resp{margin-top:12px;padding:14px 16px;background:rgba(15,52,96,.04);border-left:2px solid var(--mid);font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.88rem;color:var(--dark);line-height:1.8;display:none}
+
+/* Sinergia */
+.sin-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.scard{background:#FFFFFF;padding:28px 22px;text-decoration:none;color:inherit;display:block;transition:all .35s;cursor:none;border-top:4px solid var(--mid);border:2px solid rgba(15,52,96,.18)}
+.scard:hover{background:#071428;border-top-color:var(--gold);transform:translateY(-4px);box-shadow:0 12px 28px rgba(15,52,96,.22)}
+.scard:hover .sc-name{color:#FFFFFF}
+.scard:hover .sc-why{color:rgba(255,255,255,.6)}
+.sc-tag{font-size:.46rem;letter-spacing:4px;text-transform:uppercase;color:var(--mid);margin-bottom:8px;display:block;font-weight:500}
+.sc-name{font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:700;color:#0A1628;margin-bottom:6px;transition:color .3s}
+.sc-why{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.95rem;color:#1A2D4A;line-height:1.6;transition:color .3s}
+
+/* Cierre */
+.cierre{background:var(--light);padding:72px;text-align:center;border-top:1px solid var(--brd)}
+.c-line{width:48px;height:1px;background:linear-gradient(to right,transparent,var(--mid),transparent);margin:0 auto 40px}
+.c-quote{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:clamp(2rem,4vw,3.2rem);font-weight:300;color:var(--dark);max-width:680px;margin:0 auto;line-height:1.2}
+.c-quote em{font-style:normal;color:var(--gold)}
+.c-cta{display:inline-flex;align-items:center;gap:10px;padding:14px 48px;background:var(--aero);color:#FFFFFF;font-size:.6rem;font-weight:500;letter-spacing:5px;text-transform:uppercase;text-decoration:none;transition:background .3s;cursor:none;margin-top:36px}
+.c-cta:hover{background:var(--dark)}
+.c-back{display:block;margin-top:14px;font-size:.48rem;letter-spacing:4px;text-transform:uppercase;color:var(--stone);text-decoration:none}
+.c-back:hover{color:var(--aero)}
+
+footer{padding:18px 64px;background:#071428;border-top:1px solid rgba(15,52,96,.12);display:flex;justify-content:space-between;align-items:center}
+.fl{font-family:'Cormorant Garamond',serif;font-size:.78rem;letter-spacing:5px;color:rgba(255,255,255,.15)}
+.fl em{color:rgba(55,138,221,.55);font-style:normal}
+.fr{font-size:.42rem;letter-spacing:3px;color:rgba(255,255,255,.07);text-transform:uppercase}
+
+.sep{height:3px;background:linear-gradient(to right,transparent,var(--mid),transparent);opacity:.25}
+.reveal{opacity:0;transform:translateY(16px);transition:opacity .9s ease,transform .9s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+
+.wa-float{position:fixed;bottom:28px;right:28px;width:52px;height:52px;background:#25D366;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:500;text-decoration:none;animation:waPulse 3s infinite;cursor:none}
+.wa-float svg{width:26px;height:26px;fill:white}
+@keyframes waPulse{0%,100%{box-shadow:0 0 0 0 rgba(37,211,102,.4)}70%{box-shadow:0 0 0 12px rgba(37,211,102,0)}}
+#back-banner{position:fixed;top:66px;left:20px;z-index:250;opacity:0;transform:translateX(-10px);transition:opacity .4s,transform .4s;pointer-events:none}
+#back-banner a{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.97);backdrop-filter:blur(8px);border:1px solid var(--brd);padding:8px 14px;font-family:Raleway,sans-serif;font-size:.5rem;letter-spacing:3px;text-transform:uppercase;color:var(--aero);text-decoration:none}
+
+@media(max-width:960px){
+  .hero{padding:100px 28px 60px;flex-direction:column}
+  .hero-right{display:none}
+  .sec{padding:56px 28px}
+  .star-wrap,.don-wrap,.ia-wrap,.legajo-box,.grid-2{grid-template-columns:1fr}
+  .sin-grid,.grid-4,.sport-grid{grid-template-columns:1fr 1fr}
+  nav{padding:14px 20px}
+  footer{flex-direction:column;gap:8px;text-align:center}
+  .tab-btn{padding:10px 14px;font-size:.46rem}
+}
+@media(max-width:600px){.sin-grid,.grid-4,.sport-grid,.grid-3,.ben-grid,.fondos-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="cur"></div>
+<div id="cur2"></div>
+
+<nav>
+  <div class="nav-logo"><em>Aero-Tech</em> · El Pasaje</div>
+  <a href="index.html" class="nav-back">← El Pasaje</a>
+</nav>
+
+<!-- TABS -->
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('inicio',this)">✈ Inicio</button>
+  <button class="tab-btn" onclick="switchTab('taller',this)">🔧 Taller</button>
+  <button class="tab-btn" onclick="switchTab('oficina',this)">💻 Oficina</button>
+  <button class="tab-btn" onclick="switchTab('custom',this)">🎨 Personalización</button>
+  <button class="tab-btn" onclick="switchTab('impacto',this)">💚 Impacto</button>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PESTAÑA: INICIO
+══════════════════════════════════════════ -->
+<div id="tab-inicio" class="tab-panel active">
+
+  <div class="hero">
+    <div class="hero-left reveal">
+      <div class="h-eye">Aero-Tech · El Pasaje 3D Studio</div>
+      <h1 class="h-title">
+        Precisión de vuelo<br>en tu espacio<br>
+        <em>de trabajo.</em>
+      </h1>
+      <div class="h-div"></div>
+      <p class="h-sub">Accesorios 3D diseñados por quienes viven el ambiente aeronáutico. Para el hangar, la oficina y cualquier espacio donde la calidad importa. Personalizables con tu legajo, con el escudo de tu equipo, o con lo que te represente.</p>
+      <div class="h-stats">
+        <div class="hst"><div class="hst-n" id="cnt-skus">0</div><div class="hst-l">SKUs<br>disponibles</div></div>
+        <div class="hst"><div class="hst-n">3</div><div class="hst-l">Líneas:<br>Taller · Oficina · Custom</div></div>
+        <div class="hst"><div class="hst-n">∞</div><div class="hst-l">Combinaciones<br>de personalización</div></div>
+      </div>
+      <div class="h-ctas">
+        <button class="h-cta" onclick="switchTab('taller',document.querySelectorAll('.tab-btn')[1])">Ver línea Taller</button>
+        <button class="h-cta-sec" onclick="switchTab('custom',document.querySelectorAll('.tab-btn')[3])">Personalizar el mío</button>
+      </div>
+    </div>
+    <div class="hero-right">
+      <span class="hero-right-plane">✈️</span>
+      <div class="hero-right-txt">AERO TECH</div>
+    </div>
+  </div>
+
+  <div class="strip">
+    <div class="ss-item"><span class="ss-dot"></span>Diseñado desde adentro</div>
+    <div class="ss-item"><span class="ss-dot"></span>Personalización con legajo · Equipos · Lo que quieras</div>
+    <div class="ss-item"><span class="ss-dot"></span>PETG industrial · PLA Seda premium</div>
+  </div>
+
+  <!-- Manifiesto -->
+  <div class="sec reveal">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:72px;align-items:start">
+      <div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:.82rem;color:rgba(15,52,96,.12);line-height:.4;pointer-events:none;margin-bottom:-24px">"</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:clamp(1.8rem,3vw,2.6rem);font-weight:300;color:var(--dark);line-height:1.2;position:relative;z-index:1;margin-bottom:20px">Un objeto bien hecho<br>es el que nadie nota —<br>porque <em style="font-style:normal;color:var(--gold)">simplemente funciona.</em></div>
+        <div style="font-size:.5rem;letter-spacing:5px;text-transform:uppercase;color:var(--aero);border-top:2px solid var(--mid);padding-top:14px;font-weight:600">— Aero-Tech · El Pasaje</div>
+      </div>
+      <div>
+        <p style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.1rem;color:#1A2D4A;line-height:1.9;margin-bottom:24px">Aero-Tech nace de una observación simple: hay objetos cotidianos que el ambiente aeronáutico necesita y nadie fabrica con la precisión que ese ambiente merece.<br><br>No son herramientas homologadas. No tocan la aeronave. Son los pequeños asistentes del día a día — el mate que no vuelca, el escritorio que comunica nivel, el legajo que nadie más tiene grabado — que hacen que cada turno sea un poco mejor.</p>
+        <div style="display:grid;grid-template-columns:1fr;gap:1px;background:var(--brd)">
+          <div style="background:var(--light);padding:14px 18px;border-left:3px solid var(--mid)"><div style="font-size:.48rem;letter-spacing:3px;text-transform:uppercase;color:var(--aero2);font-weight:700;margin-bottom:4px">Nada homologado · Todo pensado</div><div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.88rem;color:#1A2D4A;line-height:1.6">Solo accesorios para el entorno del trabajador. Sin riesgos de certificación, con toda la precisión de quien conoce el ambiente.</div></div>
+          <div style="background:var(--light);padding:14px 18px;border-left:3px solid var(--gold)"><div style="font-size:.48rem;letter-spacing:3px;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:4px">Versátiles por diseño</div><div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.88rem;color:#1A2D4A;line-height:1.6">La misma ingeniería que viste a un escritorio de aerolínea puede personalizar el tuyo con tu equipo de fútbol, tu escudería de F1 o lo que te represente.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vista rápida de las tres líneas -->
+  <div class="sec sec-alt reveal">
+    <div class="eyebrow">Tres líneas · Un ecosistema</div>
+    <h2 class="sec-ttl">¿Qué necesita <em>tu espacio?</em></h2>
+    <div class="grid-3">
+      <div class="pcard" onclick="switchTab('taller',document.querySelectorAll('.tab-btn')[1])" style="cursor:pointer">
+        <span class="pcard-icon">🔧</span>
+        <span class="pcard-tag tag-taller">Línea Taller</span>
+        <div class="pcard-name">Resistencia Industrial</div>
+        <div class="pcard-desc">Para el hangar y el banco de trabajo personal. PETG Gris Mecánico y Naranja Seguridad. Todo lo que el turno necesita, sin que nada se pierda o caiga.</div>
+        <div class="pcard-cta">Ver línea completa →</div>
+      </div>
+      <div class="pcard" onclick="switchTab('oficina',document.querySelectorAll('.tab-btn')[2])" style="cursor:pointer">
+        <span class="pcard-icon">💻</span>
+        <span class="pcard-tag tag-oficina">Línea Oficina</span>
+        <div class="pcard-name">Estatus Premium</div>
+        <div class="pcard-desc">Para el escritorio de análisis y coordinación. PLA Seda Azul Aerolínea. Objetos que comunican que sabés lo que hacés.</div>
+        <div class="pcard-cta">Ver línea completa →</div>
+      </div>
+      <div class="pcard" onclick="switchTab('custom',document.querySelectorAll('.tab-btn')[3])" style="cursor:pointer">
+        <span class="pcard-icon">🎨</span>
+        <span class="pcard-tag tag-custom">Personalización</span>
+        <div class="pcard-name">Tuyo, único, irrepetible</div>
+        <div class="pcard-desc">Legajo grabado, escudos de fútbol, F1 o cualquier temática. La misma ingeniería, tu identidad. Porque los objetos también hablan de quién sos.</div>
+        <div class="pcard-cta">Ver opciones →</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════
+     PESTAÑA: TALLER
+══════════════════════════════════════════ -->
+<div id="tab-taller" class="tab-panel">
+
+  <div class="sec reveal">
+    <div class="eyebrow">Línea Taller · Resistencia Industrial</div>
+    <h2 class="sec-ttl">Hecho para el que <em>trabaja en serio.</em></h2>
+    <p class="sec-body">PETG de alta resistencia térmica y química. Diseñado para las condiciones reales del hangar y el banco de trabajo personal. No son herramientas. Son los asistentes de orden que la empresa no provee pero el turno necesita.</p>
+
+    <!-- Estrella: Rampa-Safe -->
+    <div class="star-wrap">
+      <div>
+        <span class="star-lbl">Producto estrella · Taller</span>
+        <h3 class="star-ttl">Rampa-Safe<br><em>Estación personal</em></h3>
+        <p class="star-body">Soporte dual para celular y radio personal. Base pesada especialmente diseñada para resistir las vibraciones del hangar. El legajo grabado en relieve lo convierte en el único de su tipo en toda la base.</p>
+        <div class="ben-grid">
+          <div class="ben"><div class="ben-t">Base pesada</div><div class="ben-d">Resist. vibraciones sin moverse del banco.</div></div>
+          <div class="ben"><div class="ben-t">PETG industrial</div><div class="ben-d">Alta resist. a impactos y temperatura.</div></div>
+          <div class="ben"><div class="ben-t">Gris Mecánico</div><div class="ben-d">Se integra al ambiente, no llama la atención.</div></div>
+          <div class="ben"><div class="ben-t">Legajo grabado</div><div class="ben-d">El único igual en toda la base.</div></div>
+        </div>
+        <a href="https://wa.me/541165497234?text=Hola! Quiero el Rampa-Safe de Aero-Tech" class="star-cta" target="_blank">Pedir el mío →</a>
+        <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.78rem;color:rgba(15,52,96,.45);margin-top:8px">Con legajo grabado: +$600 · Entrega en mano</div>
+      </div>
+      <div>
+        <div class="star-img">
+          <span class="star-img-icon">✈️</span>
+          <div class="star-img-name">Rampa-Safe</div>
+          <div class="star-img-sub">Soporte dual · Base pesada · PETG Gris</div>
+          <div class="price-row">
+            <div class="pr-item"><div class="pr-n">$4.500</div><div class="pr-l">Sin legajo</div></div>
+            <div class="pr-item"><div class="pr-n">$5.100</div><div class="pr-l">Con legajo</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sep"></div>
+
+  <div class="sec reveal">
+    <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:300;color:var(--dark);margin-bottom:24px">Más productos de <em style="font-style:italic;color:var(--gold)">la línea Taller.</em></h3>
+    <div class="grid-2">
+      <div class="pcard">
+        <span class="pcard-tag tag-taller">Taller</span>
+        <span class="pcard-icon">☕</span>
+        <div class="pcard-name">Mate-Carro</div>
+        <div class="pcard-desc">Accesorio para carro de herramientas personal. Sostiene el mate y el termo de forma segura durante el turno. Fin de los derrames sobre documentación técnica.</div>
+        <div class="pcard-price">$3.800</div>
+        <a href="https://wa.me/541165497234?text=Hola! Quiero el Mate-Carro de Aero-Tech" class="pcard-cta" target="_blank">Pedir →</a>
+      </div>
+      <div class="pcard">
+        <span class="pcard-tag tag-taller">Taller</span>
+        <span class="pcard-icon">🦺</span>
+        <div class="pcard-name">Clip Seguridad EPP</div>
+        <div class="pcard-desc">Clip Naranja Seguridad para cinturón. Lleva protectores auditivos o guantes siempre a mano cuando te desplazás por la base. PETG de alta resistencia.</div>
+        <div class="pcard-price">$2.200</div>
+        <a href="https://wa.me/541165497234?text=Hola! Quiero el Clip EPP de Aero-Tech" class="pcard-cta" target="_blank">Pedir →</a>
+      </div>
+      <div class="pcard">
+        <span class="pcard-tag tag-taller">Taller</span>
+        <span class="pcard-icon">🪪</span>
+        <div class="pcard-name">Porta-Credencial Pro</div>
+        <div class="pcard-desc">Funda rígida 3D personalizada con legajo en relieve. Protege la tarjeta magnética del roce constante y los químicos del ambiente. Diferente a cualquier cordón estándar.</div>
+        <div class="pcard-price">$2.800</div>
+        <a href="https://wa.me/541165497234?text=Hola! Quiero el Porta-Credencial Pro de Aero-Tech" class="pcard-cta" target="_blank">Pedir →</a>
+      </div>
+      <div class="pcard">
+        <span class="pcard-tag tag-taller">Taller</span>
+        <span class="pcard-icon">🏷️</span>
+        <div class="pcard-name">Tag Legajo Pro</div>
+        <div class="pcard-desc">Llavero/etiqueta 3D con legajo y datos en relieve. No es plano: relieve real, resistente al Skydrol y a los químicos del ambiente. Indestructible.</div>
+        <div class="pcard-price">$1.800</div>
+        <a href="https://wa.me/541165497234?text=Hola! Quiero el Tag Legajo Pro de Aero-Tech" class="pcard-cta" target="_blank">Pedir →</a>
+      </div>
+      <div class="pcard">
+        <span class="pcard-tag tag-taller">Taller</span>
+        <span class="pcard-icon">📦</span>
+        <div class="pcard-name">Organizador Banco Personal</div>
+        <div class="pcard-desc">Bandeja modular para banco de trabajo personal. Tres sectores: llaves, documentos y mate. Todo en su lugar, sin ocupar espacio de trabajo.</div>
+        <div class="pcard-price">$5.500</div>
+        <a href="https://wa.me/541165497234?text=Hola! Quiero el Organizador Banco de Aero-Tech" class="pcard-cta" target="_blank">Pedir →</a>
+      </div>
+      <div class="pcard">
+        <span class="pcard-tag tag-taller">Taller · Novedad</span>
+        <span class="pcard-icon">🚩</span>
+        <div class="pcard-name">Llavero Remove Before Flight</div>
+        <div class="pcard-desc">La clásica etiqueta roja, en versión 3D rígida e indestructible. Con tu nombre de un lado y el código IATA de tu aeropuerto del otro (EZE, AEP, COR…).</div>
+        <div class="pcard-price">$2.400</div>
+        <a href="https://wa.me/541165497234?text=Hola! Quiero el Llavero Remove Before Flight de Aero-Tech" class="pcard-cta" target="_blank">Pedir →</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- IA Taller -->
+  <div class="sec">
+    <div class="ia-wrap reveal">
+      <div>
+        <div class="ia-chip">Asesor Aero-Tech · IA</div>
+        <h3 class="ia-ttl">¿Qué necesita tu turno?</h3>
+        <p class="ia-sub">Contame cómo es tu día — si trabajás en hangar, rampa o mantenimiento — y te recomiendo qué piezas resuelven exactamente tus dolores cotidianos.</p>
+      </div>
+      <div>
+        <div class="ia-fn-grid">
+          <div class="ia-fn" onclick="setFn(this,'Trabajo en hangar y necesito orden en mi banco personal')">🔧 Mecánico de hangar</div>
+          <div class="ia-fn" onclick="setFn(this,'Trabajo en rampa y busco un accesorio práctico para el turno')">✈️ Personal de rampa</div>
+          <div class="ia-fn" onclick="setFn(this,'Quiero personalizar algo con mi legajo para regalar a un compañero')">🎁 Regalar a un colega</div>
+          <div class="ia-fn" onclick="setFn(this,'¿Qué pack de taller me recomendás para arrancar?')">📦 ¿Por dónde arranco?</div>
+        </div>
+        <input class="ia-inp" id="ia-taller" placeholder="Describí tu situación de trabajo…" />
+        <button class="ia-btn" onclick="callIA('ia-taller','r-taller')">Consultar →</button>
+        <div class="ia-resp" id="r-taller"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════
+     PESTAÑA: OFICINA
+══════════════════════════════════════════ -->
+<div id="tab-oficina" class="tab-panel">
+
+  <div class="sec reveal">
+    <div class="eyebrow">Línea Oficina · Estatus Premium</div>
+    <h2 class="sec-ttl">Tu escritorio comunica <em>quién sos.</em></h2>
+    <p class="sec-body">PLA Seda en Azul Aerolínea y Gris Acero. Para analistas, coordinadores y supervisores que entienden que un escritorio bien equipado no es vanidad — es comunicación profesional.</p>
+
+    <!-- Estrella: Lapicero Turbina -->
+    <div class="star-wrap">
+      <div>
+        <span class="star-lbl">Producto estrella · Oficina</span>
+        <h3 class="star-ttl">Lapicero<br><em>Turbina Jet</em></h3>
+        <p class="star-body">Un organizador circular donde las lapiceras se insertan entre los álabes de una turbina a reacción. Los álabes giran con un rodamiento real. La pieza que todos te van a querer tocar — y que nadie más tiene.</p>
+        <div class="ben-grid">
+          <div class="ben"><div class="ben-t">Rodamiento real</div><div class="ben-d">Los álabes giran de verdad. No es decoración.</div></div>
+          <div class="ben"><div class="ben-t">PLA Seda</div><div class="ben-d">Acabado metalizado premium, estética de motor.</div></div>
+          <div class="ben"><div class="ben-t">Focal point</div><div class="ben-d">La pieza que domina cualquier escritorio.</div></div>
+          <div class="ben"><div class="ben-t">Personalizable</div><div class="ben-d">Con legajo o iniciales en la base.</div></div>
+        </div>
+        <a href="https://wa.me/541165497234?text=Hola! Quiero el Lapicero Turbina Jet de Aero-Tech" class="star-cta" target="_blank">Pedir el mío →</a>
+        <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.78rem;color:rgba(15,52,96,.45);margin-top:8px">Incluye rodamiento · Entrega en 5-7 días</div>
+      </div>
+      <div>
+        <div class="star-img">
+          <span class="star-img-icon">⚙️</span>
+          <div class="star-img-name">Lapicero Turbina Jet</div>
+          <div class="star-img-sub">Álabes giratorios · Rodamiento real · PLA Seda</div>
+          <div class="price-row">
+            <div class="pr-item"><div class="pr-n">$6.500</div><div class="pr-l">Estándar</div></div>
+            <div class="pr-item"><div class="pr-n">$7.100</div><div class="pr-l">Con legajo</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sep"></div>
+
+  <div class="sec reveal">
+    <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:300;color:var(--dark);margin-bottom:24px">Más piezas para el escritorio <em style="font-style:italic;color:var(--gold)">que representa tu nivel.</em></h3>
+    <div class="grid-2">
+      <div class="pcard">
+        <span class="pcard-tag tag-oficina">Oficina</span>
+        <span class="pcard-icon">📋</span>
+        <div class="pcard-name">Dock Checklist</div>
+        <div class="pcard-desc">Soporte para post-its y lapicera con forma de pista de aterrizaje. Lo urgente siempre a la vista. PLA Seda Azul Aerolínea.</div>
+        <div class="pcard-price">$4.200</div>
+        <a href="https://wa.me/541165497234?text=Hola! Quiero el Dock Checklist de Aero-Tech" class="pcard-cta" target="_blank">Pedir →</a>
+      </div>
+      <div class="pcard">
+        <span class="pcard-tag tag-oficina">Oficina</span>
+        <span class="pcard-icon">🗼</span>
+        <div class="pcard-name">Torre de Control</div>
+        <div class="pcard-desc">Soporte para auriculares Teams/Zoom con diseño inspirado en las torres de control de EZE y AEP. El objeto más reconocible del escritorio.</div>
+        <div class="pcard-price">$5.800</div>
+        <a href="https://wa.me/541165497234?text=Hola! Quiero la Torre de Control de Aero-Tech" class="pcard-cta" target="_blank">Pedir →</a>
+      </div>
+      <div class="pcard">
+        <span class="pcard-tag tag-oficina">Oficina</span>
+        <span class="pcard-icon">🪪</span>
+        <div class="pcard-name">Placa Analista Senior</div>
+        <div class="pcard-desc">Placa de escritorio con nombre y legajo. Diseño inspirado en los paneles de cabina de mando. El objeto que eleva el estatus del puesto.</div>
+        <div class="pcard-price">$4.800</div>
+        <a href="https://wa.me/541165497234?text=Hola! Quiero la Placa Analista Senior de Aero-Tech" class="pcard-cta" target="_blank">Pedir →</a>
+      </div>
+      <div class="pcard">
+        <span class="pcard-tag tag-oficina">Oficina</span>
+        <span class="pcard-icon">🔌</span>
+        <div class="pcard-name">Organizador Fuselaje</div>
+        <div class="pcard-desc">Sistema de clips con forma de remaches aeronáuticos para cables al borde del escritorio. Escritorio limpio, mente despejada.</div>
+        <div class="pcard-price">$3.500</div>
+        <a href="https://wa.me/541165497234?text=Hola! Quiero el Organizador Fuselaje de Aero-Tech" class="pcard-cta" target="_blank">Pedir →</a>
+      </div>
+      <div class="pcard">
+        <span class="pcard-tag tag-oficina">Oficina</span>
+        <span class="pcard-icon">📱</span>
+        <div class="pcard-name">Soporte Sección de Ala</div>
+        <div class="pcard-desc">Soporte para celular que replica el perfil alar de un avión comercial. El cable de carga pasa por el diseño calado. Elegancia técnica.</div>
+        <div class="pcard-price">$4.500</div>
+        <a href="https://wa.me/541165497234?text=Hola! Quiero el Soporte Sección de Ala de Aero-Tech" class="pcard-cta" target="_blank">Pedir →</a>
+      </div>
+      <div class="pcard">
+        <span class="pcard-tag tag-oficina">Oficina · Novedad</span>
+        <span class="pcard-icon">✈️</span>
+        <div class="pcard-name">Maqueta Cutaway</div>
+        <div class="pcard-desc">Sección esquemática de cabina o motor para decorar escritorios de jefaturas. No el avión entero — el detalle técnico que distingue a quien sabe.</div>
+        <div class="pcard-price">Cotizar</div>
+        <a href="https://wa.me/541165497234?text=Hola! Quiero cotizar una Maqueta Cutaway de Aero-Tech" class="pcard-cta" target="_blank">Cotizar →</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- IA Oficina -->
+  <div class="sec">
+    <div class="ia-wrap reveal">
+      <div>
+        <div class="ia-chip">Asesor Aero-Tech · IA</div>
+        <h3 class="ia-ttl">¿Qué le falta a tu escritorio?</h3>
+        <p class="ia-sub">Describime tu puesto de trabajo — si es análisis, coordinación, jefatura — y te recomiendo qué piezas elevan el nivel sin exagerar.</p>
+      </div>
+      <div>
+        <div class="ia-fn-grid">
+          <div class="ia-fn" onclick="setFn(this,'Soy analista y quiero un escritorio que comunique nivel profesional')">📊 Analista</div>
+          <div class="ia-fn" onclick="setFn(this,'Busco un regalo impactante para un coordinador o jefe')">🎁 Regalo para jefe</div>
+          <div class="ia-fn" onclick="setFn(this,'Quiero organizar los cables y accesorios de mi escritorio')">🔌 Organizar escritorio</div>
+          <div class="ia-fn" onclick="setFn(this,'¿Qué pack de oficina me recomendás para empezar?')">💼 ¿Por dónde arranco?</div>
+        </div>
+        <input class="ia-inp" id="ia-oficina" placeholder="Describí tu puesto de trabajo…" />
+        <button class="ia-btn" onclick="callIA('ia-oficina','r-oficina')">Consultar →</button>
+        <div class="ia-resp" id="r-oficina"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════
+     PESTAÑA: PERSONALIZACIÓN
+══════════════════════════════════════════ -->
+<div id="tab-custom" class="tab-panel">
+
+  <div class="sec reveal">
+    <div class="eyebrow">Personalización · Lo que te represente</div>
+    <h2 class="sec-ttl">La misma ingeniería.<br><em>Tu identidad.</em></h2>
+    <p class="sec-body">Aero-Tech no es solo aviación. Es precisión aplicada a lo que importa. La misma tecnología que graba un legajo aeronáutico puede grabar el escudo de tu equipo, el número de tu piloto favorito o cualquier cosa que te represente.</p>
+
+    <!-- Sub-tabs internos -->
+    <div class="sub-tabs">
+      <button class="sub-btn active" onclick="switchSub('legajo',this)">✈️ Legajo aeronáutico</button>
+      <button class="sub-btn" onclick="switchSub('futbol',this)">⚽ Fútbol</button>
+      <button class="sub-btn" onclick="switchSub('f1',this)">🏎️ Fórmula 1</button>
+      <button class="sub-btn" onclick="switchSub('libre',this)">🎨 Diseño libre</button>
+    </div>
+
+    <!-- Sub: Legajo -->
+    <div id="sub-legajo" class="sub-panel active">
+      <div class="legajo-box">
+        <div class="lb-left">
+          <span class="lb-label">Tu legajo · Así queda grabado</span>
+          <div class="lb-preview">AR · <span id="legajo-num">028883</span></div>
+          <div class="lb-sub">En relieve permanente · No se borra · No se confunde</div>
+        </div>
+        <div class="lb-right">
+          <div class="lb-right-ttl">El único igual en toda Aerolíneas</div>
+          <div class="lb-right-body">Cualquier pieza de Aero-Tech puede llevar tu número de legajo grabado en relieve. Sin costo adicional en algunos productos, con un pequeño adicional en otros. El resultado es siempre el mismo: una pieza que es tuya y de nadie más.</div>
+          <a href="https://wa.me/541165497234?text=Hola! Quiero un producto de Aero-Tech con mi legajo grabado" class="lb-cta" target="_blank">Pedirlo personalizado →</a>
+        </div>
+      </div>
+      <div style="background:var(--light);padding:24px 28px;border:1px solid var(--brd);border-left:3px solid var(--mid)">
+        <div style="font-size:.5rem;letter-spacing:4px;text-transform:uppercase;color:var(--aero2);font-weight:700;margin-bottom:10px">¿Qué lleva legajo?</div>
+        <div class="grid-4">
+          <div style="text-align:center;padding:12px"><div style="font-size:1.4rem">🪪</div><div style="font-size:.7rem;color:var(--aero);margin-top:4px;font-weight:600">Porta-Credencial</div></div>
+          <div style="text-align:center;padding:12px"><div style="font-size:1.4rem">🏷️</div><div style="font-size:.7rem;color:var(--aero);margin-top:4px;font-weight:600">Tag Legajo Pro</div></div>
+          <div style="text-align:center;padding:12px"><div style="font-size:1.4rem">✈️</div><div style="font-size:.7rem;color:var(--aero);margin-top:4px;font-weight:600">Rampa-Safe</div></div>
+          <div style="text-align:center;padding:12px"><div style="font-size:1.4rem">🪪</div><div style="font-size:.7rem;color:var(--aero);margin-top:4px;font-weight:600">Placa Senior</div></div>
+        </div>
+        <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.85rem;color:var(--stone);margin-top:8px">Y prácticamente cualquier otra pieza del catálogo. Consultanos.</div>
+      </div>
+    </div>
+
+    <!-- Sub: Fútbol -->
+    <div id="sub-futbol" class="sub-panel">
+      <p style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.05rem;color:var(--stone);margin-bottom:24px;line-height:1.7">La misma tecnología de impresión que da vida a los accesorios aeronáuticos puede personalizar cualquier pieza con el escudo, los colores o la identidad de tu equipo. Un Lapicero Turbina con los colores de Boca. Una Placa con el escudo de River. Un Tag con el número de tu piloto.</p>
+      <div class="sport-grid">
+        <div class="sport-card">
+          <span class="sp-emoji">💙💛</span>
+          <div class="sp-name">Boca Juniors</div>
+          <div class="sp-desc">Azul y oro · Escudo en relieve</div>
+        </div>
+        <div class="sport-card">
+          <span class="sp-emoji">❤️🤍</span>
+          <div class="sp-name">River Plate</div>
+          <div class="sp-desc">Rojo y blanco · La banda</div>
+        </div>
+        <div class="sport-card">
+          <span class="sp-emoji">💙🤍</span>
+          <div class="sp-name">Racing Club</div>
+          <div class="sp-desc">Celeste y blanco · La Academia</div>
+        </div>
+        <div class="sport-card">
+          <span class="sp-emoji">🔴⚫</span>
+          <div class="sp-name">Independiente</div>
+          <div class="sp-desc">Rojo y negro · El Rojo</div>
+        </div>
+        <div class="sport-card">
+          <span class="sp-emoji">💙⚪</span>
+          <div class="sp-name">San Lorenzo</div>
+          <div class="sp-desc">Azul y blanco · El Ciclón</div>
+        </div>
+        <div class="sport-card">
+          <span class="sp-emoji">🟡🔵</span>
+          <div class="sp-name">Rosario Central</div>
+          <div class="sp-desc">Amarillo y azul</div>
+        </div>
+        <div class="sport-card">
+          <span class="sp-emoji">🔴⚫</span>
+          <div class="sp-name">Newell's</div>
+          <div class="sp-desc">Rojo y negro · La Lepra</div>
+        </div>
+        <div class="sport-card" style="border-style:dashed;opacity:.7">
+          <span class="sp-emoji">➕</span>
+          <div class="sp-name">Tu equipo</div>
+          <div class="sp-desc">Si no está en la lista, lo hacemos igual. Consultanos.</div>
+        </div>
+      </div>
+      <div style="margin-top:24px;padding:20px 24px;background:var(--light);border-left:3px solid var(--gold)">
+        <div style="font-size:.5rem;letter-spacing:3px;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:8px">¿Cómo funciona?</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.9rem;color:#1A2D4A;line-height:1.65">Elegís el producto base del catálogo (Lapicero Turbina, Dock Checklist, Torre de Control, etc.) y lo personalizamos con los colores y escudo de tu equipo. Pequeño adicional según complejidad. Escribinos con el producto y tu equipo.</div>
+        <a href="https://wa.me/541165497234?text=Hola! Quiero personalizar un producto de Aero-Tech con el escudo de mi equipo" class="star-cta" style="margin-top:14px;display:inline-flex" target="_blank">Personalizar con mi equipo →</a>
+      </div>
+    </div>
+
+    <!-- Sub: F1 -->
+    <div id="sub-f1" class="sub-panel">
+      <p style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.05rem;color:var(--stone);margin-bottom:24px;line-height:1.7">La Fórmula 1 y la ingeniería aeronáutica comparten el mismo ADN: velocidad, precisión y diseño extremo. Personalizamos tus piezas Aero-Tech con los colores y la identidad de tu escudería favorita.</p>
+      <div class="sport-grid">
+        <div class="sport-card">
+          <span class="sp-emoji">🔴🟡</span>
+          <div class="sp-name">Ferrari</div>
+          <div class="sp-desc">Rojo Scuderia · Prancing Horse</div>
+        </div>
+        <div class="sport-card">
+          <span class="sp-emoji">🔵⚫</span>
+          <div class="sp-name">Red Bull Racing</div>
+          <div class="sp-desc">Azul y rojo · Toro Rojo</div>
+        </div>
+        <div class="sport-card">
+          <span class="sp-emoji">⚪⚫</span>
+          <div class="sp-name">Mercedes AMG</div>
+          <div class="sp-desc">Plata y verde menta</div>
+        </div>
+        <div class="sport-card">
+          <span class="sp-emoji">🟠⚫</span>
+          <div class="sp-name">McLaren</div>
+          <div class="sp-desc">Naranja papaya</div>
+        </div>
+        <div class="sport-card">
+          <span class="sp-emoji">🔵🟢</span>
+          <div class="sp-name">Aston Martin</div>
+          <div class="sp-desc">Verde British Racing</div>
+        </div>
+        <div class="sport-card">
+          <span class="sp-emoji">🔵⚪</span>
+          <div class="sp-name">Williams</div>
+          <div class="sp-desc">Azul y blanco · Legado británico</div>
+        </div>
+        <div class="sport-card">
+          <span class="sp-emoji">🔢</span>
+          <div class="sp-name">Tu piloto</div>
+          <div class="sp-desc">Número + colores · Senna 12 · Fangio 1 · Verstappen 1</div>
+        </div>
+        <div class="sport-card" style="border-style:dashed;opacity:.7">
+          <span class="sp-emoji">➕</span>
+          <div class="sp-name">Otra escudería</div>
+          <div class="sp-desc">Si no está en la lista, la hacemos igual.</div>
+        </div>
+      </div>
+      <div style="margin-top:24px;padding:20px 24px;background:var(--light);border-left:3px solid var(--orange)">
+        <div style="font-size:.5rem;letter-spacing:3px;text-transform:uppercase;color:var(--orange);font-weight:700;margin-bottom:8px">Pack F1 Recomendado</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.9rem;color:#1A2D4A;line-height:1.65">Lapicero Turbina + Torre de Control + Dock Checklist en los colores de tu escudería. El set completo para el escritorio del fanático que también es profesional.</div>
+        <a href="https://wa.me/541165497234?text=Hola! Quiero el Pack F1 de Aero-Tech con los colores de mi escudería" class="star-cta" style="margin-top:14px;display:inline-flex;background:var(--orange)" target="_blank">Pedir Pack F1 →</a>
+      </div>
+    </div>
+
+    <!-- Sub: Libre -->
+    <div id="sub-libre" class="sub-panel">
+      <p style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.05rem;color:var(--stone);margin-bottom:24px;line-height:1.7">¿Tenés una idea en mente que no está en ninguna lista? Trabajamos con vos desde el diseño. Logos de empresas, fechas especiales, frases, escudos institucionales, lo que se te ocurra.</p>
+      <div class="grid-2" style="margin-bottom:24px">
+        <div class="pcard">
+          <span class="pcard-tag tag-custom">Custom</span>
+          <span class="pcard-icon">🏢</span>
+          <div class="pcard-name">Kit Corporativo</div>
+          <div class="pcard-desc">Personalización con logo de empresa para regalos institucionales, kits de bienvenida o reconocimientos. Mínimo 5 piezas.</div>
+          <div class="pcard-price">Cotizar</div>
+          <a href="https://wa.me/541165497234?text=Hola! Quiero cotizar un Kit Corporativo de Aero-Tech" class="pcard-cta" target="_blank">Cotizar →</a>
+        </div>
+        <div class="pcard">
+          <span class="pcard-tag tag-custom">Custom</span>
+          <span class="pcard-icon">🎯</span>
+          <div class="pcard-name">Diseño a pedido</div>
+          <div class="pcard-desc">Tenés una idea, un logo, un símbolo o cualquier referencia. Llevamos eso a una pieza 3D. Consultanos y lo evaluamos juntos.</div>
+          <div class="pcard-price">Cotizar</div>
+          <a href="https://wa.me/541165497234?text=Hola! Tengo una idea para personalizar con Aero-Tech" class="pcard-cta" target="_blank">Contar la idea →</a>
+        </div>
+      </div>
+      <div style="background:var(--aero);padding:28px 32px;text-align:center">
+        <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.3rem;color:#FFFFFF;margin-bottom:14px">¿Tenés algo en mente? Escribinos y lo hacemos.</div>
+        <a href="https://wa.me/541165497234?text=Hola! Tengo una idea de personalización para Aero-Tech" class="star-cta" style="margin:0 auto;display:inline-flex" target="_blank">Hablar con Nando →</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PESTAÑA: IMPACTO
+══════════════════════════════════════════ -->
+<div id="tab-impacto" class="tab-panel">
+
+  <div class="sec sec-dark reveal">
+    <div style="display:grid;grid-template-columns:1fr auto;gap:24px;align-items:flex-end;margin-bottom:36px;flex-wrap:wrap">
+      <div>
+        <div style="font-size:.52rem;letter-spacing:6px;text-transform:uppercase;color:rgba(143,175,122,.7);margin-bottom:12px;display:flex;align-items:center;gap:12px;font-weight:600"><span style="width:18px;height:1px;background:rgba(143,175,122,.5);display:inline-block"></span>Impacto · Aero-Tech</div>
+        <h2 style="font-family:'Cormorant Garamond',serif;font-size:clamp(2rem,3.5vw,2.8rem);font-weight:300;color:#FFFFFF;margin-bottom:0">Cada compra<br>también <em style="font-style:italic;color:var(--sage)">contribuye.</em></h2>
+      </div>
+      <div style="text-align:center">
+        <span class="don-pct" id="pct-avp">%</span>
+        <div class="don-pct-lbl">de cada venta<br>a fondos solidarios</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.72rem;color:rgba(143,175,122,.4);margin-top:4px">(% a confirmar)</div>
+      </div>
+    </div>
+
+    <div class="don-wrap">
+      <div>
+        <div class="don-thermo">
+          <div class="don-lbl">Refugio Oasis Animal</div>
+          <div class="don-bar-bg"><div class="don-bar" id="don-bar-1" style="width:0%"></div></div>
+          <div class="don-row"><span id="don-val-1">Cargando…</span><span>Meta $50.000</span></div>
+        </div>
+        <div class="don-thermo">
+          <div class="don-lbl">Mentes Brillantes</div>
+          <div class="don-bar-bg"><div class="don-bar" id="don-bar-2" style="width:0%;background:linear-gradient(to right,#818CF8,#A5B4FC)"></div></div>
+          <div class="don-row"><span id="don-val-2">Cargando…</span><span>Meta $40.000</span></div>
+        </div>
+        <div class="don-thermo">
+          <div class="don-lbl">Fondo General</div>
+          <div class="don-bar-bg"><div class="don-bar" id="don-bar-3" style="width:0%;background:linear-gradient(to right,#FB7185,#FDA4AF)"></div></div>
+          <div class="don-row"><span id="don-val-3">Cargando…</span><span>Meta $30.000</span></div>
+        </div>
+        <a href="oasis-animal.html" style="display:inline-flex;align-items:center;gap:8px;padding:10px 22px;border:1px solid rgba(143,175,122,.3);color:rgba(143,175,122,.8);font-size:.52rem;letter-spacing:3px;text-transform:uppercase;text-decoration:none;transition:all .3s;cursor:none;margin-top:8px">Ver Oasis Animal →</a>
+      </div>
+      <div>
+        <div class="don-info">Aero-Tech forma parte del ecosistema solidario de El Pasaje 3D Studio. Una porción de cada venta va a los fondos que sostienen el refugio de animales de Oasis Animal, el programa educativo Mentes Brillantes y el fondo general del estudio.</div>
+        <div style="margin-top:24px">
+          <div style="font-size:.48rem;letter-spacing:4px;text-transform:uppercase;color:rgba(143,175,122,.6);font-weight:600;margin-bottom:16px">Elegí el destino de tu aporte</div>
+          <div class="fondos-grid">
+            <div class="fondo-card"><span class="fondo-emoji">🐾</span><div class="fondo-name">Refugio Oasis Animal</div><div class="fondo-desc">Rescate, alimento y vet. para animales que esperan un hogar.</div></div>
+            <div class="fondo-card"><span class="fondo-emoji">🧠</span><div class="fondo-name">Mentes Brillantes</div><div class="fondo-desc">Apoyo educativo para chicos con talento y pocos recursos.</div></div>
+            <div class="fondo-card" style="grid-column:span 2"><span class="fondo-emoji">❤️</span><div class="fondo-name">Fondo General</div><div class="fondo-desc">Se distribuye donde más se necesita dentro del ecosistema El Pasaje.</div></div>
+          </div>
+        </div>
+        <a href="https://wa.me/541165497234?text=Hola! Quiero que mi compra de Aero-Tech vaya al fondo: " class="lb-cta" style="margin-top:18px;display:inline-flex" target="_blank">Indicar el destino de mi aporte →</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sinergia -->
+  <div class="sec reveal">
+    <div class="eyebrow">Ecosistema · El Pasaje</div>
+    <h2 class="sec-ttl">Aero-Tech no es una línea sola.<br>Es parte de algo <em>más grande.</em></h2>
+    <div class="sin-grid" style="margin-top:28px">
+      <a href="index.html" class="scard">
+        <span class="sc-tag">El estudio · Hub</span>
+        <div class="sc-name">El Pasaje 3D Studio</div>
+        <div class="sc-why">El estudio familiar donde todo se fabrica. Fer en producción. Cinco líneas. Un ecosistema con propósito.</div>
+        <span style="position:absolute;bottom:14px;right:16px;font-size:.58rem;color:#FFFFFF;opacity:0;transition:opacity .3s">→</span>
+      </a>
+      <a href="oasis-animal.html" class="scard">
+        <span class="sc-tag">Sinergias · Oasis</span>
+        <div class="sc-name">Oasis Animal</div>
+        <div class="sc-why">La línea solidaria del ecosistema. Pack regalo conjunto: Porta-Credencial Aero-Tech + Guardián Tag Oasis.</div>
+      </a>
+      <a href="coquette.html" class="scard">
+        <span class="sc-tag">Sinergias · Coquette</span>
+        <div class="sc-name">Coquette</div>
+        <div class="sc-why">La línea de Olivia. Para regalos premium a colegas. Estética opuesta, mismo nivel de ingeniería.</div>
+      </a>
+      <a href="sport.html" class="scard">
+        <span class="sc-tag">Sinergias · Sport</span>
+        <div class="sc-name">Francisco Deportes</div>
+        <div class="sc-why">La línea de Fran. Coincidencia natural con los personalizados deportivos de Aero-Tech.</div>
+      </a>
+    </div>
+  </div>
+
+  <!-- Cierre -->
+  <div class="cierre">
+    <div class="c-line"></div>
+    <div style="font-size:.5rem;letter-spacing:8px;text-transform:uppercase;color:var(--mid);margin-bottom:16px">Aero-Tech · El Pasaje 3D Studio</div>
+    <div class="c-quote">Precisión de vuelo<br>en tu espacio de <em>trabajo.</em></div>
+    <div style="margin-top:14px;font-size:.48rem;letter-spacing:6px;text-transform:uppercase;color:var(--stone)">Diseñado desde adentro · Para quienes saben</div>
+    <a href="https://wa.me/541165497234?text=Hola! Quiero ver el catálogo de Aero-Tech" class="c-cta" target="_blank">Escribirle a Nando →</a>
+    <a href="index.html" class="c-back">← Volver a El Pasaje 3D Studio</a>
+  </div>
+
+</div><!-- fin tab impacto -->
+
+<footer>
+  <div class="fl"><em>Aero-Tech</em> · El Pasaje 3D Studio</div>
+  <div class="fr">Precisión de vuelo en tu espacio de trabajo</div>
+</footer>
+
+<a href="https://wa.me/541165497234?text=Hola! Me interesa Aero-Tech de El Pasaje" target="_blank" class="wa-float">
+  <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+</a>
+
+<div id="back-banner">
+  <a href="index.html">← El Pasaje</a>
+</div>
+
+<script>
+// Cursor
+const cur=document.getElementById("cur"),cur2=document.getElementById("cur2");
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener("mousemove",e=>{mx=e.clientX;my=e.clientY;cur.style.transform=`translate(${mx-4}px,${my-4}px)`});
+(function loop(){rx+=(mx-rx)*.1;ry+=(my-ry)*.1;cur2.style.transform=`translate(${rx-14}px,${ry-14}px)`;requestAnimationFrame(loop)})();
+document.querySelectorAll("a,button,.pcard,.scard,.sport-card,.fondo-card,.ia-fn").forEach(el=>{
+  el.addEventListener("mouseenter",()=>{cur.style.width="14px";cur.style.height="14px"});
+  el.addEventListener("mouseleave",()=>{cur.style.width="8px";cur.style.height="8px"});
+});
+
+// Reveal
+const obs=new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting)x.target.classList.add("visible")})},{threshold:.05});
+document.querySelectorAll(".reveal").forEach(el=>obs.observe(el));
+
+// Counter SKUs
+setTimeout(()=>{
+  let v=0;const t=setInterval(()=>{v=Math.min(v+1,16);const el=document.getElementById("cnt-skus");if(el)el.textContent=v;if(v>=16)clearInterval(t)},70);
+},400);
+
+// Termómetros donación
+setTimeout(()=>{
+  const bars=[["don-bar-1","don-val-1",62,50000],["don-bar-2","don-val-2",48,40000],["don-bar-3","don-val-3",35,30000]];
+  bars.forEach(([bid,vid,pct,meta])=>{
+    const b=document.getElementById(bid);
+    const v=document.getElementById(vid);
+    if(b)b.style.width=pct+"%";
+    if(v)v.innerHTML=`<span>$${Math.round(meta*pct/100).toLocaleString()} recaudados</span>`;
+  });
+},600);
+
+// Back banner
+window.addEventListener("scroll",()=>{
+  const b=document.getElementById("back-banner");
+  if(window.scrollY>300){b.style.opacity="1";b.style.transform="translateX(0)";b.style.pointerEvents="auto"}
+  else{b.style.opacity="0";b.style.transform="translateX(-10px)";b.style.pointerEvents="none"}
+});
+
+// Tabs principales
+function switchTab(id,btn){
+  document.querySelectorAll(".tab-panel").forEach(p=>p.classList.remove("active"));
+  document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
+  document.getElementById("tab-"+id).classList.add("active");
+  if(btn)btn.classList.add("active");
+  window.scrollTo({top:0,behavior:"smooth"});
+  // Re-trigger reveals
+  document.querySelectorAll("#tab-"+id+" .reveal").forEach(el=>{
+    if(!el.classList.contains("visible"))obs.observe(el);
+  });
+}
+
+// Sub-tabs (personalización)
+function switchSub(id,btn){
+  document.querySelectorAll(".sub-panel").forEach(p=>p.classList.remove("active"));
+  document.querySelectorAll(".sub-btn").forEach(b=>b.classList.remove("active"));
+  document.getElementById("sub-"+id).classList.add("active");
+  if(btn)btn.classList.add("active");
+}
+
+// IA
+function setFn(el,texto){
+  el.closest(".ia-fn-grid").querySelectorAll(".ia-fn").forEach(f=>f.classList.remove("active-fn"));
+  el.classList.add("active-fn");
+  const inp=el.closest(".ia-wrap").querySelector(".ia-inp");
+  if(inp){inp.value=texto;inp.focus()}
+}
+
+const SYS=`Sos el asesor de Aero-Tech, la línea de accesorios 3D para personas que trabajan en el ambiente aeronáutico y más allá, de El Pasaje 3D Studio. La directora es Alejandra y Nando (Fernando Gomez Aguilera) es el co-fundador y vendedor.
+
+IMPORTANTE: Ningún producto toca la aeronave. Son accesorios de uso diario, para el entorno personal del trabajador.
+
+LÍNEA TALLER (PETG Gris/Naranja):
+- Rampa-Safe $4.500 (+$600 con legajo): soporte celular+radio para hangar
+- Mate-Carro $3.800: sostiene mate y termo en el carro de herramientas
+- Clip Seguridad EPP $2.200: clip naranja para EPP personal
+- Porta-Credencial Pro $2.800: funda rígida con legajo
+- Organizador Banco Personal $5.500: bandeja modular
+- Tag Legajo Pro $1.800: llavero 3D con legajo y datos en relieve
+- Llavero Remove Before Flight $2.400: en 3D rígido, con nombre y código IATA
+
+LÍNEA OFICINA (PLA Seda Azul/Gris):
+- Lapicero Turbina Jet $6.500: álabes giratorios con rodamiento real
+- Dock Checklist $4.200: soporte post-its forma pista de aterrizaje
+- Torre de Control $5.800: soporte auriculares inspirado en torres EZE/AEP
+- Placa Analista Senior $4.800: con nombre y legajo
+- Organizador Fuselaje $3.500: clips forma remaches para cables
+- Soporte Sección de Ala $4.500: soporte celular perfil alar
+- Maqueta Cutaway: cotizar
+
+PERSONALIZACIÓN:
+- Legajo grabado: en cualquier pieza, a veces con costo adicional
+- Fútbol: Boca, River, Racing, Independiente, San Lorenzo, otros
+- F1: Ferrari, Red Bull, Mercedes, McLaren, Aston Martin, Williams, otros
+- Diseño libre: logos de empresa, diseños a pedido
+
+Tono: directo, técnico, de colega a colega. Máximo 3 oraciones. Siempre recomendá algo concreto.
+WA Nando: +54 11 6549-7234.`;
+
+const FB_default=[
+  "Para el hangar, el Rampa-Safe es el punto de partida — resuelve el problema del celular y la radio en el banco sin ocupar espacio. Con el legajo grabado queda como tuyo y de nadie más.",
+  "Para escritorio de oficina, el Lapicero Turbina Jet es la pieza que define el nivel del puesto. Los álabes giran de verdad — nadie pasa por tu escritorio sin querer tocarlo.",
+  "El Tag Legajo Pro es el regalo perfecto para un colega que valora las cosas bien hechas: resistente, con su número grabado, y un recuerdo de trabajo que dura años."
+];
+
+async function callIA(inputId,respId){
+  const inp=document.getElementById(inputId);
+  const resp=document.getElementById(respId);
+  if(!inp||!resp)return;
+  const t=inp.value.trim();if(!t){inp.focus();return}
+  resp.style.display="block";resp.textContent="···";
+  try{
+    const r=await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:220,system:SYS,messages:[{role:"user",content:t}]})
+    });
+    const d=await r.json();resp.textContent=d.content?.[0]?.text||"Escribile a Nando al WA y te ayudamos."
+  }catch(e){
+    resp.textContent=FB_default[Math.floor(Math.random()*FB_default.length)]
+  }
+}
+</script>
+</body>
+</html>
