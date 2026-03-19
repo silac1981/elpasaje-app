@@ -921,9 +921,19 @@ elif menu == "🛒 Cargar Pedido":
 
     if st.button("Confirmar Pedido", type="primary"):
         with engine.connect() as conn:
+            result = conn.execute(text(
+                f"INSERT INTO orders (client_id, status, date, notas, color_pedido) "
+                f"VALUES ('{uid}', 'Pendiente', '{datetime.now().isoformat()}', "
+                f"'{notas.strip()}', '') "
+            ))
+            order_id = result.lastrowid
+            precio_unit = pd.read_sql(
+                f"SELECT price FROM products WHERE name='{producto}'", engine
+            )["price"].iloc[0]
             conn.execute(text(
-                f"INSERT INTO orders (client_id, product_name, status, date) "
-                f"VALUES ('{uid}', '{producto}', 'Pendiente', '{datetime.now().isoformat()}')"
+                f"INSERT INTO order_items (order_id, product_sku, cantidad, precio_unitario) "
+                f"SELECT {order_id}, sku, {cantidad}, {precio_unit} "
+                f"FROM products WHERE name='{producto}'"
             ))
             conn.commit()
         st.success(f"✅ Pedido registrado: {cantidad}x {producto}")
