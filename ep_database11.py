@@ -11,7 +11,7 @@ TABLAS:
   - odv_cabecera    → la orden completa
   - odv_detalle     → líneas de producto por orden
   - odv_insumos     → costo real de fabricación
-  - log_agente      → patrones y senales detectadas
+  - log_agente      → patrones y señales detectadas
   - precios         → historial de precios por producto
 """
 
@@ -147,8 +147,8 @@ def crear_tablas():
         id              INTEGER PRIMARY KEY AUTOINCREMENT,
         fecha           TEXT DEFAULT (datetime('now')),
         proyecto        TEXT NOT NULL,               -- ElPasaje / SIA
-        tipo            TEXT NOT NULL,               -- Patron / Anomalia / Senal / Alerta
-        senal           TEXT NOT NULL,               -- descripción
+        tipo            TEXT NOT NULL,               -- Patron / Anomalia / Señal / Alerta
+        señal           TEXT NOT NULL,               -- descripción
         dato_observado  TEXT,
         accion_sugerida TEXT,
         estado          TEXT DEFAULT 'Pendiente',    -- Pendiente / Revisado / Implementado
@@ -280,11 +280,11 @@ def cargar_datos_iniciales():
     # Primera entrada del log
     cur.execute("""
         INSERT OR IGNORE INTO log_agente
-        (proyecto, tipo, senal, dato_observado, accion_sugerida, etiquetas, confianza, origen)
+        (proyecto, tipo, señal, dato_observado, accion_sugerida, etiquetas, confianza, origen)
         VALUES (?,?,?,?,?,?,?,?)
-    """, ("ElPasaje", "Senal de Mercado",
+    """, ("ElPasaje", "Señal de Mercado",
           "Muy buena recepción elevadores de notebook en entorno corporativo",
-          "Gerente Aerolíneas + Pablo (profe) + companero — perfil ejecutivo",
+          "Gerente Aerolíneas + Pablo (profe) + compañero — perfil ejecutivo",
           "Desarrollar línea corporativa elevadores — segmento diferenciado de feria",
           "corporativo|ergonomico|b2b_potencial|magnitud19",
           0.85, "manual"))
@@ -342,13 +342,13 @@ def get_productos_mas_vendidos(limit=5):
     conn.close()
     return [dict(r) for r in rows]
 
-def registrar_log(proyecto, tipo, senal, dato="", accion="", etiquetas="", confianza=0.7, origen="agente"):
+def registrar_log(proyecto, tipo, señal, dato="", accion="", etiquetas="", confianza=0.7, origen="agente"):
     conn = get_conn()
     conn.execute("""
         INSERT INTO log_agente
-        (proyecto, tipo, senal, dato_observado, accion_sugerida, etiquetas, confianza, origen)
+        (proyecto, tipo, señal, dato_observado, accion_sugerida, etiquetas, confianza, origen)
         VALUES (?,?,?,?,?,?,?,?)
-    """, (proyecto, tipo, senal, dato, accion, etiquetas, confianza, origen))
+    """, (proyecto, tipo, señal, dato, accion, etiquetas, confianza, origen))
     conn.commit()
     conn.close()
 

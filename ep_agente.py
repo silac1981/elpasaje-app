@@ -29,7 +29,7 @@ from email.mime.multipart import MIMEMultipart
 CONFIG = {
     "email_origen":   "elpasaje.3d.studio@gmail.com",
     "email_destino":  "elpasaje.3d.studio@gmail.com",
-    "app_password":   "yggvmdwtjhfcerlr",   # ← completar con App Password de Google (16 caracteres)
+    "app_password":   "ndguxauofxtedqrr",   # ← completar con App Password de Google (16 caracteres)
     "db_path":        r"C:\Users\ar028883\Documents\elpasaje-app-clean\ep_pasaje.db",
     "modo_silencioso": "--silencioso" in sys.argv or "silencioso" in sys.argv,
 }
@@ -43,13 +43,13 @@ def get_conn():
     conn.row_factory = sqlite3.Row
     return conn
 
-def registrar_log(tipo, señal, dato="", accion="", etiquetas="", confianza=0.7):
+def registrar_log(tipo, senal, dato="", accion="", etiquetas="", confianza=0.7):
     conn = get_conn()
     conn.execute("""
         INSERT INTO log_agente
-        (proyecto, tipo, señal, dato_observado, accion_sugerida, etiquetas, confianza, origen)
+        (proyecto, tipo, senal, dato_observado, accion_sugerida, etiquetas, confianza, origen)
         VALUES ('ElPasaje',?,?,?,?,?,?,'agente')
-    """, (tipo, señal, dato, accion, etiquetas, confianza))
+    """, (tipo, senal, dato, accion, etiquetas, confianza))
     conn.commit()
     conn.close()
 
@@ -80,7 +80,7 @@ def analizar_patrones():
         mejor = top_margen[0]
         hallazgos.append({
             "tipo": "Patrón de Margen",
-            "señal": f"Producto más rentable: {mejor['nombre']}",
+            "senal": f"Producto más rentable: {mejor['nombre']}",
             "dato": f"Margen {mejor['margen_pct']}% — Marca: {mejor['marca_ep']}",
             "accion": f"Priorizar producción de {mejor['nombre']} ante demanda similar",
             "etiquetas": f"margen_alto|{mejor['categoria'].lower().replace(' ','_')}",
@@ -101,7 +101,7 @@ def analizar_patrones():
         if c["nro_ordenes"] and c["nro_ordenes"] >= 2:
             hallazgos.append({
                 "tipo": "Cliente Recurrente",
-                "señal": f"{c['nombre']} tiene {c['nro_ordenes']} órdenes — cliente consolidado",
+                "senal": f"{c['nombre']} tiene {c['nro_ordenes']} órdenes — cliente consolidado",
                 "dato": f"Total facturado: ${c['total_facturado']:,.0f}",
                 "accion": "Considerar precio especial por volumen o programa de fidelidad",
                 "etiquetas": f"cliente_recurrente|{c['tipo'].lower()}",
@@ -125,7 +125,7 @@ def analizar_patrones():
                 if dias <= 2:
                     hallazgos.append({
                         "tipo": "Alerta Entrega",
-                        "señal": f"ODV {p['id_odv']} vence en {dias} días",
+                        "senal": f"ODV {p['id_odv']} vence en {dias} días",
                         "dato": f"Estado: {p['estado']} — Entrega: {p['fecha_entrega']}",
                         "accion": "Verificar avance de producción con Fernando",
                         "etiquetas": "entrega_urgente|produccion",
@@ -147,7 +147,7 @@ def analizar_patrones():
         top_cat = cats[0]
         hallazgos.append({
             "tipo": "Patrón de Demanda",
-            "señal": f"Categoría más demandada: {top_cat['categoria']}",
+            "senal": f"Categoría más demandada: {top_cat['categoria']}",
             "dato": f"{top_cat['pedidos']} pedidos — ${top_cat['revenue']:,.0f} en revenue",
             "accion": f"Ampliar catálogo en {top_cat['categoria']} — hay demanda probada",
             "etiquetas": f"demanda|{top_cat['categoria'].lower().replace(' ','_')}",
@@ -158,7 +158,7 @@ def analizar_patrones():
 
     # Guardar hallazgos en el log
     for h in hallazgos:
-        registrar_log(h["tipo"], h["señal"], h["dato"], h["accion"], h["etiquetas"], h["confianza"])
+        registrar_log(h["tipo"], h["senal"], h["dato"], h["accion"], h["etiquetas"], h["confianza"])
 
     return hallazgos
 
@@ -192,7 +192,7 @@ def generar_resumen():
 
     # Logs recientes del agente
     logs = cur.execute("""
-        SELECT tipo, señal, accion_sugerida, confianza
+        SELECT tipo, senal, accion_sugerida, confianza
         FROM log_agente
         WHERE DATE(fecha) = DATE('now')
         ORDER BY confianza DESC
@@ -208,7 +208,7 @@ def generar_resumen():
 
 def enviar_email(totales, odvs, hallazgos):
     if CONFIG["modo_silencioso"] or not CONFIG["app_password"]:
-        print("📧 Email omitido (modo silencioso o sin contraseña configurada)")
+        print("📧 Email omitido (modo silencioso o sin contrasena configurada)")
         return
 
     hoy = datetime.now().strftime("%d/%m/%Y %H:%M")
@@ -233,7 +233,7 @@ def enviar_email(totales, odvs, hallazgos):
         <div style='background:#F0F8FF; border-left:4px solid #0071BC; 
                     padding:10px; margin:8px 0; border-radius:4px;'>
             <strong>{h['tipo']}</strong> (confianza: {h['confianza']*100:.0f}%)<br>
-            📍 {h['señal']}<br>
+            📍 {h['senal']}<br>
             💡 <em>{h['accion']}</em>
         </div>"""
 
@@ -320,7 +320,7 @@ if __name__ == "__main__":
     print(f"   → {totales['total_odv']} ODV | {totales['en_produccion']} en producción | ${totales['facturado_total']:,.0f} facturado")
 
     for h in hallazgos:
-        print(f"\n   🔸 [{h['tipo']}] {h['señal']}")
+        print(f"\n   🔸 [{h['tipo']}] {h['senal']}")
         print(f"      💡 {h['accion']}")
 
     print("\n📧 Enviando resumen por email...")
