@@ -29,7 +29,7 @@ from email.mime.multipart import MIMEMultipart
 CONFIG = {
     "email_origen":   "elpasaje.3d.studio@gmail.com",
     "email_destino":  "elpasaje.3d.studio@gmail.com",
-    "app_password":   "",   # ← completar con App Password de Google (16 caracteres)
+    "app_password":   "yggvmdwtjhfcerlr",   # ← completar con App Password de Google (16 caracteres)
     "db_path":        r"C:\Users\ar028883\Documents\elpasaje-app-clean\ep_pasaje.db",
     "modo_silencioso": "--silencioso" in sys.argv or "silencioso" in sys.argv,
 }
