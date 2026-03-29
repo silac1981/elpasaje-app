@@ -283,24 +283,128 @@ if st.session_state["role"] == "produccion":
 
     elif menu == "🧵 Materiales":
         st.markdown("<div class='section-title'>🧵 Stock de Filamentos</div>", unsafe_allow_html=True)
+
+        # Calcular consumo del mes por material desde production_log
+        try:
+            consumo_mes = pd.read_sql("""
+                SELECT material_id, SUM(gramos_usados) as consumido_mes
+                FROM production_log
+                WHERE fecha_inicio >= date('now','start of month')
+                GROUP BY material_id
+            """, engine)
+        except:
+            consumo_mes = pd.DataFrame(columns=["material_id","consumido_mes"])
+
+        # Calcular qué líneas usan cada material
+        try:
+            uso_lineas = pd.read_sql("""
+                SELECT p.material_id, GROUP_CONCAT(DISTINCT t.name) as lineas
+                FROM products p
+                JOIN tenants t ON p.client_id = t.id
+                WHERE p.material_id IS NOT NULL
+                GROUP BY p.material_id
+            """, engine)
+        except:
+            uso_lineas = pd.DataFrame(columns=["material_id","lineas"])
+
+        # Historial de compras por material
+        try:
+            compras = pd.read_sql("""
+                SELECT product_sku as material_id, fecha, cantidad, referencia
+                FROM stock_movements
+                WHERE tipo = 'entrada'
+                ORDER BY fecha DESC
+            """, engine)
+        except:
+            compras = pd.DataFrame(columns=["material_id","fecha","cantidad","referencia"])
+
         if not materiales.empty:
-            for _, m in materiales.iterrows():
+            col_a, col_b = st.columns(2)
+            for idx, (_, m) in enumerate(materiales.iterrows()):
                 stock = m.get("stock_gr", 0)
                 minimo = m.get("stock_minimo_gr", 200)
                 pct = min(stock / 1000 * 100, 100)
                 color_bar = "#059669" if stock > minimo*2 else ("#D97706" if stock > minimo else "#EF4444")
-                alerta = " ⚠️ STOCK BAJO — Hay que comprar" if stock <= minimo else ""
-                st.markdown(f"""
-                <div style='background:white;border-radius:12px;padding:20px;margin-bottom:12px;
-                     box-shadow:0 2px 12px rgba(0,0,0,0.06);border-left:4px solid {color_bar};'>
-                    <div style='font-weight:700;color:#1a1a2e;font-size:1rem;'>{m.get('name','')}{alerta}</div>
-                    <div style='font-size:1.8rem;font-weight:700;color:{color_bar};margin:6px 0;'>{stock:.0f}g</div>
-                    <div style='font-size:0.8rem;color:#6B7280;'>${m.get('cost_kg',0):,.0f}/kg · Mínimo: {minimo}g</div>
-                    <div style='background:#F3F4F6;border-radius:999px;height:8px;margin-top:10px;'>
-                        <div style='width:{pct:.0f}%;background:{color_bar};height:100%;border-radius:999px;'></div>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
+                alerta = "⚠️ STOCK BAJO" if stock <= minimo else "✅ OK"
+                mid = m.get("material_id","")
+
+                # Datos de consumo del mes
+                consumo = consumo_mes[consumo_mes["material_id"]==mid]["consumido_mes"].sum() if not consumo_mes.empty else 0
+                # Líneas que usan este material
+                lineas_txt = uso_lineas[uso_lineas["material_id"]==mid]["lineas"].values[0] if not uso_lineas.empty and mid in uso_lineas["material_id"].values else "Sin asignar"
+                # Última compra
+                compra_mat = compras[compras["material_id"]==mid].head(1) if not compras.empty else pd.DataFrame()
+                ultima_compra = compra_mat["fecha"].values[0] if not compra_mat.empty else m.get("fecha_compra","—")
+                ultimo_precio = m.get("cost_kg", 0)
+                # Días de stock restante (estimado)
+                dias_stock = round(stock / (consumo / 30)) if consumo > 0 else 999
+
+                col = col_a if idx % 2 == 0 else col_b
+                with col:
+                    with st.expander(f"{'⚠️' if stock <= minimo else '🟢'} {m.get('name','')} — {stock:.0f}g restantes"):
+                        # Barra de stock
+                        st.markdown(f"""
+                        <div style='margin-bottom:12px;'>
+                            <div style='display:flex;justify-content:space-between;margin-bottom:4px;'>
+                                <span style='font-size:2rem;font-weight:700;color:{color_bar};'>{stock:.0f}g</span>
+                                <span style='font-size:0.8rem;color:#6B7280;padding-top:12px;'>{alerta}</span>
+                            </div>
+                            <div style='background:#F3F4F6;border-radius:999px;height:10px;'>
+                                <div style='width:{pct:.0f}%;background:{color_bar};height:100%;border-radius:999px;'></div>
+                            </div>
+                            <div style='font-size:0.75rem;color:#9CA3AF;margin-top:4px;'>{pct:.0f}% de 1kg de referencia · Mínimo: {minimo}g</div>
+                        </div>
+                        """, unsafe_allow_html=True)
+
+                        # Grid de datos
+                        d1, d2, d3 = st.columns(3)
+                        with d1:
+                            st.markdown(f"**💰 Precio/kg**")
+                            st.markdown(f"${ultimo_precio:,.0f}")
+                            st.markdown(f"**📅 Última compra**")
+                            st.markdown(f"{ultima_compra}")
+                        with d2:
+                            st.markdown(f"**🔥 Consumido este mes**")
+                            st.markdown(f"{consumo:.0f}g")
+                            st.markdown(f"**📊 Stock estimado**")
+                            st.markdown(f"{'∞ días' if dias_stock==999 else f'{dias_stock} días'}")
+                        with d3:
+                            st.markdown(f"**🏭 Usado en líneas**")
+                            st.markdown(f"{lineas_txt[:50] if lineas_txt else '—'}")
+                            st.markdown(f"**💵 Valor stock**")
+                            st.markdown(f"${stock * ultimo_precio / 1000:,.0f}")
+
+                        # Historial de compras de este material
+                        hist_mat = compras[compras["material_id"]==mid].head(5) if not compras.empty else pd.DataFrame()
+                        if not hist_mat.empty:
+                            st.markdown("**📋 Últimas compras:**")
+                            st.dataframe(hist_mat[["fecha","cantidad","referencia"]].rename(columns={
+                                "fecha":"Fecha","cantidad":"Gramos","referencia":"Detalle"
+                            }), use_container_width=True, hide_index=True)
+
+                        # Botón compra rápida
+                        st.markdown("---")
+                        with st.form(f"compra_rapida_{mid}", clear_on_submit=True):
+                            cr1, cr2 = st.columns(2)
+                            with cr1:
+                                cr_gr = st.number_input("Gramos a cargar", min_value=0, step=250, value=1000, key=f"gr_{mid}")
+                            with cr2:
+                                cr_precio = st.number_input("Precio pagado ($)", min_value=0.0, step=500.0, key=f"pr_{mid}")
+                            if st.form_submit_button("🛒 Registrar compra", use_container_width=True):
+                                try:
+                                    with engine.connect() as conn_:
+                                        nuevo_costo = cr_precio/(cr_gr/1000) if cr_gr > 0 else ultimo_precio
+                                        conn_.execute(text(f"UPDATE materials SET stock_gr=stock_gr+{cr_gr}, cost_kg={nuevo_costo} WHERE material_id='{mid}'"))
+                                        conn_.execute(text(f"""
+                                            INSERT INTO stock_movements (product_sku, tipo, cantidad, fecha, referencia)
+                                            VALUES ('{mid}','entrada',{cr_gr},'{datetime.now().strftime('%Y-%m-%d')}',
+                                            'Compra Fer — ${cr_precio:,.0f} — ${nuevo_costo:,.0f}/kg')
+                                        """))
+                                        conn_.commit()
+                                    st.success(f"✅ +{cr_gr}g registrado a ${nuevo_costo:,.0f}/kg")
+                                    st.rerun()
+                                except Exception as e:
+                                    st.error(f"Error: {e}")
 
         # Actualizar stock
         st.markdown("<div class='section-title'>🛒 Registrar compra de material</div>", unsafe_allow_html=True)
@@ -840,4 +944,3 @@ elif menu == "🌱 Impacto Social":
             icon = TIPO_ICON.get(row["tipo"], "💰")
             finfo = FONDOS.get(row["fondo"], {"nombre":row["fondo"],"emoji":"❓","color":"#ccc"})
             st.markdown(f"<div style='background:white;border-radius:12px;padding:14px 18px;margin-bottom:8px;box-shadow:0 2px 8px rgba(0,0,0,0.05);border-left:4px solid {finfo['color']};'><div style='display:flex;justify-content:space-between;align-items:center;'><div><b>{icon} {finfo['emoji']} {finfo['nombre']}</b><span style='margin-left:10px;font-size:0.75rem;color:#6B7280;'>{row['tipo'].upper()} · {row['fecha']}</span><div style='font-size:0.78rem;color:#9CA3AF;margin-top:3px;'>{row.get('descripcion','') or ''}</div></div><div style='font-size:1.4rem;font-weight:700;color:{finfo['color']};'>${row['monto']:,.0f}</div></div></div>", unsafe_allow_html=True)
-# v2.1
