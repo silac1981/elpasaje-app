@@ -29,6 +29,11 @@ st.markdown("""
 .main-header p  { font-family: 'Inter', sans-serif; font-size: 0.85rem; color: #94a3b8; margin: 6px 0 0; }
 .section-title { font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; color: #1a1a2e; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; margin: 28px 0 16px; }
 .stock-critico { background: #FEF2F2; border-left: 5px solid #EF4444; border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; }
+.stExpander { background: white !important; }
+.stExpander details { background: white !important; }
+.stExpander summary p { color: #1a1a2e !important; font-weight: 600 !important; }
+.stMarkdown p, .stMarkdown span { color: #1a1a2e !important; }
+.stTabs [data-baseweb="tab"] { color: #1a1a2e !important; font-weight: 600; }
 </style>
 """, unsafe_allow_html=True)
 
