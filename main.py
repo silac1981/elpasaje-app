@@ -30,6 +30,12 @@ st.markdown("""
 .section-title { font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; color: #1a1a2e; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; margin: 28px 0 16px; }
 .stock-critico { background: #FEF2F2; border-left: 5px solid #EF4444; border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; }
 .stExpander { background: white !important; }
+.stTextInput label, .stSelectbox label, .stTextArea label, 
+.stCheckbox label, .stNumberInput label { 
+    color: #1a1a2e !important; font-weight: 600 !important; font-size: 0.85rem !important;
+}
+.stForm { background: white; border-radius: 16px; padding: 20px; }
+div[data-testid="stFormSubmitButton"] button { margin-top: 12px; }
 .stExpander details { background: white !important; }
 .stExpander summary p { color: #1a1a2e !important; font-weight: 600 !important; }
 .stMarkdown p, .stMarkdown span { color: #1a1a2e !important; }
