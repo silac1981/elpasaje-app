@@ -173,6 +173,7 @@ TENANTS_INICIALES = [
     ("oasis_animal",     "Oasis Animal",                      "oasisanimal@elpasaje.com", "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",    None,          "b2b",     None,                  HOY, 1),
     ("oasis_del_estero", "Oasis del Estero",                  "oasisestero@elpasaje.com", "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",    None,          "b2b",     None,                  HOY, 1),
     ("pharma_delux",     "Pharma DeLux",                      "pharma@elpasaje.com",      "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",    None,          "b2b",     None,                  HOY, 1),
+    ("fer_produccion",   "Fernando (Fer)",                     "fer@elpasaje.com",         "a29461d9796a45974014a214c0ece938a5f9dcd8799f26b26c34d3e8adf31c69",    None,          "produccion", "Fabricacion y Materiales", HOY, 1),
 ]
 
 MATERIALS_INICIALES = [
