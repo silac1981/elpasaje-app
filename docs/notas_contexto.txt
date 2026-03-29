@@ -1,0 +1,4 @@
+# Notas para el Agente IA
+# Creado: 28/03/2026
+# Agregá acá cualquier contexto nuevo que quieras que el agente sepa.
+
