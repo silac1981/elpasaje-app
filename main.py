@@ -130,6 +130,8 @@ with st.sidebar:
     """, unsafe_allow_html=True)
     if st.session_state["role"] == "admin":
         menu = st.radio("", ["📊 Dashboard Alejandra","📦 Inventario Pro","🛠️ Produccion (Fer)","🤝 Socios","👥 Clientes","🌱 Impacto Social"], label_visibility="collapsed")
+    elif st.session_state["role"] == "produccion":
+        menu = st.radio("", ["🛠️ Mi Panel Produccion","📦 Cargar Fabricacion","🧵 Materiales","📋 Cola de Pedidos"], label_visibility="collapsed")
     else:
         menu = st.radio("", ["📈 Mi Panel","🛒 Cargar Pedido"], label_visibility="collapsed")
     st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)
