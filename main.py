@@ -16,19 +16,54 @@ st.set_page_config(
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap');
+
+/* ── APP ── */
 .stApp { background-color: #F0F2F6; }
-.stSidebar { background-color: #1a1a2e !important; }
-.stSidebar * { color: white !important; }
+
+/* ── SIDEBAR ── */
+[data-testid="stSidebar"] { background-color: #1a1a2e !important; }
+[data-testid="stSidebar"] * { color: #FFFFFF !important; }
+[data-testid="stSidebar"] p,
+[data-testid="stSidebar"] span,
+[data-testid="stSidebar"] label,
+[data-testid="stSidebar"] div { color: #FFFFFF !important; }
+/* Radio buttons en sidebar */
+[data-testid="stSidebar"] [data-baseweb="radio"] label p { 
+    color: #FFFFFF !important; font-size: 0.9rem !important; font-weight: 500 !important;
+}
+[data-testid="stSidebar"] [data-baseweb="radio"] [data-checked="true"] label p { 
+    color: #C9A84C !important; font-weight: 700 !important;
+}
+/* Version label */
+[data-testid="stSidebar"] .version-label { color: #94a3b8 !important; }
+/* Botón cerrar sesión */
+[data-testid="stSidebar"] button { 
+    background: rgba(255,255,255,0.1) !important; 
+    color: #FFFFFF !important; 
+    border: 1px solid rgba(255,255,255,0.2) !important;
+}
+[data-testid="stSidebar"] button:hover { 
+    background: rgba(201,168,76,0.2) !important;
+    border-color: #C9A84C !important;
+}
+
+/* ── CARDS ── */
 .metric-card { background: white; border-radius: 16px; padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.07); border-top: 5px solid; transition: transform 0.2s; height: 100%; }
 .metric-card:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(0,0,0,0.12); }
 .metric-title { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #6B7280; margin-bottom: 8px; }
 .metric-value { font-family: 'Cormorant Garamond', serif; font-size: 36px; font-weight: 700; color: #1a1a2e; line-height: 1; }
 .metric-sub   { font-size: 12px; color: #9CA3AF; margin-top: 6px; }
+
+/* ── HEADER ── */
 .main-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); color: white; padding: 28px 36px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); margin-bottom: 28px; }
-.main-header h1 { font-family: 'Cormorant Garamond', serif; font-size: 2.2rem; margin: 0; letter-spacing: 2px; }
+.main-header h1 { font-family: 'Cormorant Garamond', serif; font-size: 2.2rem; margin: 0; letter-spacing: 2px; color: white !important; }
 .main-header p  { font-family: 'Inter', sans-serif; font-size: 0.85rem; color: #94a3b8; margin: 6px 0 0; }
+
+/* ── TITULOS ── */
 .section-title { font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; color: #1a1a2e; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; margin: 28px 0 16px; }
 .stock-critico { background: #FEF2F2; border-left: 5px solid #EF4444; border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; }
+
+/* ── FORMULARIOS ── */
 .stExpander { background: white !important; }
 .stTextInput label, .stSelectbox label, .stTextArea label, 
 .stCheckbox label, .stNumberInput label { 
@@ -130,7 +165,7 @@ with st.sidebar:
     if st.button("Cerrar Sesion", use_container_width=True):
         st.session_state.update({"auth": False, "user": None, "role": None, "uid": None})
         st.rerun()
-    st.markdown(f"<div style='font-size:0.7rem;color:#4B5563;text-align:center;margin-top:20px;'>v2.6 · {datetime.now().strftime('%d/%m/%Y')}</div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='font-size:0.7rem;color:#94a3b8;text-align:center;margin-top:20px;'>v2.6 · {datetime.now().strftime('%d/%m/%Y')}</div>", unsafe_allow_html=True)
 
 # DASHBOARD ALEJANDRA
 if menu == "📊 Dashboard Alejandra":
