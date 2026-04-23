@@ -300,10 +300,20 @@ ANOVA: compara tiempo de resolución (DiasDesdeVuelo en REVI) entre escalas
   Post-hoc Tukey: identifica cuáles escalas difieren entre sí
 
 ═══════════════════════════════════════════════
+IDENTIFICACIÓN DE ÓRDENES — REGLA FUNDAMENTAL
+═══════════════════════════════════════════════
+El campo que identifica una OV es SIEMPRE 'Orden' (número de 12 dígitos, ej: 700001226170).
+NUNCA usar el campo 'Texto breve', descripción del vuelo, ni ningún texto descriptivo
+como identificador de una orden. Siempre citá el número de Orden cuando menciones una OV.
+
+Ejemplo CORRECTO: "La Orden 700001226170 tiene SIN_CONTRATO por $1.921"
+Ejemplo INCORRECTO: "El vuelo AR1132/EZE-MAD tiene SIN_CONTRATO"
+
+═══════════════════════════════════════════════
 COMPORTAMIENTO DEL AGENTE
 ═══════════════════════════════════════════════
 - Español, técnico, directo — como analista senior de Control de Gestión
-- Para cada error: tipo + impacto + área responsable + email escala + transacción SAP + procedimiento
+- Para cada error: Orden (número) + tipo + impacto + área responsable + email escala + transacción SAP
 - Ordenar por impacto financiero (Impacto_Financiero del Excel)
 - Señalar patrones recurrentes con evidencia
 - Marcar anomalías de volumen según día/mes
@@ -311,6 +321,7 @@ COMPORTAMIENTO DEL AGENTE
 - Armar emails profesionales con asunto, destinatario y cuerpo completo
 - No inventar datos — si algo no está en el contexto, pedirlo o aclararlo
 - Siempre referir a las transacciones SAP específicas para la corrección
+- Los datos de errores son REALES, leídos de ERRORES_DETECTADOS.xlsx — citarlos con exactitud
 """
 
 
@@ -346,12 +357,14 @@ def get_data_context() -> str:
 def _errores(df):
     if df.empty:
         return "ERRORES: ninguno ✅\n"
-    lines = [f"ERRORES DETECTADOS: {len(df)}\n"]
 
     CRITICOS = {"SIN_CONTRATO","ELLS_LIMITE","FACTURA_SIN_OV","PUESTO_BASURA",
                 "CONTRATO_VENCIDO","SERVICIO_NO_PLANIFICADO","EXCESO_VALOR"}
     MEDIOS   = {"REMITO_INVALIDO","CANTIDAD_INCONSISTENTE","VUELO_CANCELADO",
                 "REVI_VENCIDO","PROVEEDOR_INCORRECTO","MANGA_INCORRECTA","SOBRECOSTO"}
+
+    n_ordenes = df['Orden'].nunique() if 'Orden' in df.columns else len(df)
+    lines = [f"ERRORES DETECTADOS: {len(df)} registros en {n_ordenes} órdenes únicas\n"]
 
     if 'Tipo_Error' in df.columns:
         lines.append("POR TIPO:")
@@ -386,6 +399,40 @@ def _errores(df):
         lines.append("\nPOR ÁREA RESPONSABLE:")
         for a, n in df['Area_Responsable'].value_counts().items():
             lines.append(f"  {a}: {n}")
+
+    if 'Periodo' in df.columns and df['Periodo'].nunique() > 1:
+        lines.append("\nPOR PERÍODO:")
+        for p, n in df.groupby('Periodo').size().sort_index().items():
+            lines.append(f"  {p}: {n}")
+
+    # Órdenes individuales con número real de Orden
+    if 'Orden' in df.columns and 'Tipo_Error' in df.columns:
+        df_crit = df[df['Tipo_Error'].isin(CRITICOS)]
+        if df_crit.empty:
+            df_crit = df
+        grp_cols = {c: (c, 'first') for c in ['Vuelo', 'Centro', 'Periodo'] if c in df.columns}
+        grp_cols['impacto_total'] = ('Impacto_Financiero', 'sum') if 'Impacto_Financiero' in df.columns else None
+        grp_cols['tipos_error'] = ('Tipo_Error', lambda x: '|'.join(sorted(x.unique())))
+
+        agg_spec = {k: v for k, v in grp_cols.items() if v is not None}
+        top = (df_crit.groupby('Orden')
+               .agg(**agg_spec)
+               .sort_values('impacto_total', ascending=False)
+               .head(20))
+
+        lines.append("\nÓRDENES CRÍTICAS — TOP 20 POR IMPACTO (número de Orden real):")
+        for orden, row in top.iterrows():
+            partes = [f"  Orden {orden}"]
+            if 'Vuelo' in row:
+                partes.append(str(row['Vuelo']))
+            if 'Centro' in row:
+                partes.append(str(row['Centro']))
+            if 'impacto_total' in row:
+                partes.append(f"${row['impacto_total']:,.0f}")
+            partes.append(row['tipos_error'])
+            if 'Periodo' in row:
+                partes.append(str(row['Periodo']))
+            lines.append(" | ".join(partes))
 
     return "\n".join(lines) + "\n"
 
