@@ -139,7 +139,7 @@ if not st.session_state["auth"]:
             )
             if not row.empty:
                 uid  = row["id"].iloc[0]
-                role = "admin" if uid == "admin" else "socio"
+                role = "admin" if uid == "admin" else ("produccion" if uid == "fer_produccion" else "socio")
                 st.session_state.update({"auth": True, "user": row["name"].iloc[0], "role": role, "uid": uid})
                 st.rerun()
             else:
@@ -153,12 +153,14 @@ with st.sidebar:
         <div style='text-align:center;padding:20px 0 10px;'>
             <div style='font-size:2.5rem;'>{linea_cfg['emoji']}</div>
             <div style='font-size:1rem;font-weight:600;margin-top:6px;'>{st.session_state['user']}</div>
-            <div style='font-size:0.75rem;color:#94a3b8;margin-top:2px;'>{"Administracion" if st.session_state["role"] == "admin" else "Socio"}</div>
+            <div style='font-size:0.75rem;color:#94a3b8;margin-top:2px;'>{"Administracion" if st.session_state["role"] == "admin" else ("Produccion" if st.session_state["role"] == "produccion" else "Socio")}</div>
         </div>
         <hr style='border-color:#ffffff22;margin:0 0 16px;'/>
     """, unsafe_allow_html=True)
     if st.session_state["role"] == "admin":
         menu = st.radio("", ["📊 Dashboard Alejandra","📦 Inventario Pro","🛠️ Produccion (Fer)","🤝 Socios","👥 Clientes","🌱 Impacto Social"], label_visibility="collapsed")
+    elif st.session_state["role"] == "produccion":
+        menu = st.radio("", ["📋 Cola de Pedidos","📝 Registrar Fabricacion","🧵 Materiales","⚙️ Calculadora"], label_visibility="collapsed")
     else:
         menu = st.radio("", ["📈 Mi Panel","🛒 Cargar Pedido"], label_visibility="collapsed")
     st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)
@@ -317,7 +319,7 @@ elif menu == "🛠️ Produccion (Fer)":
     costo_calc = calcular_costo_pieza(peso_g, costo_kg_sel, merma / 100)
     ganancia = precio_v - costo_calc
     margen = (ganancia / precio_v * 100) if precio_v > 0 else 0
-    st.markdown(f"<div style='background:white;border-radius:16px;padding:20px;box-shadow:0 4px 12px rgba(0,0,0,0.06);margin-top:12px;'><div style='display:flex;gap:32px;flex-wrap:wrap;'><div><div class='metric-title'>💰 Costo Pieza</div><div style='font-size:2rem;font-weight:700;color:#DC2626;'>${costo_calc:,.2f}</div></div><div><div class='metric-title'>📈 Ganancia</div><div style='font-size:2rem;font-weight:700;color:#059669;'>${ganancia:,.2f}</div></div><div><div class='metric-title'>📊 Margen</div><div style='font-size:2rem;font-weight:700;color:#1E3A8A;'>{margen:.1f}%</div></div><div><div class='metric-title'>✅ Precio Regla x3</div><div style='font-size:2rem;font-weight:700;color:#7C3AED;'>${costo_calc * 3:,.2f}</div></div></div></div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='background:white;border-radius:16px;padding:20px;box-shadow:0 4px 12px rgba(0,0,0,0.06);margin-top:12px;'><div style='display:flex;gap:32px;flex-wrap:wrap;'><div><div class='metric-title'>💰 Costo Pieza</div><div style='font-size:2rem;font-weight:700;color:#DC2626;'>${costo_calc:,.2f}</div></div><div><div class='metric-title'>📈 Ganancia</div><div style='font-size:2rem;font-weight:700;color:#059669;'>${ganancia:,.2f}</div></div><div><div class='metric-title'>📊 Margen</div><div style='font-size:2rem;font-weight:700;color:#1E3A8A;'>{margen:.1f}%</div></div><div><div class='metric-title'>✅ Precio Margen Ale (×4)</div><div style='font-size:2rem;font-weight:700;color:#7C3AED;'>${costo_calc * 4:,.2f}</div></div></div></div>", unsafe_allow_html=True)
 
 elif menu == "🤝 Socios":
     st.markdown("<div class='main-header'><h1>🤝 Panel de Socios</h1><p>Ecosistema El Pasaje · Familia + B2B · Visión consolidada</p></div>", unsafe_allow_html=True)
@@ -342,7 +344,14 @@ elif menu == "🤝 Socios":
     for _, t in tenants.iterrows():
         cfg = get_linea(t["id"])
         prod = df[df["client_id"] == t["id"]]
-        chart_rows.append({"Socio":cfg["nombre"],"Costo":prod["costo_stock"].sum(),"Ganancia":prod["ganancia_stock"].sum(),"valor_total":prod["valor_stock"].sum(),"Color":cfg["color"]})
+        chart_rows.append({
+            "Socio": cfg["nombre"],
+            "Costo": prod["costo_stock"].sum(),
+            "Ganancia": prod["ganancia_stock"].sum(),
+            "valor_total": prod["valor_stock"].sum(),
+            "n_skus": len(prod),
+            "Color": cfg["color"],
+        })
     df_chart = pd.DataFrame(chart_rows).sort_values("Ganancia", ascending=True)
     col_a, col_b = st.columns([1.6, 1])
     with col_a:
@@ -353,11 +362,13 @@ elif menu == "🤝 Socios":
         fig_bar.update_layout(barmode="stack", plot_bgcolor="white", paper_bgcolor="white", height=300, margin=dict(l=10,r=60,t=10,b=30), legend=dict(orientation="h",yanchor="bottom",y=1.02), xaxis=dict(tickprefix="$",tickformat=",.0f"))
         st.plotly_chart(fig_bar, use_container_width=True)
     with col_b:
-        st.markdown("<div class='section-title'>🥧 Participación</div>", unsafe_allow_html=True)
-        color_map = {r["Socio"]:r["Color"] for _, r in df_chart.iterrows()}
-        fig_pie = px.pie(df_chart, values="valor_total", names="Socio", color="Socio", color_discrete_map=color_map, hole=0.5)
-        fig_pie.update_traces(textposition="inside", textinfo="percent", textfont_size=10)
-        fig_pie.update_layout(showlegend=True, height=300, margin=dict(l=0,r=0,t=10,b=10), paper_bgcolor="white", legend=dict(font=dict(size=10)))
+        st.markdown("<div class='section-title'>🥧 SKUs por Línea</div>", unsafe_allow_html=True)
+        df_pie = df_chart.copy()
+        df_pie["_val"] = df_pie["n_skus"].apply(lambda x: x if x > 0 else 0.3)
+        color_map = {r["Socio"]: r["Color"] for _, r in df_pie.iterrows()}
+        fig_pie = px.pie(df_pie, values="_val", names="Socio", color="Socio", color_discrete_map=color_map, hole=0.5, custom_data=["n_skus"])
+        fig_pie.update_traces(textposition="inside", texttemplate="%{label}<br>%{customdata[0]} SKUs", textfont_size=9)
+        fig_pie.update_layout(showlegend=False, height=300, margin=dict(l=0,r=0,t=10,b=10), paper_bgcolor="white")
         st.plotly_chart(fig_pie, use_container_width=True)
     for grupo_label, grupo_df in [("👨‍👩‍👧‍👦 Familia El Pasaje", tenants[~tenants["id"].isin(B2B_IDS)]),("🤝 Socios B2B · Nando", tenants[tenants["id"].isin(B2B_IDS)])]:
         if grupo_df.empty: continue
@@ -409,18 +420,53 @@ elif menu == "🛒 Cargar Pedido":
     uid = st.session_state["uid"]
     cfg = get_linea(uid)
     st.markdown(f"<div class='main-header'><h1>🛒 Nuevo Pedido · {cfg['nombre']}</h1><p>Solicita produccion a Fer de forma digital</p></div>", unsafe_allow_html=True)
-    prods_admin = pd.read_sql("SELECT name, sku FROM products WHERE client_id='admin'", engine)
-    producto = st.selectbox("Producto", prods_admin["name"].tolist())
-    cantidad = st.number_input("Cantidad", min_value=1, max_value=100, value=1)
-    notas = st.text_area("Notas para Fer (color, urgencia, etc.)", height=80)
-    if st.button("Confirmar Pedido", type="primary"):
+
+    prods_socio = pd.read_sql(f"SELECT name, sku, price, weight_gr FROM products WHERE client_id='{uid}'", engine)
+    if prods_socio.empty:
+        st.info("No tenés productos cargados en tu línea todavía. Contactá a Alejandra para que los cargue.")
+        st.stop()
+
+    mats = cargar_materiales()
+    COLORES = ["Negro","Blanco","Gris","Rojo","Azul","Verde","Rosa","Naranja","Dorado","Plateado","Multicolor","A definir con Fer"]
+
+    producto_sel = st.selectbox("📦 Producto", prods_socio["name"].tolist())
+    prod_data = prods_socio[prods_socio["name"] == producto_sel].iloc[0]
+
+    col_p1, col_p2 = st.columns(2)
+    with col_p1:
+        cantidad = st.number_input("Cantidad", min_value=1, max_value=100, value=1)
+        color_sel = st.selectbox("🎨 Color", COLORES)
+        color_final = st.text_input("Especificá el color") if color_sel == "A definir con Fer" else color_sel
+    with col_p2:
+        mat_nombres = mats["name"].tolist()
+        material_sel = st.selectbox("🧵 Material preferido", ["Sin preferencia"] + mat_nombres)
+        urgencia = st.selectbox("⏰ Urgencia", ["Normal (72hs)", "Media (48hs)", "Alta (24hs — coordinar con Fer)"])
+
+    notas = st.text_area("📝 Notas adicionales para Fer", height=80, placeholder="Ej: para regalo, necesito caja incluida...")
+
+    precio_unit = float(prod_data["price"])
+    total_estimado = precio_unit * cantidad
+    st.markdown(f"""
+    <div style='background:white;border-radius:16px;padding:20px;box-shadow:0 4px 12px rgba(0,0,0,0.06);margin:16px 0;'>
+        <div style='display:flex;gap:32px;flex-wrap:wrap;'>
+            <div><div class='metric-title'>Producto</div><div style='font-size:1.1rem;font-weight:700;color:#1a1a2e;'>{producto_sel}</div></div>
+            <div><div class='metric-title'>Cantidad</div><div style='font-size:1.1rem;font-weight:700;color:#1a1a2e;'>{cantidad} uds</div></div>
+            <div><div class='metric-title'>Color</div><div style='font-size:1.1rem;font-weight:700;color:#1a1a2e;'>{color_final}</div></div>
+            <div><div class='metric-title'>Precio Unit</div><div style='font-size:1.1rem;font-weight:700;color:#059669;'>${precio_unit:,.0f}</div></div>
+            <div><div class='metric-title'>Total Estimado</div><div style='font-size:1.3rem;font-weight:700;color:#1E3A8A;'>${total_estimado:,.0f}</div></div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    nota_completa = f"Color: {color_final} | Material: {material_sel} | Urgencia: {urgencia}" + (f" | {notas.strip()}" if notas.strip() else "")
+    if st.button("✅ Confirmar Pedido", type="primary", use_container_width=True):
         with engine.connect() as conn:
-            result = conn.execute(text(f"INSERT INTO orders (client_id, status, date, notas, color_pedido) VALUES ('{uid}', 'Pendiente', '{datetime.now().isoformat()}', '{notas.strip()}', '')"))
+            result = conn.execute(text(f"INSERT INTO orders (client_id, status, date, notas, color_pedido) VALUES ('{uid}', 'Pendiente', '{datetime.now().isoformat()}', '{nota_completa}', '{color_final}')"))
             order_id = result.lastrowid
-            precio_unit = pd.read_sql(f"SELECT price FROM products WHERE name='{producto}'", engine)["price"].iloc[0]
-            conn.execute(text(f"INSERT INTO order_items (order_id, product_sku, cantidad, precio_unitario) SELECT {order_id}, sku, {cantidad}, {precio_unit} FROM products WHERE name='{producto}'"))
+            sku_prod = prods_socio[prods_socio["name"] == producto_sel]["sku"].iloc[0]
+            conn.execute(text(f"INSERT INTO order_items (order_id, product_sku, cantidad, precio_unitario) VALUES ({order_id}, '{sku_prod}', {cantidad}, {precio_unit})"))
             conn.commit()
-        st.success(f"✅ Pedido registrado: {cantidad}x {producto}")
+        st.success(f"✅ Pedido registrado: {cantidad}x {producto_sel} → {color_final}")
         st.balloons()
 
 
@@ -663,3 +709,204 @@ elif menu == "🌱 Impacto Social":
             icon = TIPO_ICON.get(row["tipo"], "💰")
             finfo = FONDOS.get(row["fondo"], {"nombre":row["fondo"],"emoji":"❓","color":"#ccc"})
             st.markdown(f"<div style='background:white;border-radius:12px;padding:14px 18px;margin-bottom:8px;box-shadow:0 2px 8px rgba(0,0,0,0.05);border-left:4px solid {finfo['color']};'><div style='display:flex;justify-content:space-between;align-items:center;'><div><b>{icon} {finfo['emoji']} {finfo['nombre']}</b><span style='margin-left:10px;font-size:0.75rem;color:#6B7280;'>{row['tipo'].upper()} · {row['fecha']}</span><div style='font-size:0.78rem;color:#9CA3AF;margin-top:3px;'>{row.get('descripcion','') or ''}</div></div><div style='font-size:1.4rem;font-weight:700;color:{finfo['color']};'>${row['monto']:,.0f}</div></div></div>", unsafe_allow_html=True)
+
+# ──────────────────────────────────────────────────────
+# PANELES DE FER (rol: produccion)
+# ──────────────────────────────────────────────────────
+
+elif menu == "📋 Cola de Pedidos":
+    st.markdown("<div class='main-header'><h1>📋 Cola de Pedidos</h1><p>Lo que tenés que fabricar hoy</p></div>", unsafe_allow_html=True)
+    ESTADO_CONFIG = {"Pendiente":{"color":"#F59E0B","emoji":"⏳"},"En Proceso":{"color":"#3B82F6","emoji":"🖨️"},"Listo":{"color":"#22C55E","emoji":"✅"},"Cancelado":{"color":"#EF4444","emoji":"❌"}}
+    try:
+        todos_pedidos = pd.read_sql("""
+            SELECT o.id, o.client_id, o.status, o.date, o.notas, o.color_pedido,
+                   oi.product_sku, oi.cantidad, oi.precio_unitario, p.name as product_name, p.weight_gr
+            FROM orders o
+            LEFT JOIN order_items oi ON oi.order_id = o.id
+            LEFT JOIN products p ON p.sku = oi.product_sku
+            WHERE o.status != 'Cancelado'
+            ORDER BY o.date ASC
+        """, engine)
+    except:
+        todos_pedidos = pd.DataFrame()
+
+    if todos_pedidos.empty:
+        st.success("🎉 No hay pedidos pendientes. Todo al día.")
+    else:
+        rc1, rc2, rc3 = st.columns(3)
+        for col, estado, ecfg in [(rc1,"Pendiente",ESTADO_CONFIG["Pendiente"]),(rc2,"En Proceso",ESTADO_CONFIG["En Proceso"]),(rc3,"Listo",ESTADO_CONFIG["Listo"])]:
+            cant = len(todos_pedidos[todos_pedidos["status"] == estado])
+            with col:
+                st.markdown(f"<div style='background:white;border-radius:12px;padding:16px;text-align:center;border-top:4px solid {ecfg['color']};box-shadow:0 2px 8px rgba(0,0,0,0.05);margin-bottom:20px;'><div style='font-size:1.8rem;'>{ecfg['emoji']}</div><div style='font-size:2rem;font-weight:700;color:{ecfg['color']};'>{cant}</div><div style='font-size:0.8rem;color:#6B7280;'>{estado}</div></div>", unsafe_allow_html=True)
+
+        tenants_df = pd.read_sql("SELECT id, name FROM tenants", engine)
+        tenant_map = dict(zip(tenants_df["id"], tenants_df["name"]))
+
+        for _, p in todos_pedidos.iterrows():
+            estado = p.get("status","Pendiente")
+            ecfg = ESTADO_CONFIG.get(estado, ESTADO_CONFIG["Pendiente"])
+            socio = tenant_map.get(p["client_id"], p["client_id"])
+            fecha = str(p.get("date",""))[:10]
+            pid = p["id"]
+            peso_total = float(p.get("weight_gr") or 0) * int(p.get("cantidad") or 1)
+            notas_pedido = p.get("notas","") or ""
+            color_pedido = p.get("color_pedido","") or "—"
+
+            col_info, col_btn = st.columns([3, 1])
+            with col_info:
+                st.markdown(f"""
+                <div style='background:white;border-radius:12px;padding:16px 20px;border-left:5px solid {ecfg['color']};box-shadow:0 2px 8px rgba(0,0,0,0.05);margin-bottom:8px;'>
+                    <div style='font-weight:700;color:#1a1a2e;font-size:1rem;'>{ecfg['emoji']} {p['product_name']}</div>
+                    <div style='font-size:0.8rem;color:#6B7280;margin-top:6px;display:flex;gap:16px;flex-wrap:wrap;'>
+                        <span>👤 {socio}</span><span>📅 {fecha}</span>
+                        <span>🎨 {color_pedido}</span><span>📦 {int(p.get('cantidad',1))} uds</span>
+                        {f"<span>⚖️ ~{peso_total:.0f}g</span>" if peso_total > 0 else ""}
+                    </div>
+                    {f"<div style='margin-top:8px;font-size:0.78rem;color:#4B5563;background:#F9FAFB;padding:6px 10px;border-radius:6px;'>📝 {notas_pedido}</div>" if notas_pedido else ""}
+                </div>
+                """, unsafe_allow_html=True)
+            with col_btn:
+                nuevo_estado = st.selectbox("Estado", ["Pendiente","En Proceso","Listo","Cancelado"],
+                    index=["Pendiente","En Proceso","Listo","Cancelado"].index(estado),
+                    key=f"fer_estado_{pid}", label_visibility="collapsed")
+                if nuevo_estado != estado:
+                    if st.button("Actualizar", key=f"fer_btn_{pid}", type="primary"):
+                        with engine.connect() as conn:
+                            conn.execute(text(f"UPDATE orders SET status='{nuevo_estado}' WHERE id={pid}"))
+                            conn.commit()
+                        st.success(f"✅ #{pid} → {nuevo_estado}")
+                        st.rerun()
+
+elif menu == "📝 Registrar Fabricacion":
+    st.markdown("<div class='main-header'><h1>📝 Registrar Fabricación</h1><p>Cargá lo que fabricaste · El sistema calcula el resto</p></div>", unsafe_allow_html=True)
+
+    df_prods = pd.read_sql("SELECT name, sku, weight_gr, price FROM products ORDER BY name", engine)
+    mats = cargar_materiales()
+    COLORES_FAB = ["Negro","Blanco","Gris","Rojo","Azul","Verde","Rosa","Naranja","Dorado","Plateado","Multicolor","Otro"]
+    RESULTADO_OPTS = ["Exitoso","Con fallas menores","Fallo — descartado","Reimpresión necesaria"]
+
+    prod_sel = st.selectbox("📦 ¿Qué fabricaste?", df_prods["name"].tolist())
+    prod_row = df_prods[df_prods["name"] == prod_sel].iloc[0]
+    peso_estimado = float(prod_row.get("weight_gr") or 0)
+
+    col1, col2 = st.columns(2)
+    with col1:
+        cantidad_fab = st.number_input("Cantidad fabricada", min_value=1, max_value=200, value=1)
+        gramos_usados = st.number_input("Gramos usados (total)", min_value=1.0, step=5.0,
+            value=float(peso_estimado * cantidad_fab) if peso_estimado > 0 else 50.0)
+        color_fab = st.selectbox("🎨 Color impreso", COLORES_FAB)
+        if color_fab == "Otro":
+            color_fab = st.text_input("Especificá el color")
+    with col2:
+        mats_disponibles = mats[mats["stock_gr"] > 0]["name"].tolist() or mats["name"].tolist()
+        material_fab = st.selectbox("🧵 Material usado", mats_disponibles)
+        mat_row = mats[mats["name"] == material_fab].iloc[0]
+        costo_kg = float(mat_row["cost_kg"])
+        tiempo_min = st.number_input("⏱️ Tiempo de impresión (minutos)", min_value=1, max_value=2000, value=60)
+        resultado = st.selectbox("📊 Resultado", RESULTADO_OPTS)
+
+    notas_fab = st.text_area("📝 Notas (temperatura, ajustes, fallas...)", height=80)
+
+    costo_calculado = calcular_costo_pieza(gramos_usados / max(cantidad_fab, 1), costo_kg) * cantidad_fab
+    precio_venta = float(prod_row.get("price") or 0) * cantidad_fab
+    ganancia_fab = precio_venta - costo_calculado
+    margen_fab = (ganancia_fab / precio_venta * 100) if precio_venta > 0 else 0
+
+    st.markdown(f"""
+    <div style='background:white;border-radius:16px;padding:20px;box-shadow:0 4px 12px rgba(0,0,0,0.06);margin:16px 0;'>
+        <div style='font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#6B7280;margin-bottom:14px;'>📊 Cálculo Automático</div>
+        <div style='display:flex;gap:32px;flex-wrap:wrap;'>
+            <div><div class='metric-title'>Costo material</div><div style='font-size:1.3rem;font-weight:700;color:#DC2626;'>${costo_calculado:,.0f}</div></div>
+            <div><div class='metric-title'>Valor producido</div><div style='font-size:1.3rem;font-weight:700;color:#1E3A8A;'>${precio_venta:,.0f}</div></div>
+            <div><div class='metric-title'>Ganancia generada</div><div style='font-size:1.3rem;font-weight:700;color:#059669;'>${ganancia_fab:,.0f}</div></div>
+            <div><div class='metric-title'>Margen</div><div style='font-size:1.3rem;font-weight:700;color:#7C3AED;'>{margen_fab:.1f}%</div></div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    descontar_stock = False
+    if resultado in ["Exitoso","Con fallas menores"]:
+        descontar_stock = st.checkbox("Descontar gramos del stock de material y sumar unidades al catálogo", value=True)
+    else:
+        st.warning("⚠️ Pieza con fallas — no se actualizará el stock de productos.")
+
+    if st.button("💾 REGISTRAR FABRICACIÓN", type="primary", use_container_width=True):
+        hoy_str = datetime.now().strftime("%Y-%m-%d")
+        try:
+            with engine.connect() as conn:
+                conn.execute(text("""
+                    INSERT INTO production_log
+                    (fecha, product_sku, material_id, gramos_usados, tiempo_impresion_min,
+                     cantidad, color, resultado, notas, operador)
+                    SELECT :fecha, sku, :mat, :gr, :tiempo, :cant, :color, :resultado, :notas, 'fer_produccion'
+                    FROM products WHERE name = :prod
+                """), {"fecha": hoy_str, "mat": material_fab, "gr": gramos_usados,
+                       "tiempo": tiempo_min, "cant": cantidad_fab, "color": color_fab,
+                       "resultado": resultado, "notas": notas_fab, "prod": prod_sel})
+                if descontar_stock:
+                    conn.execute(text(f"UPDATE materials SET stock_gr = stock_gr - {gramos_usados} WHERE name = '{material_fab}'"))
+                    conn.execute(text(f"UPDATE products SET stock = stock + {cantidad_fab} WHERE name = '{prod_sel}'"))
+                conn.commit()
+            st.success(f"✅ Registrado: {cantidad_fab}x {prod_sel} · {gramos_usados:.0f}g de {material_fab} · {resultado}")
+            if descontar_stock:
+                st.info(f"📦 Stock actualizado: +{cantidad_fab} uds | -{gramos_usados:.0f}g de {material_fab}")
+            st.rerun()
+        except Exception as e:
+            st.error(f"Error: {e}")
+
+    st.markdown("<div class='section-title'>📋 Últimas fabricaciones</div>", unsafe_allow_html=True)
+    try:
+        log = pd.read_sql("""
+            SELECT pl.fecha, p.name as producto, pl.cantidad, pl.gramos_usados,
+                   pl.material_id as material, pl.color, pl.resultado, pl.tiempo_impresion_min
+            FROM production_log pl
+            LEFT JOIN products p ON p.sku = pl.product_sku
+            ORDER BY pl.fecha DESC LIMIT 15
+        """, engine)
+        if log.empty:
+            st.info("Aún no hay fabricaciones registradas.")
+        else:
+            log.columns = ["Fecha","Producto","Cant","Gramos","Material","Color","Resultado","Min"]
+            st.dataframe(log, use_container_width=True, hide_index=True)
+    except Exception as e:
+        st.info(f"Tabla production_log pendiente de datos.")
+
+elif menu == "🧵 Materiales":
+    st.markdown("<div class='main-header'><h1>🧵 Stock de Materiales</h1><p>Filamentos disponibles para produccion</p></div>", unsafe_allow_html=True)
+    mats = cargar_materiales()
+    for _, mat in mats.iterrows():
+        pct = min(mat["stock_gr"] / 1000 * 100, 100)
+        color_m = "#22C55E" if pct > 30 else ("#F59E0B" if pct > 10 else "#EF4444")
+        alerta = " ⚠️ STOCK BAJO — avisá a Alejandra" if pct <= 10 else (" ⚡ Atención" if pct <= 30 else "")
+        st.markdown(f"""
+        <div style='background:white;border-radius:16px;padding:20px;box-shadow:0 4px 12px rgba(0,0,0,0.06);margin-bottom:14px;'>
+            <div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;'>
+                <div style='font-size:1.1rem;font-weight:700;color:#1a1a2e;'>🧵 {mat['name']}</div>
+                <div style='font-size:1.1rem;font-weight:700;color:{color_m};'>{mat['stock_gr']:.0f}g{alerta}</div>
+            </div>
+            <div style='background:#F3F4F6;border-radius:999px;height:12px;overflow:hidden;'>
+                <div style='width:{pct:.0f}%;background:{color_m};height:100%;border-radius:999px;'></div>
+            </div>
+            <div style='display:flex;justify-content:space-between;margin-top:8px;font-size:0.78rem;color:#6B7280;'>
+                <span>${mat['cost_kg']:,.0f}/kg</span>
+                <span>Valor en stock: ${mat['stock_gr']*mat['cost_kg']/1000:,.0f}</span>
+                <span>{pct:.0f}% de referencia 1kg</span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+elif menu == "⚙️ Calculadora":
+    st.markdown("<div class='main-header'><h1>⚙️ Calculadora de Insumos</h1><p>Cuánto cuesta fabricar una pieza</p></div>", unsafe_allow_html=True)
+    mats = cargar_materiales()
+    c1, c2 = st.columns(2)
+    with c1:
+        peso_g = st.number_input("Peso de pieza (gramos)", min_value=1.0, value=100.0, step=5.0)
+        mat_cal = st.selectbox("Material", mats["name"].tolist())
+    with c2:
+        merma = st.slider("% Merma estimada", 5, 25, 10)
+        precio_v = st.number_input("Precio de venta ($)", min_value=0.0, value=5000.0, step=100.0)
+    costo_kg_sel = mats.loc[mats["name"] == mat_cal, "cost_kg"].iloc[0]
+    costo_calc = calcular_costo_pieza(peso_g, costo_kg_sel, merma / 100)
+    ganancia = precio_v - costo_calc
+    margen = (ganancia / precio_v * 100) if precio_v > 0 else 0
+    st.markdown(f"<div style='background:white;border-radius:16px;padding:20px;box-shadow:0 4px 12px rgba(0,0,0,0.06);margin-top:12px;'><div style='display:flex;gap:32px;flex-wrap:wrap;'><div><div class='metric-title'>💰 Costo Pieza</div><div style='font-size:2rem;font-weight:700;color:#DC2626;'>${costo_calc:,.2f}</div></div><div><div class='metric-title'>📈 Ganancia</div><div style='font-size:2rem;font-weight:700;color:#059669;'>${ganancia:,.2f}</div></div><div><div class='metric-title'>📊 Margen</div><div style='font-size:2rem;font-weight:700;color:#1E3A8A;'>{margen:.1f}%</div></div><div><div class='metric-title'>✅ Precio Margen Ale (×4)</div><div style='font-size:2rem;font-weight:700;color:#7C3AED;'>${costo_calc * 4:,.2f}</div></div></div></div>", unsafe_allow_html=True)

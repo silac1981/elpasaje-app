@@ -1,0 +1,79 @@
+EL PASAJE 3D STUDIO — CREDENCIALES DE ACCESO
+=============================================
+Sistema: elpasaje.streamlit.app
+Generado: Abr 2026
+Contraseña inicial para todos los socios: 123
+
+─────────────────────────────────────────────
+FAMILIA EL PASAJE
+─────────────────────────────────────────────
+
+Olivia (Coquette)
+  Usuario: olivia_coquette
+  Email:   coquette@elpasaje.com
+  Clave:   123
+
+Francisco (Sport)
+  Usuario: francisco_sport
+  Email:   fsport@elpasaje.com
+  Clave:   123
+
+Constantino (Core Tech)
+  Usuario: constantino_tech
+  Email:   coretech@elpasaje.com
+  Clave:   123
+
+─────────────────────────────────────────────
+SOCIOS B2B
+─────────────────────────────────────────────
+
+Nando — Aviation Pro (Fernando Gomez Aguilera)
+  Usuario: aviation
+  Email:   aviation@elpasaje.com
+  Clave:   123
+
+Oasis Animal
+  Usuario: oasis_animal
+  Email:   oasisanimal@elpasaje.com
+  Clave:   123
+
+Oasis del Estero
+  Usuario: oasis_del_estero
+  Email:   oasisestero@elpasaje.com
+  Clave:   123
+
+Pharma DeLux
+  Usuario: pharma_delux
+  Email:   pharma@elpasaje.com
+  Clave:   123
+
+─────────────────────────────────────────────
+PENDIENTE — NO CREADO EN DB
+─────────────────────────────────────────────
+Fede → falta definir: usuario, email y línea de productos
+       Agregar con el SQL de abajo una vez definido.
+
+─────────────────────────────────────────────
+ADMIN
+─────────────────────────────────────────────
+Alejandra (admin)
+  Usuario: admin
+  Email:   admin@elpasaje.com
+  Clave:   (contraseña propia — no compartir)
+
+─────────────────────────────────────────────
+SQL PARA AGREGAR FEDE (completar antes de ejecutar)
+─────────────────────────────────────────────
+
+INSERT INTO tenants (id, name, email, password, telefono, tipo, sector, fecha_alta, activo)
+VALUES (
+  'fede_LINEA',          -- ej: fede_moto, fede_outdoor, etc.
+  'Federico APELLIDO',
+  'fede@elpasaje.com',
+  'a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3',  -- hash de "123"
+  NULL,
+  'familia',             -- o 'b2b' si corresponde
+  NULL,
+  DATE('now'),
+  1
+);
