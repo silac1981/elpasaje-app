@@ -31,10 +31,10 @@ from pathlib import Path
 
 CONFIG = {
     "SIA": {
-        "repo_path":      r"C:\Users\ar028883\Documents\SIA_Project",
+        "repo_path":      r"C:\Trabajo\SIA_Project",
         "branch":         "main",
         "google_drive":   r"C:\Users\ar028883\Google Drive\BACKUP_SIA",
-        "disco_externo":  r"E:\BACKUP_SIA",          # cambiá la letra cuando llegue el disco
+        "disco_externo":  r"E:\BACKUP_SIA",
         "archivos_clave": [
             "dashboard_sia_v5_3_FINAL.py",
             "sap_match_engine_robusto.py",
@@ -42,10 +42,10 @@ CONFIG = {
         ]
     },
     "ELPASAJE": {
-        "repo_path":      r"C:\Users\ar028883\Documents\elpasaje-app-clean",
+        "repo_path":      r"C:\Trabajo\ElPasaje",
         "branch":         "main",
         "google_drive":   r"C:\Users\ar028883\Google Drive\BACKUP_ELPASAJE",
-        "disco_externo":  r"E:\BACKUP_ELPASAJE",     # cambiá la letra cuando llegue el disco
+        "disco_externo":  r"E:\BACKUP_ELPASAJE",
         "archivos_clave": [
             "app.py",
             "requirements.txt",

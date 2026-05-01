@@ -25,7 +25,7 @@ from pathlib import Path
 # ══════════════════════════════════════════════════════
 
 DB_PATH = Path(os.environ.get("EP_DB_PATH", 
-    r"C:\Users\ar028883\Documents\elpasaje-app-clean\ep_pasaje.db"))
+    r"C:\Trabajo\ElPasaje\ep_pasaje.db"))
 
 def get_conn():
     """Conexión a la base. Crea el archivo si no existe."""
