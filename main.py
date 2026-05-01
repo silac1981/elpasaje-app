@@ -83,19 +83,33 @@ DB_PATH = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "elpasaje_
 engine = create_engine(f"sqlite:///{DB_PATH}")
 
 LINEAS = {
-    "admin":            {"nombre": "Administracion",   "color": "#1E3A8A", "emoji": "🏛️"},
-    "oasis_animal":     {"nombre": "Oasis Animal",     "color": "#F472B6", "emoji": "🐾"},
-    "oasis_del_estero": {"nombre": "Oasis del Estero", "color": "#34D399", "emoji": "🌱"},
-    "pharma_delux":     {"nombre": "Pharma DeLux",     "color": "#FBBF24", "emoji": "💊"},
-    "aviation":         {"nombre": "Aviation Pro",     "color": "#0F3460", "emoji": "✈️"},
-    "olivia_coquette":  {"nombre": "Coquette",         "color": "#F9A8D4", "emoji": "🎀"},
-    "francisco_sport":  {"nombre": "Sport (Francisco)","color": "#F97316", "emoji": "⚽"},
+    "admin":            {"nombre": "Administracion",     "color": "#1E3A8A", "emoji": "🏛️"},
+    "oasis_animal":     {"nombre": "Oasis Animal",       "color": "#F472B6", "emoji": "🐾"},
+    "oasis_del_estero": {"nombre": "Oasis del Estero",   "color": "#34D399", "emoji": "🌱"},
+    "pharma_delux":     {"nombre": "Pharma DeLux",       "color": "#FBBF24", "emoji": "💊"},
+    "aviation":         {"nombre": "Aviation Pro",       "color": "#0F3460", "emoji": "✈️"},
+    "olivia_coquette":  {"nombre": "Coquette",           "color": "#F9A8D4", "emoji": "🎀"},
+    "francisco_sport":  {"nombre": "Sport (Francisco)",  "color": "#F97316", "emoji": "⚽"},
     "constantino_tech": {"nombre": "Core Tech (Constantino)", "color": "#64748B", "emoji": "⚙️"},
+    "vkhome_cliente":   {"nombre": "VK-Home",            "color": "#A78BFA", "emoji": "🏡"},
+    "agustina":         {"nombre": "Agustina",           "color": "#6366F1", "emoji": "✨"},
 }
 COSTO_KG_DEFAULT = 2350.0
 
 def get_linea(cid):
     return LINEAS.get(cid, {"nombre": cid, "color": "#6B7280", "emoji": "📦"})
+
+@st.cache_data(ttl=60)
+def get_lineas_usuario(uid: str) -> list[str]:
+    """Retorna las linea_ids visibles para un usuario.
+    Para socio_multi: lee tenant_lineas. Para socio regular: [uid].
+    Genérico — cualquier futuro socio_multi solo necesita filas en tenant_lineas."""
+    with engine.connect() as _conn:
+        rows = pd.read_sql(
+            text("SELECT linea_id FROM tenant_lineas WHERE tenant_id=:uid"),
+            _conn, params={"uid": uid}
+        )
+    return rows["linea_id"].tolist() if not rows.empty else [uid]
 
 def calcular_costo_pieza(weight_gr, cost_kg=COSTO_KG_DEFAULT, merma=0.10):
     return (weight_gr * (1 + merma) * cost_kg) / 1000
@@ -142,7 +156,7 @@ if not st.session_state["auth"]:
             if not row.empty:
                 uid  = row["id"].iloc[0]
                 tipo = row["tipo"].iloc[0] if "tipo" in row.columns else "socio"
-                role = "admin" if uid == "admin" else ("produccion" if tipo == "produccion" else "socio")
+                role = "admin" if uid == "admin" else ("produccion" if tipo == "produccion" else ("socio_multi" if tipo == "socio_multi" else "socio"))
                 st.session_state.update({"auth": True, "user": row["name"].iloc[0], "role": role, "uid": uid})
                 st.rerun()
             else:
@@ -164,6 +178,13 @@ with st.sidebar:
         menu = st.radio("", ["📊 Dashboard Alejandra","📦 Inventario Pro","🛠️ Produccion (Fer)","🤝 Socios","👥 Clientes","🌱 Impacto Social"], label_visibility="collapsed")
     elif st.session_state["role"] == "produccion":
         menu = st.radio("", ["🛠️ Produccion (Fer)"], label_visibility="collapsed")
+    elif st.session_state["role"] == "socio_multi":
+        _lids = get_lineas_usuario(st.session_state["uid"])
+        _nombre_a_id = {LINEAS[l]["nombre"]: l for l in _lids if l in LINEAS}
+        _opciones = ["Todas"] + list(_nombre_a_id.keys())
+        _sel = st.selectbox("Línea", _opciones, key="linea_sel")
+        st.session_state["linea_filtro"] = _lids if _sel == "Todas" else [_nombre_a_id[_sel]]
+        menu = st.radio("", ["📈 Mi Panel","🛒 Cargar Pedido"], label_visibility="collapsed")
     else:
         menu = st.radio("", ["📈 Mi Panel","🛒 Cargar Pedido"], label_visibility="collapsed")
     st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)
@@ -395,49 +416,101 @@ elif menu == "🤝 Socios":
                         st.caption("Sin productos cargados en esta línea.")
 
 elif menu == "📈 Mi Panel":
-    uid = st.session_state["uid"]
-    cfg = get_linea(uid)
-    st.markdown(f"<div class='main-header' style='background:linear-gradient(135deg,{cfg['color']}cc,{cfg['color']}88);'><h1>{cfg['emoji']} Panel {cfg['nombre']}</h1><p>Bienvenido/a, {st.session_state['user']}</p></div>", unsafe_allow_html=True)
-    df = cargar_productos()
-    prod = df[df["client_id"] == uid]
+    uid  = st.session_state["uid"]
+    role = st.session_state["role"]
+    if role == "socio_multi":
+        lineas_activas = st.session_state.get("linea_filtro", get_lineas_usuario(uid))
+        sel_nombre     = st.session_state.get("linea_sel", "Todas")
+        if sel_nombre == "Todas":
+            hdr_nombre = "Mis Líneas"
+            hdr_emoji  = LINEAS.get(uid, {}).get("emoji", "✨")
+            hdr_color  = LINEAS.get(uid, {}).get("color", "#6366F1")
+        else:
+            lid        = lineas_activas[0] if lineas_activas else uid
+            _lc        = LINEAS.get(lid, {"nombre": sel_nombre, "emoji": "●", "color": "#6366F1"})
+            hdr_nombre = _lc["nombre"]
+            hdr_emoji  = _lc["emoji"]
+            hdr_color  = _lc["color"]
+    else:
+        lineas_activas = [uid]
+        sel_nombre     = uid
+        cfg            = get_linea(uid)
+        hdr_nombre, hdr_emoji, hdr_color = cfg["nombre"], cfg["emoji"], cfg["color"]
+    st.markdown(f"<div class='main-header' style='background:linear-gradient(135deg,{hdr_color}cc,{hdr_color}88);'><h1>{hdr_emoji} Panel {hdr_nombre}</h1><p>Bienvenido/a, {st.session_state['user']}</p></div>", unsafe_allow_html=True)
+    df   = cargar_productos()
+    prod = df[df["client_id"].isin(lineas_activas)]
     cc1, cc2, cc3 = st.columns(3)
-    cc1.metric("💰 Capital en Stock", f"${prod['valor_stock'].sum():,.0f}")
+    cc1.metric("💰 Capital en Stock",    f"${prod['valor_stock'].sum():,.0f}")
     cc2.metric("📈 Ganancia Proyectada", f"${prod['ganancia_stock'].sum():,.0f}")
-    cc3.metric("📦 Productos Activos", f"{len(prod)} SKUs")
+    cc3.metric("📦 Productos Activos",   f"{len(prod)} SKUs")
+    if role == "socio_multi" and sel_nombre == "Todas" and len(lineas_activas) > 1:
+        st.markdown("<div class='section-title'>📊 Por Línea</div>", unsafe_allow_html=True)
+        cols_l = st.columns(len(lineas_activas))
+        for i, lid in enumerate(lineas_activas):
+            lp = prod[prod["client_id"] == lid]
+            lc = LINEAS.get(lid, {"nombre": lid, "emoji": "●", "color": "#6366F1"})
+            with cols_l[i]:
+                st.markdown(f"<div class='metric-card' style='border-top-color:{lc['color']}'><div class='metric-title'>{lc['emoji']} {lc['nombre']}</div><div class='metric-value'>${lp['valor_stock'].sum():,.0f}</div><div class='metric-sub'>{len(lp)} productos</div></div>", unsafe_allow_html=True)
     st.markdown("<div class='section-title'>📦 Mis Productos</div>", unsafe_allow_html=True)
     if prod.empty:
         st.info("Aun no tenes productos cargados en tu linea.")
     else:
-        st.dataframe(prod[["name","sku","price","stock","ganancia_unit","margen_pct"]].rename(columns={"name":"Producto","sku":"SKU","price":"Precio","stock":"Stock","ganancia_unit":"Ganancia Unit","margen_pct":"Margen%"}).style.format({"Precio":"${:,.0f}","Ganancia Unit":"${:,.0f}","Margen%":"{:.1f}%"}), use_container_width=True, hide_index=True)
+        if role == "socio_multi" and sel_nombre == "Todas":
+            _disp = prod[["client_id","name","sku","price","stock","ganancia_unit","margen_pct"]].copy()
+            _disp["client_id"] = _disp["client_id"].map(lambda x: LINEAS.get(x, {}).get("nombre", x))
+            st.dataframe(_disp.rename(columns={"client_id":"Línea","name":"Producto","sku":"SKU","price":"Precio","stock":"Stock","ganancia_unit":"Ganancia Unit","margen_pct":"Margen%"}).style.format({"Precio":"${:,.0f}","Ganancia Unit":"${:,.0f}","Margen%":"{:.1f}%"}), use_container_width=True, hide_index=True)
+        else:
+            st.dataframe(prod[["name","sku","price","stock","ganancia_unit","margen_pct"]].rename(columns={"name":"Producto","sku":"SKU","price":"Precio","stock":"Stock","ganancia_unit":"Ganancia Unit","margen_pct":"Margen%"}).style.format({"Precio":"${:,.0f}","Ganancia Unit":"${:,.0f}","Margen%":"{:.1f}%"}), use_container_width=True, hide_index=True)
 
 elif menu == "🛒 Cargar Pedido":
-    uid = st.session_state["uid"]
-    cfg = get_linea(uid)
+    uid  = st.session_state["uid"]
+    role = st.session_state["role"]
+    if role == "socio_multi":
+        lineas_activas = st.session_state.get("linea_filtro", get_lineas_usuario(uid))
+        cfg = LINEAS.get(uid, {"nombre": "Mis Líneas", "emoji": "✨"})
+    else:
+        lineas_activas = [uid]
+        cfg = get_linea(uid)
     st.markdown(f"<div class='main-header'><h1>🛒 Nuevo Pedido · {cfg['nombre']}</h1><p>Solicita produccion a Fer de forma digital</p></div>", unsafe_allow_html=True)
     with engine.connect() as _conn:
-        prods_socio = pd.read_sql(text("SELECT name, sku FROM products WHERE client_id=:uid AND activo=1"), _conn, params={"uid": uid})
+        _frames = [
+            pd.read_sql(
+                text("SELECT name, sku, client_id FROM products WHERE client_id=:uid AND activo=1 ORDER BY name"),
+                _conn, params={"uid": lid}
+            ) for lid in lineas_activas
+        ]
+    prods_socio = pd.concat(_frames, ignore_index=True) if _frames else pd.DataFrame()
     if prods_socio.empty:
         st.info("Todavía no tenés productos cargados en tu línea. Pedile a Alejandra que los agregue.")
         st.stop()
-    producto = st.selectbox("Producto", prods_socio["name"].tolist())
+    if role == "socio_multi" and len(lineas_activas) > 1:
+        prods_socio["display"] = prods_socio.apply(
+            lambda r: f"[{LINEAS.get(r['client_id'],{}).get('nombre', r['client_id'])}] {r['name']}", axis=1
+        )
+    else:
+        prods_socio["display"] = prods_socio["name"]
+    producto_display = st.selectbox("Producto", prods_socio["display"].tolist())
     cantidad = st.number_input("Cantidad", min_value=1, max_value=100, value=1)
-    notas = st.text_area("Notas para Fer (color, urgencia, etc.)", height=80)
+    notas    = st.text_area("Notas para Fer (color, urgencia, etc.)", height=80)
     if st.button("Confirmar Pedido", type="primary"):
+        sel_row     = prods_socio[prods_socio["display"] == producto_display].iloc[0]
+        linea_pedido = sel_row["client_id"]
         with engine.connect() as conn:
             result = conn.execute(
                 text("INSERT INTO orders (client_id, status, date, notas, color_pedido) VALUES (:cid, 'Pendiente', :fecha, :notas, '')"),
-                {"cid": uid, "fecha": datetime.now().isoformat(), "notas": notas.strip()}
+                {"cid": linea_pedido, "fecha": datetime.now().isoformat(), "notas": notas.strip()}
             )
-            order_id = result.lastrowid
-            prod_row = pd.read_sql(text("SELECT sku, price FROM products WHERE name=:nombre"), conn, params={"nombre": producto})
-            product_sku  = prod_row["sku"].iloc[0]
-            precio_unit  = float(prod_row["price"].iloc[0])
+            order_id  = result.lastrowid
+            prod_data = pd.read_sql(
+                text("SELECT sku, price FROM products WHERE name=:nombre AND client_id=:cid"),
+                conn, params={"nombre": sel_row["name"], "cid": linea_pedido}
+            )
             conn.execute(
                 text("INSERT INTO order_items (order_id, product_sku, cantidad, precio_unitario) VALUES (:oid, :sku, :qty, :precio)"),
-                {"oid": order_id, "sku": product_sku, "qty": cantidad, "precio": precio_unit}
+                {"oid": order_id, "sku": prod_data["sku"].iloc[0], "qty": cantidad, "precio": float(prod_data["price"].iloc[0])}
             )
             conn.commit()
-        st.success(f"✅ Pedido registrado: {cantidad}x {producto}")
+        st.success(f"✅ Pedido registrado: {cantidad}x {sel_row['name']}")
         st.balloons()
 
 
