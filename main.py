@@ -412,8 +412,12 @@ elif menu == "🛒 Cargar Pedido":
     uid = st.session_state["uid"]
     cfg = get_linea(uid)
     st.markdown(f"<div class='main-header'><h1>🛒 Nuevo Pedido · {cfg['nombre']}</h1><p>Solicita produccion a Fer de forma digital</p></div>", unsafe_allow_html=True)
-    prods_admin = pd.read_sql("SELECT name, sku FROM products WHERE client_id='admin'", engine)
-    producto = st.selectbox("Producto", prods_admin["name"].tolist())
+    with engine.connect() as _conn:
+        prods_socio = pd.read_sql(text("SELECT name, sku FROM products WHERE client_id=:uid AND activo=1"), _conn, params={"uid": uid})
+    if prods_socio.empty:
+        st.info("Todavía no tenés productos cargados en tu línea. Pedile a Alejandra que los agregue.")
+        st.stop()
+    producto = st.selectbox("Producto", prods_socio["name"].tolist())
     cantidad = st.number_input("Cantidad", min_value=1, max_value=100, value=1)
     notas = st.text_area("Notas para Fer (color, urgencia, etc.)", height=80)
     if st.button("Confirmar Pedido", type="primary"):
