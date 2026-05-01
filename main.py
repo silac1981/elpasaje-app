@@ -16,19 +16,54 @@ st.set_page_config(
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap');
+
+/* ── APP ── */
 .stApp { background-color: #F0F2F6; }
-.stSidebar { background-color: #1a1a2e !important; }
-.stSidebar * { color: white !important; }
+
+/* ── SIDEBAR ── */
+[data-testid="stSidebar"] { background-color: #1a1a2e !important; }
+[data-testid="stSidebar"] * { color: #FFFFFF !important; }
+[data-testid="stSidebar"] p,
+[data-testid="stSidebar"] span,
+[data-testid="stSidebar"] label,
+[data-testid="stSidebar"] div { color: #FFFFFF !important; }
+/* Radio buttons en sidebar */
+[data-testid="stSidebar"] [data-baseweb="radio"] label p { 
+    color: #FFFFFF !important; font-size: 0.9rem !important; font-weight: 500 !important;
+}
+[data-testid="stSidebar"] [data-baseweb="radio"] [data-checked="true"] label p { 
+    color: #C9A84C !important; font-weight: 700 !important;
+}
+/* Version label */
+[data-testid="stSidebar"] .version-label { color: #94a3b8 !important; }
+/* Botón cerrar sesión */
+[data-testid="stSidebar"] button { 
+    background: rgba(255,255,255,0.1) !important; 
+    color: #FFFFFF !important; 
+    border: 1px solid rgba(255,255,255,0.2) !important;
+}
+[data-testid="stSidebar"] button:hover { 
+    background: rgba(201,168,76,0.2) !important;
+    border-color: #C9A84C !important;
+}
+
+/* ── CARDS ── */
 .metric-card { background: white; border-radius: 16px; padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.07); border-top: 5px solid; transition: transform 0.2s; height: 100%; }
 .metric-card:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(0,0,0,0.12); }
 .metric-title { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #6B7280; margin-bottom: 8px; }
 .metric-value { font-family: 'Cormorant Garamond', serif; font-size: 36px; font-weight: 700; color: #1a1a2e; line-height: 1; }
 .metric-sub   { font-size: 12px; color: #9CA3AF; margin-top: 6px; }
+
+/* ── HEADER ── */
 .main-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); color: white; padding: 28px 36px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); margin-bottom: 28px; }
-.main-header h1 { font-family: 'Cormorant Garamond', serif; font-size: 2.2rem; margin: 0; letter-spacing: 2px; }
+.main-header h1 { font-family: 'Cormorant Garamond', serif; font-size: 2.2rem; margin: 0; letter-spacing: 2px; color: white !important; }
 .main-header p  { font-family: 'Inter', sans-serif; font-size: 0.85rem; color: #94a3b8; margin: 6px 0 0; }
+
+/* ── TITULOS ── */
 .section-title { font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; color: #1a1a2e; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; margin: 28px 0 16px; }
 .stock-critico { background: #FEF2F2; border-left: 5px solid #EF4444; border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; }
+
+/* ── FORMULARIOS ── */
 .stExpander { background: white !important; }
 .stTextInput label, .stSelectbox label, .stTextArea label, 
 .stCheckbox label, .stNumberInput label { 
@@ -98,19 +133,16 @@ if not st.session_state["auth"]:
         pwd   = st.text_input("Contrasena", type="password")
         if st.button("INGRESAR AL SISTEMA", use_container_width=True, type="primary"):
             hashed_pwd = hashlib.sha256(pwd.strip().encode()).hexdigest()
-            row = pd.read_sql(
-                f"SELECT * FROM tenants WHERE email='{email.strip().lower()}' AND password='{hashed_pwd}'",
-                engine
-            )
+            with engine.connect() as _conn:
+                row = pd.read_sql(
+                    text("SELECT * FROM tenants WHERE email=:email AND password=:pwd"),
+                    _conn,
+                    params={"email": email.strip().lower(), "pwd": hashed_pwd}
+                )
             if not row.empty:
                 uid  = row["id"].iloc[0]
                 tipo = row["tipo"].iloc[0] if "tipo" in row.columns else "socio"
-                if uid == "admin":
-                    role = "admin"
-                elif tipo == "produccion":
-                    role = "produccion"
-                else:
-                    role = "socio"
+                role = "admin" if uid == "admin" else ("produccion" if tipo == "produccion" else "socio")
                 st.session_state.update({"auth": True, "user": row["name"].iloc[0], "role": role, "uid": uid})
                 st.rerun()
             else:
@@ -124,331 +156,19 @@ with st.sidebar:
         <div style='text-align:center;padding:20px 0 10px;'>
             <div style='font-size:2.5rem;'>{linea_cfg['emoji']}</div>
             <div style='font-size:1rem;font-weight:600;margin-top:6px;'>{st.session_state['user']}</div>
-            <div style='font-size:0.75rem;color:#94a3b8;margin-top:2px;'>{"Administracion" if st.session_state["role"] == "admin" else ("Produccion" if st.session_state["role"] == "produccion" else "Socio")}</div>
+            <div style='font-size:0.75rem;color:#94a3b8;margin-top:2px;'>{"Administracion" if st.session_state["role"] == "admin" else "Socio"}</div>
         </div>
         <hr style='border-color:#ffffff22;margin:0 0 16px;'/>
     """, unsafe_allow_html=True)
     if st.session_state["role"] == "admin":
         menu = st.radio("", ["📊 Dashboard Alejandra","📦 Inventario Pro","🛠️ Produccion (Fer)","🤝 Socios","👥 Clientes","🌱 Impacto Social"], label_visibility="collapsed")
-    elif st.session_state["role"] == "produccion":
-        menu = st.radio("", ["🛠️ Mi Panel Produccion","📦 Cargar Fabricacion","🧵 Materiales","📋 Cola de Pedidos"], label_visibility="collapsed")
     else:
         menu = st.radio("", ["📈 Mi Panel","🛒 Cargar Pedido"], label_visibility="collapsed")
     st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)
     if st.button("Cerrar Sesion", use_container_width=True):
         st.session_state.update({"auth": False, "user": None, "role": None, "uid": None})
         st.rerun()
-    st.markdown(f"<div style='font-size:0.7rem;color:#4B5563;text-align:center;margin-top:20px;'>v2.6 · {datetime.now().strftime('%d/%m/%Y')}</div>", unsafe_allow_html=True)
-
-
-# ══════════════════════════════════════
-# PANEL PRODUCCION — FER
-# ══════════════════════════════════════
-if st.session_state["role"] == "produccion":
-    st.markdown("<div class='main-header'><h1>🛠️ Panel de Producción</h1><p>El Pasaje 3D Studio · Fernando · Lo que fabricás, lo que cuesta, lo que queda</p></div>", unsafe_allow_html=True)
-
-    # ── KPIs de producción ──
-    try:
-        pedidos = pd.read_sql("SELECT * FROM orders WHERE status IN ('Pendiente','En Proceso') ORDER BY date DESC", engine)
-    except:
-        pedidos = pd.DataFrame()
-    try:
-        materiales = pd.read_sql("SELECT * FROM materials WHERE activo=1", engine)
-    except:
-        materiales = pd.DataFrame()
-    try:
-        log = pd.read_sql("SELECT * FROM production_log ORDER BY fecha_inicio DESC LIMIT 50", engine)
-    except:
-        log = pd.DataFrame()
-
-    k1, k2, k3, k4 = st.columns(4)
-    pedidos_hoy = len(pedidos[pedidos["date"].str.startswith(datetime.now().strftime("%Y-%m-%d"))]) if not pedidos.empty and "date" in pedidos.columns else 0
-    total_pendientes = len(pedidos)
-    piezas_fabricadas = len(log) if not log.empty else 0
-    mat_criticos = len(materiales[materiales["stock_gr"] < materiales["stock_minimo_gr"]]) if not materiales.empty and "stock_gr" in materiales.columns and "stock_minimo_gr" in materiales.columns else 0
-
-    for col, title, val, sub, color in [
-        (k1, "📋 Pedidos Pendientes", str(total_pendientes), "en cola ahora", "#1E3A8A"),
-        (k2, "⚡ Nuevos Hoy",         str(pedidos_hoy),     "entrados hoy",  "#D97706"),
-        (k3, "✅ Piezas Fabricadas",  str(piezas_fabricadas),"en el historial","#059669"),
-        (k4, "⚠️ Materiales Críticos",str(mat_criticos),    "bajo mínimo",   "#EF4444"),
-    ]:
-        with col:
-            st.markdown(f"<div class='metric-card' style='border-top-color:{color}'><div class='metric-title'>{title}</div><div class='metric-value'>{val}</div><div class='metric-sub'>{sub}</div></div>", unsafe_allow_html=True)
-
-    st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)
-
-    if menu == "🛠️ Mi Panel Produccion":
-        # Cola de pedidos activos
-        st.markdown("<div class='section-title'>📋 Cola de Pedidos Activos</div>", unsafe_allow_html=True)
-        if pedidos.empty:
-            st.info("🎉 No hay pedidos pendientes. Podés tomarte un descanso, Fer.")
-        else:
-            for _, p in pedidos.iterrows():
-                try:
-                    items = pd.read_sql(f"SELECT oi.*, pr.name, pr.weight_gr, pr.tiempo_impresion_min FROM order_items oi JOIN products pr ON oi.product_sku=pr.sku WHERE oi.order_id={p['id']}", engine)
-                except:
-                    items = pd.DataFrame()
-                cliente_row = pd.read_sql(f"SELECT name FROM tenants WHERE id='{p['client_id']}'", engine)
-                cliente_nombre = cliente_row["name"].iloc[0] if not cliente_row.empty else p["client_id"]
-                status_color = {"Pendiente":"#D97706","En Proceso":"#1E3A8A","Listo":"#059669"}.get(p.get("status",""), "#6B7280")
-                total_tiempo = items["tiempo_impresion_min"].sum() if not items.empty and "tiempo_impresion_min" in items.columns else 0
-                total_gr = items["weight_gr"].sum() if not items.empty and "weight_gr" in items.columns else 0
-                with st.expander(f"Pedido #{p['id']} · {cliente_nombre} · {p.get('status','')} · {total_tiempo//60}h {total_tiempo%60}min estimado"):
-                    c1, c2, c3 = st.columns(3)
-                    with c1:
-                        st.markdown(f"**Cliente:** {cliente_nombre}")
-                        st.markdown(f"**Fecha:** {p.get('date','')[:10]}")
-                    with c2:
-                        st.markdown(f"**Tiempo estimado:** {total_tiempo//60}h {total_tiempo%60}min")
-                        st.markdown(f"**Material estimado:** {total_gr:.0f}g")
-                    with c3:
-                        nuevo_status = st.selectbox(f"Estado #{p['id']}", ["Pendiente","En Proceso","Listo","Cancelado"],
-                            index=["Pendiente","En Proceso","Listo","Cancelado"].index(p.get("status","Pendiente")),
-                            key=f"status_{p['id']}")
-                        if st.button(f"Actualizar #{p['id']}", key=f"btn_{p['id']}"):
-                            with engine.connect() as conn_:
-                                conn_.execute(text(f"UPDATE orders SET status='{nuevo_status}' WHERE id={p['id']}"))
-                                conn_.commit()
-                            st.success("✅ Actualizado")
-                            st.rerun()
-                    if not items.empty:
-                        st.dataframe(items[["name","cantidad","weight_gr","tiempo_impresion_min"]].rename(columns={
-                            "name":"Producto","cantidad":"Cant","weight_gr":"Gramos","tiempo_impresion_min":"Min"}),
-                            use_container_width=True, hide_index=True)
-                    if p.get("notas"):
-                        st.caption(f"📝 Notas: {p['notas']}")
-
-    elif menu == "📦 Cargar Fabricacion":
-        st.markdown("<div class='section-title'>📦 Registrar lo que fabricaste</div>", unsafe_allow_html=True)
-        st.caption("Cada registro que cargás acá alimenta el análisis de Mike y ayuda a calcular el costo real de cada pieza.")
-
-        with st.form("form_fabricacion", clear_on_submit=True):
-            c1, c2 = st.columns(2)
-            with c1:
-                # Pedidos activos para vincular
-                try:
-                    opts_pedidos = pd.read_sql("SELECT id, client_id, status FROM orders WHERE status IN ('Pendiente','En Proceso')", engine)
-                    pedido_opts = ["Sin pedido asociado"] + [f"Pedido #{r['id']} — {r['client_id']}" for _,r in opts_pedidos.iterrows()]
-                except:
-                    pedido_opts = ["Sin pedido asociado"]
-                fab_pedido = st.selectbox("Pedido asociado", pedido_opts)
-                fab_sku = st.text_input("SKU del producto", placeholder="Ej: OAS-LLA-001")
-                fab_material = st.selectbox("Material usado", ["petg_gris","petg_naranja","pla_seda_azul","pla_seda_gris","pla_rosa","pla_blanco","pla_negro"])
-            with c2:
-                fab_gramos = st.number_input("Gramos consumidos", min_value=0.0, step=0.5)
-                fab_tiempo = st.number_input("Tiempo real (minutos)", min_value=0, step=1)
-                fab_resultado = st.selectbox("Resultado", ["ok","fallo","reimpresion"])
-            fab_fallo_desc = st.text_input("Si hubo fallo — ¿qué pasó?", placeholder="Ej: Se tapó el hotend, se despegó la base...")
-            fab_notas = st.text_area("Notas adicionales", placeholder="Cualquier cosa que quieras que quede registrada")
-
-            if st.form_submit_button("✅ REGISTRAR FABRICACIÓN", use_container_width=True, type="primary"):
-                hoy_str = datetime.now().strftime("%Y-%m-%d %H:%M")
-                order_id_val = None
-                if fab_pedido != "Sin pedido asociado":
-                    try:
-                        order_id_val = int(fab_pedido.split("#")[1].split("—")[0].strip())
-                    except:
-                        order_id_val = None
-                try:
-                    with engine.connect() as conn_:
-                        conn_.execute(text("""
-                            INSERT INTO production_log
-                            (order_id, product_sku, material_id, gramos_usados,
-                             tiempo_real_min, fecha_inicio, fecha_fin, resultado)
-                            VALUES (:oid,:sku,:mat,:gr,:tiempo,:fi,:ff,:res)
-                        """), {
-                            "oid": order_id_val, "sku": fab_sku.strip(),
-                            "mat": fab_material, "gr": fab_gramos,
-                            "tiempo": int(fab_tiempo), "fi": hoy_str, "ff": hoy_str,
-                            "res": fab_resultado + (f" — {fab_fallo_desc}" if fab_fallo_desc else "")
-                        })
-                        # Si hubo fallo, registrar en orders también
-                        if order_id_val and fab_resultado != "ok":
-                            conn_.execute(text(f"UPDATE orders SET notas=COALESCE(notas,'')||' | FALLO: {fab_fallo_desc}' WHERE id={order_id_val}"))
-                        conn_.commit()
-                    st.success(f"✅ Fabricación registrada — {fab_sku} — {fab_gramos}g — {fab_tiempo}min — {fab_resultado}")
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"Error: {e}")
-
-        # Historial reciente
-        if not log.empty:
-            st.markdown("<div class='section-title'>📋 Últimas fabricaciones</div>", unsafe_allow_html=True)
-            st.dataframe(
-                log[["fecha_inicio","product_sku","material_id","gramos_usados","tiempo_real_min","resultado"]].rename(columns={
-                    "fecha_inicio":"Fecha","product_sku":"SKU","material_id":"Material",
-                    "gramos_usados":"Gramos","tiempo_real_min":"Minutos","resultado":"Resultado"
-                }).head(20),
-                use_container_width=True, hide_index=True
-            )
-
-    elif menu == "🧵 Materiales":
-        st.markdown("<div class='section-title'>🧵 Stock de Filamentos</div>", unsafe_allow_html=True)
-
-        # Calcular consumo del mes por material desde production_log
-        try:
-            consumo_mes = pd.read_sql("""
-                SELECT material_id, SUM(gramos_usados) as consumido_mes
-                FROM production_log
-                WHERE fecha_inicio >= date('now','start of month')
-                GROUP BY material_id
-            """, engine)
-        except:
-            consumo_mes = pd.DataFrame(columns=["material_id","consumido_mes"])
-
-        # Calcular qué líneas usan cada material
-        try:
-            uso_lineas = pd.read_sql("""
-                SELECT p.material_id, GROUP_CONCAT(DISTINCT t.name) as lineas
-                FROM products p
-                JOIN tenants t ON p.client_id = t.id
-                WHERE p.material_id IS NOT NULL
-                GROUP BY p.material_id
-            """, engine)
-        except:
-            uso_lineas = pd.DataFrame(columns=["material_id","lineas"])
-
-        # Historial de compras por material
-        try:
-            compras = pd.read_sql("""
-                SELECT product_sku as material_id, fecha, cantidad, referencia
-                FROM stock_movements
-                WHERE tipo = 'entrada'
-                ORDER BY fecha DESC
-            """, engine)
-        except:
-            compras = pd.DataFrame(columns=["material_id","fecha","cantidad","referencia"])
-
-        if not materiales.empty:
-            col_a, col_b = st.columns(2)
-            for idx, (_, m) in enumerate(materiales.iterrows()):
-                stock = m.get("stock_gr", 0)
-                minimo = m.get("stock_minimo_gr", 200)
-                pct = min(stock / 1000 * 100, 100)
-                color_bar = "#059669" if stock > minimo*2 else ("#D97706" if stock > minimo else "#EF4444")
-                alerta = "⚠️ STOCK BAJO" if stock <= minimo else "✅ OK"
-                mid = m.get("material_id","")
-
-                # Datos de consumo del mes
-                consumo = consumo_mes[consumo_mes["material_id"]==mid]["consumido_mes"].sum() if not consumo_mes.empty else 0
-                # Líneas que usan este material
-                lineas_txt = uso_lineas[uso_lineas["material_id"]==mid]["lineas"].values[0] if not uso_lineas.empty and mid in uso_lineas["material_id"].values else "Sin asignar"
-                # Última compra
-                compra_mat = compras[compras["material_id"]==mid].head(1) if not compras.empty else pd.DataFrame()
-                ultima_compra = compra_mat["fecha"].values[0] if not compra_mat.empty else m.get("fecha_compra","—")
-                ultimo_precio = m.get("cost_kg", 0)
-                # Días de stock restante (estimado)
-                dias_stock = round(stock / (consumo / 30)) if consumo > 0 else 999
-
-                col = col_a if idx % 2 == 0 else col_b
-                with col:
-                    with st.expander(f"{'⚠️' if stock <= minimo else '🟢'} {m.get('name','')} — {stock:.0f}g restantes"):
-                        # Barra de stock
-                        st.markdown(f"""
-                        <div style='margin-bottom:12px;'>
-                            <div style='display:flex;justify-content:space-between;margin-bottom:4px;'>
-                                <span style='font-size:2rem;font-weight:700;color:{color_bar};'>{stock:.0f}g</span>
-                                <span style='font-size:0.8rem;color:#6B7280;padding-top:12px;'>{alerta}</span>
-                            </div>
-                            <div style='background:#F3F4F6;border-radius:999px;height:10px;'>
-                                <div style='width:{pct:.0f}%;background:{color_bar};height:100%;border-radius:999px;'></div>
-                            </div>
-                            <div style='font-size:0.75rem;color:#9CA3AF;margin-top:4px;'>{pct:.0f}% de 1kg de referencia · Mínimo: {minimo}g</div>
-                        </div>
-                        """, unsafe_allow_html=True)
-
-                        # Grid de datos
-                        d1, d2, d3 = st.columns(3)
-                        with d1:
-                            st.markdown(f"**💰 Precio/kg**")
-                            st.markdown(f"${ultimo_precio:,.0f}")
-                            st.markdown(f"**📅 Última compra**")
-                            st.markdown(f"{ultima_compra}")
-                        with d2:
-                            st.markdown(f"**🔥 Consumido este mes**")
-                            st.markdown(f"{consumo:.0f}g")
-                            st.markdown(f"**📊 Stock estimado**")
-                            st.markdown(f"{'∞ días' if dias_stock==999 else f'{dias_stock} días'}")
-                        with d3:
-                            st.markdown(f"**🏭 Usado en líneas**")
-                            st.markdown(f"{lineas_txt[:50] if lineas_txt else '—'}")
-                            st.markdown(f"**💵 Valor stock**")
-                            st.markdown(f"${stock * ultimo_precio / 1000:,.0f}")
-
-                        # Historial de compras de este material
-                        hist_mat = compras[compras["material_id"]==mid].head(5) if not compras.empty else pd.DataFrame()
-                        if not hist_mat.empty:
-                            st.markdown("**📋 Últimas compras:**")
-                            st.dataframe(hist_mat[["fecha","cantidad","referencia"]].rename(columns={
-                                "fecha":"Fecha","cantidad":"Gramos","referencia":"Detalle"
-                            }), use_container_width=True, hide_index=True)
-
-                        # Botón compra rápida
-                        st.markdown("---")
-                        with st.form(f"compra_rapida_{mid}", clear_on_submit=True):
-                            cr1, cr2 = st.columns(2)
-                            with cr1:
-                                cr_gr = st.number_input("Gramos a cargar", min_value=0, step=250, value=1000, key=f"gr_{mid}")
-                            with cr2:
-                                cr_precio = st.number_input("Precio pagado ($)", min_value=0.0, step=500.0, key=f"pr_{mid}")
-                            if st.form_submit_button("🛒 Registrar compra", use_container_width=True):
-                                try:
-                                    with engine.connect() as conn_:
-                                        nuevo_costo = cr_precio/(cr_gr/1000) if cr_gr > 0 else ultimo_precio
-                                        conn_.execute(text(f"UPDATE materials SET stock_gr=stock_gr+{cr_gr}, cost_kg={nuevo_costo} WHERE material_id='{mid}'"))
-                                        conn_.execute(text(f"""
-                                            INSERT INTO stock_movements (product_sku, tipo, cantidad, fecha, referencia)
-                                            VALUES ('{mid}','entrada',{cr_gr},'{datetime.now().strftime('%Y-%m-%d')}',
-                                            'Compra Fer — ${cr_precio:,.0f} — ${nuevo_costo:,.0f}/kg')
-                                        """))
-                                        conn_.commit()
-                                    st.success(f"✅ +{cr_gr}g registrado a ${nuevo_costo:,.0f}/kg")
-                                    st.rerun()
-                                except Exception as e:
-                                    st.error(f"Error: {e}")
-
-        # Actualizar stock
-        st.markdown("<div class='section-title'>🛒 Registrar compra de material</div>", unsafe_allow_html=True)
-        with st.form("form_material", clear_on_submit=True):
-            c1, c2, c3 = st.columns(3)
-            with c1:
-                mat_id = st.selectbox("Material", materiales["material_id"].tolist() if not materiales.empty else [])
-            with c2:
-                mat_gr = st.number_input("Gramos comprados", min_value=0, step=100, value=1000)
-            with c3:
-                mat_precio = st.number_input("Precio pagado ($)", min_value=0.0, step=100.0)
-            if st.form_submit_button("💾 REGISTRAR COMPRA", use_container_width=True, type="primary"):
-                try:
-                    with engine.connect() as conn_:
-                        conn_.execute(text(f"UPDATE materials SET stock_gr = stock_gr + {mat_gr}, cost_kg = {mat_precio/(mat_gr/1000) if mat_gr > 0 else 0} WHERE material_id='{mat_id}'"))
-                        conn_.execute(text(f"""
-                            INSERT INTO stock_movements (product_sku, tipo, cantidad, fecha, referencia)
-                            VALUES ('{mat_id}', 'entrada', {mat_gr}, '{datetime.now().strftime("%Y-%m-%d")}',
-                            'Compra registrada por Fer — ${mat_precio:,.0f}')
-                        """))
-                        conn_.commit()
-                    st.success(f"✅ +{mat_gr}g de {mat_id} registrado")
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"Error: {e}")
-
-    elif menu == "📋 Cola de Pedidos":
-        st.markdown("<div class='section-title'>📋 Todos los pedidos</div>", unsafe_allow_html=True)
-        try:
-            todos_pedidos = pd.read_sql("SELECT * FROM orders ORDER BY date DESC", engine)
-        except:
-            todos_pedidos = pd.DataFrame()
-        if todos_pedidos.empty:
-            st.info("No hay pedidos registrados todavía.")
-        else:
-            filtro_st = st.selectbox("Filtrar por estado", ["Todos","Pendiente","En Proceso","Listo","Cancelado"])
-            df_p = todos_pedidos if filtro_st=="Todos" else todos_pedidos[todos_pedidos["status"]==filtro_st]
-            st.dataframe(df_p[["id","client_id","status","date","notas"]].rename(columns={
-                "id":"#","client_id":"Cliente","status":"Estado","date":"Fecha","notas":"Notas"
-            }), use_container_width=True, hide_index=True)
-
-    st.stop()
+    st.markdown(f"<div style='font-size:0.7rem;color:#94a3b8;text-align:center;margin-top:20px;'>v2.6 · {datetime.now().strftime('%d/%m/%Y')}</div>", unsafe_allow_html=True)
 
 # DASHBOARD ALEJANDRA
 if menu == "📊 Dashboard Alejandra":
@@ -568,7 +288,7 @@ elif menu == "🛠️ Produccion (Fer)":
                 if nuevo_estado != estado:
                     if st.button("Actualizar", key=f"btn_{pid}", type="primary"):
                         with engine.connect() as conn:
-                            conn.execute(text(f"UPDATE orders SET status='{nuevo_estado}' WHERE id={pid}"))
+                            conn.execute(text("UPDATE orders SET status=:status WHERE id=:id"), {"status": nuevo_estado, "id": pid})
                             conn.commit()
                         st.success(f"✅ Pedido #{pid} → {nuevo_estado}")
                         st.rerun()
@@ -584,7 +304,7 @@ elif menu == "🛠️ Produccion (Fer)":
         gramos = st.number_input("Gramos a agregar", min_value=100, max_value=5000, step=100)
         if st.button("Registrar Reposicion", type="primary"):
             with engine.connect() as conn:
-                conn.execute(text(f"UPDATE materials SET stock_gr = stock_gr + {gramos} WHERE name = '{mat_sel}'"))
+                conn.execute(text("UPDATE materials SET stock_gr = stock_gr + :gramos WHERE name = :nombre"), {"gramos": gramos, "nombre": mat_sel})
                 conn.commit()
             st.success(f"✅ +{gramos}g agregados a {mat_sel}")
             st.rerun()
@@ -698,10 +418,18 @@ elif menu == "🛒 Cargar Pedido":
     notas = st.text_area("Notas para Fer (color, urgencia, etc.)", height=80)
     if st.button("Confirmar Pedido", type="primary"):
         with engine.connect() as conn:
-            result = conn.execute(text(f"INSERT INTO orders (client_id, status, date, notas, color_pedido) VALUES ('{uid}', 'Pendiente', '{datetime.now().isoformat()}', '{notas.strip()}', '')"))
+            result = conn.execute(
+                text("INSERT INTO orders (client_id, status, date, notas, color_pedido) VALUES (:cid, 'Pendiente', :fecha, :notas, '')"),
+                {"cid": uid, "fecha": datetime.now().isoformat(), "notas": notas.strip()}
+            )
             order_id = result.lastrowid
-            precio_unit = pd.read_sql(f"SELECT price FROM products WHERE name='{producto}'", engine)["price"].iloc[0]
-            conn.execute(text(f"INSERT INTO order_items (order_id, product_sku, cantidad, precio_unitario) SELECT {order_id}, sku, {cantidad}, {precio_unit} FROM products WHERE name='{producto}'"))
+            prod_row = pd.read_sql(text("SELECT sku, price FROM products WHERE name=:nombre"), conn, params={"nombre": producto})
+            product_sku  = prod_row["sku"].iloc[0]
+            precio_unit  = float(prod_row["price"].iloc[0])
+            conn.execute(
+                text("INSERT INTO order_items (order_id, product_sku, cantidad, precio_unitario) VALUES (:oid, :sku, :qty, :precio)"),
+                {"oid": order_id, "sku": product_sku, "qty": cantidad, "precio": precio_unit}
+            )
             conn.commit()
         st.success(f"✅ Pedido registrado: {cantidad}x {producto}")
         st.balloons()
@@ -933,7 +661,10 @@ elif menu == "🌱 Impacto Social":
         desc_don = st.text_input("Descripcion", placeholder="Ej: Urna fin de semana")
     if st.button("💚 REGISTRAR DONACION", type="primary"):
         with engine.connect() as conn:
-            conn.execute(text(f"INSERT INTO donations (fondo, monto, tipo, descripcion, fecha) VALUES ('{fondo_sel}', {monto_don}, '{tipo_don}', '{desc_don}', '{datetime.now().date()}')"))
+            conn.execute(
+                text("INSERT INTO donations (fondo, monto, tipo, descripcion, fecha) VALUES (:fondo, :monto, :tipo, :desc, :fecha)"),
+                {"fondo": fondo_sel, "monto": monto_don, "tipo": tipo_don, "desc": desc_don, "fecha": str(datetime.now().date())}
+            )
             conn.commit()
         st.success(f"✅ ${monto_don:,.0f} registrados en {FONDOS[fondo_sel]['nombre']} 💚")
         st.rerun()
