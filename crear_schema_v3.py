@@ -159,6 +159,25 @@ TABLAS = [
             fecha       TEXT DEFAULT CURRENT_DATE
         )
     """),
+
+    # ─────────────────────────────────────────────
+    #  INTELIGENCIA COMERCIAL
+    # ─────────────────────────────────────────────
+    ("senales_mercado", """
+        CREATE TABLE senales_mercado (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            fecha           TEXT DEFAULT CURRENT_DATE,
+            cliente_id      TEXT,                 -- nombre libre o id de tenants
+            linea           TEXT,                 -- línea relacionada (Magnitud 19, Coquette, etc.)
+            producto        TEXT,                 -- producto específico si aplica
+            reaccion        TEXT,                 -- 'Le encantó'|'Preguntó el precio'|'Dudó'|etc.
+            oportunidad     TEXT,                 -- descripción de la oportunidad detectada
+            fuente          TEXT,                 -- quién reporta la señal
+            canal           TEXT,                 -- 'WhatsApp'|'Presencial'|'Instagram'|etc.
+            notas           TEXT,                 -- notas libres para el agente IA
+            procesado_por_ia INTEGER DEFAULT 0    -- 0=pendiente, 1=procesado
+        )
+    """),
 ]
 
 # ─────────────────────────────────────────────────
