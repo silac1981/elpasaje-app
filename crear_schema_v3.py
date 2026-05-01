@@ -172,8 +172,23 @@ TABLAS = [
     """),
 
     # ─────────────────────────────────────────────
-    #  INTELIGENCIA COMERCIAL
+    #  INTELIGENCIA / AGENTE IA
     # ─────────────────────────────────────────────
+    ("log_agente", """
+        CREATE TABLE log_agente (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            proyecto        TEXT DEFAULT 'ElPasaje',
+            tipo            TEXT NOT NULL,            -- 'Patrón de Margen'|'Alerta Entrega'|etc.
+            senal           TEXT NOT NULL,
+            dato_observado  TEXT,
+            accion_sugerida TEXT,
+            etiquetas       TEXT,
+            confianza       REAL DEFAULT 0.7,
+            origen          TEXT DEFAULT 'agente',
+            fecha           TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+    """),
+
     ("senales_mercado", """
         CREATE TABLE senales_mercado (
             id              INTEGER PRIMARY KEY AUTOINCREMENT,
