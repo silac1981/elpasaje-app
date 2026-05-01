@@ -70,20 +70,25 @@ section{min-height:100vh;scroll-snap-align:start;position:relative;display:flex;
 .sec-title{font-family:'Cormorant Garamond',serif;font-size:clamp(2.5rem,5vw,4.5rem);font-weight:300;line-height:1;letter-spacing:-1px;margin-bottom:8px}
 .sec-frase{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1rem;color:var(--gold2);margin-bottom:32px}
 
-/* ── Cards de línea ── */
-.lineas-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1px;background:var(--border)}
-.linea-card{background:var(--deep);padding:28px 24px;position:relative;overflow:hidden;transition:background .3s;cursor:none}
-.linea-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--lc,var(--gold));transform:scaleX(0);transform-origin:left;transition:transform .4s}
-.linea-card:hover{background:var(--surface)}
-.linea-card:hover::before{transform:scaleX(1)}
-.lc-emoji{font-size:1.5rem;margin-bottom:16px;display:block}
-.lc-name{font-family:'Cormorant Garamond',serif;font-size:1.2rem;margin-bottom:4px}
-.lc-frase{font-size:.72rem;color:var(--muted);line-height:1.6;margin-bottom:16px}
-.lc-tag{font-size:.6rem;letter-spacing:2px;text-transform:uppercase;color:var(--lc,var(--gold));padding:3px 8px;border:1px solid currentColor;border-radius:99px;opacity:.6;display:inline-block}
-.lc-sat{display:inline-flex;align-items:center;gap:6px;margin-top:8px;font-size:.6rem;letter-spacing:2px;text-transform:uppercase;text-decoration:none;border:1px solid rgba(255,255,255,.15);padding:5px 12px;transition:all .3s;opacity:.8}
-.lc-sat:hover{opacity:1;border-color:currentColor}
-.lc-wa{display:inline-flex;align-items:center;gap:6px;margin-top:8px;font-size:.65rem;letter-spacing:1px;color:var(--accent2);text-decoration:none;opacity:0;transition:opacity .3s}
+/* ── Cards de línea (foto-first) ── */
+.lineas-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:2px;background:var(--border)}
+.linea-card{background:var(--deep);position:relative;overflow:hidden;transition:transform .4s;cursor:none;aspect-ratio:3/4}
+.linea-card:hover{transform:scale(1.02);z-index:2}
+.lc-img{width:100%;height:100%;object-fit:cover;display:block;filter:saturate(0.85) brightness(0.9);transition:filter .4s}
+.linea-card:hover .lc-img{filter:saturate(1.1) brightness(1)}
+/* placeholder cuando no hay foto */
+.lc-placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--surface),var(--deep));position:relative}
+.lc-placeholder::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,var(--lc,var(--gold)) 0%,transparent 60%);opacity:.06}
+.lc-ph-icon{font-size:3.5rem;opacity:.25}
+/* overlay inferior */
+.lc-overlay{position:absolute;bottom:0;left:0;right:0;padding:20px 18px 16px;background:linear-gradient(transparent,rgba(7,7,15,.92));display:flex;flex-direction:column;gap:4px}
+.lc-overlay::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--lc,var(--gold))}
+.lc-name{font-family:'Cormorant Garamond',serif;font-size:1.1rem;margin:0;line-height:1.2}
+.lc-tag{font-size:.58rem;letter-spacing:2px;text-transform:uppercase;color:var(--lc,var(--gold));opacity:.75}
+.lc-wa{display:inline-flex;align-items:center;gap:6px;margin-top:6px;font-size:.62rem;letter-spacing:1px;color:var(--accent2);text-decoration:none;opacity:0;transition:opacity .3s}
 .linea-card:hover .lc-wa{opacity:1}
+/* ocultar elementos viejos si quedan */
+.lc-emoji,.lc-frase,.lc-sat{display:none}
 
 /* ── Separador full-screen ── */
 .interlude{min-height:60vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:80px 48px;position:relative;scroll-snap-align:none}
@@ -212,8 +217,11 @@ footer{padding:60px 48px;border-top:1px solid var(--border);display:grid;grid-te
     El <span>Pasaje</span>
   </div>
   <div class="nav-links">
-    <a href="#nivel1">Público</a>
-    <a href="#nivel2">Profesional</a>
+    <a href="coquette.html" style="color:#F9A8D4">Coquette</a>
+    <a href="oasis-animal.html" style="color:#F472B6">Oasis Animal</a>
+    <a href="sport.html" style="color:#34D399">F-Zone</a>
+    <a href="oasis-estero.html" style="color:#4CAF50">Oasis del Estero</a>
+    <span style="color:rgba(255,255,255,0.12);margin:0 4px">|</span>
     <a href="#blacklabel">Black Label</a>
     <a href="#quienes">Equipo</a>
     <a href="#contacto">Contacto</a>
@@ -259,54 +267,63 @@ footer{padding:60px 48px;border-top:1px solid var(--border);display:grid;grid-te
   <div class="lineas-grid reveal">
 
     <div class="linea-card" style="--lc:#F9A8D4">
-      <span class="lc-emoji">🎀</span>
-      <div class="lc-name">Coquette</div>
-      <div class="lc-frase">Elegancia que se toca. Para la generación que sabe que los detalles son el todo.</div>
-      <span class="lc-tag">Olivia · 15 años</span>
-      <a href="coquette.html" style="display:inline-flex;align-items:center;gap:6px;margin-top:10px;font-size:.62rem;letter-spacing:2px;text-transform:uppercase;color:#F9A8D4;text-decoration:none;border:1px solid rgba(249,168,212,.3);padding:5px 12px;transition:all .3s">Ver línea completa →</a>
-      <a href="https://wa.me/541165497234?text=Hola! Me interesa la línea Coquette" class="lc-wa" target="_blank">Consultar →</a>
+      <div class="lc-placeholder"><span class="lc-ph-icon">🎀</span></div>
+      <!-- reemplazar div anterior por: <img class="lc-img" src="img/coquette/producto.jpg" alt="Coquette"> -->
+      <div class="lc-overlay">
+        <div class="lc-name">Coquette</div>
+        <span class="lc-tag">Olivia · 15 años</span>
+        <a href="https://wa.me/541165497234?text=Hola! Me interesa la línea Coquette" class="lc-wa" target="_blank">Consultar por WA →</a>
+      </div>
     </div>
 
     <div class="linea-card" style="--lc:#F472B6">
-      <span class="lc-emoji">🐾</span>
-      <div class="lc-name">Oasis Animal</div>
-      <div class="lc-frase">Amor que deja huella. 10% de cada venta financia el refugio de Agus y Fede.</div>
-      <span class="lc-tag">Solidario · Rescate</span>
-      <a href="https://wa.me/541165497234?text=Hola! Me interesa la línea Oasis Animal" class="lc-wa" target="_blank">Consultar →</a>
+      <div class="lc-placeholder"><span class="lc-ph-icon">🐾</span></div>
+      <!-- reemplazar div anterior por: <img class="lc-img" src="img/oasis-animal/producto.jpg" alt="Oasis Animal"> -->
+      <div class="lc-overlay">
+        <div class="lc-name">Oasis Animal</div>
+        <span class="lc-tag">Solidario · Rescate</span>
+        <a href="https://wa.me/541165497234?text=Hola! Me interesa la línea Oasis Animal" class="lc-wa" target="_blank">Consultar por WA →</a>
+      </div>
     </div>
 
     <div class="linea-card" style="--lc:#34D399">
-      <span class="lc-emoji">⚽</span>
-      <div class="lc-name">Sport</div>
-      <div class="lc-frase">Pasión hecha objeto. Coleccionismo deportivo y aeronáutico por Francisco.</div>
-      <span class="lc-tag">Francisco · 11 años</span>
-      <a href="sport.html" style="display:inline-flex;align-items:center;gap:6px;margin-top:10px;font-size:.62rem;letter-spacing:2px;text-transform:uppercase;color:#34D399;text-decoration:none;border:1px solid rgba(52,211,153,.3);padding:5px 12px;transition:all .3s">Ver F-Zone →</a>
-      <a href="https://wa.me/541165497234?text=Hola! Me interesa la línea Sport" class="lc-wa" target="_blank">Consultar →</a>
+      <div class="lc-placeholder"><span class="lc-ph-icon">⚽</span></div>
+      <!-- reemplazar div anterior por: <img class="lc-img" src="img/sport/producto.jpg" alt="F-Zone"> -->
+      <div class="lc-overlay">
+        <div class="lc-name">F-Zone · Sport</div>
+        <span class="lc-tag">Francisco · 11 años</span>
+        <a href="https://wa.me/541165497234?text=Hola! Me interesa la línea Sport" class="lc-wa" target="_blank">Consultar por WA →</a>
+      </div>
     </div>
 
     <div class="linea-card" style="--lc:#CD7F32">
-      <span class="lc-emoji">🌀</span>
-      <div class="lc-name">Ánima</div>
-      <div class="lc-frase">Objetos que respiran. Espacios que inspiran. Espiritualidad laica por Nely.</div>
-      <span class="lc-tag">Bronce · Geometría áurea</span>
-      <a href="https://wa.me/541165497234?text=Hola! Me interesa la línea Ánima" class="lc-wa" target="_blank">Consultar →</a>
+      <div class="lc-placeholder"><span class="lc-ph-icon">🌀</span></div>
+      <!-- reemplazar div anterior por: <img class="lc-img" src="img/anima/producto.jpg" alt="Ánima"> -->
+      <div class="lc-overlay">
+        <div class="lc-name">Ánima</div>
+        <span class="lc-tag">Bronce · Geometría áurea</span>
+        <a href="https://wa.me/541165497234?text=Hola! Me interesa la línea Ánima" class="lc-wa" target="_blank">Consultar por WA →</a>
+      </div>
     </div>
 
     <div class="linea-card" style="--lc:#A78BFA">
-      <span class="lc-emoji">🎵</span>
-      <div class="lc-name">Melómano</div>
-      <div class="lc-frase">Para los que escuchan diferente. Soportes de vinilo y accesorios de alta fidelidad por Fer.</div>
-      <span class="lc-tag">Fernando · Audio hi-fi</span>
-      <a href="https://wa.me/541165497234?text=Hola! Me interesa la línea Melómano" class="lc-wa" target="_blank">Consultar →</a>
+      <div class="lc-placeholder"><span class="lc-ph-icon">🎵</span></div>
+      <!-- reemplazar div anterior por: <img class="lc-img" src="img/melomano/producto.jpg" alt="Melómano"> -->
+      <div class="lc-overlay">
+        <div class="lc-name">Melómano</div>
+        <span class="lc-tag">Fernando · Audio hi-fi</span>
+        <a href="https://wa.me/541165497234?text=Hola! Me interesa la línea Melómano" class="lc-wa" target="_blank">Consultar por WA →</a>
+      </div>
     </div>
 
     <div class="linea-card" style="--lc:#4CAF50">
-      <span class="lc-emoji">🌿</span>
-      <div class="lc-name">Oasis del Estero</div>
-      <div class="lc-frase">Tecnología para el cultivo del futuro. Macetas innovadoras y piezas para hidroponía por Fede.</div>
-      <span class="lc-tag">Buenos Aires · Agro-Tech</span>
-      <a href="oasis-estero.html" style="display:inline-flex;align-items:center;gap:6px;margin-top:10px;font-size:.62rem;letter-spacing:2px;text-transform:uppercase;color:#4CAF50;text-decoration:none;border:1px solid rgba(76,175,80,.3);padding:5px 12px;transition:all .3s">Ver Oasis →</a>
-      <a href="https://wa.me/541165497234?text=Hola! Me interesa la línea Oasis del Estero" class="lc-wa" target="_blank">Consultar →</a>
+      <div class="lc-placeholder"><span class="lc-ph-icon">🌿</span></div>
+      <!-- reemplazar div anterior por: <img class="lc-img" src="img/oasis-estero/producto.jpg" alt="Oasis del Estero"> -->
+      <div class="lc-overlay">
+        <div class="lc-name">Oasis del Estero</div>
+        <span class="lc-tag">Buenos Aires · Agro-Tech</span>
+        <a href="https://wa.me/541165497234?text=Hola! Me interesa la línea Oasis del Estero" class="lc-wa" target="_blank">Consultar por WA →</a>
+      </div>
     </div>
 
   </div>
@@ -331,35 +348,43 @@ footer{padding:60px 48px;border-top:1px solid var(--border);display:grid;grid-te
   <div class="lineas-grid reveal">
 
     <div class="linea-card" style="--lc:#FF5F1F">
-      <span class="lc-emoji">✈️</span>
-      <div class="lc-name">Aero-Tech</div>
-      <div class="lc-frase">Precisión de vuelo en tu escritorio. Para pilotos, mecánicos y personal de aviación. Personalización con código IATA y legajo.</div>
-      <span class="lc-tag">Nando · PETG Industrial</span>
-      <a href="https://wa.me/541165497234?text=Hola! Me interesa la línea Aero-Tech" class="lc-wa" target="_blank">Consultar →</a>
+      <div class="lc-placeholder"><span class="lc-ph-icon">✈️</span></div>
+      <!-- reemplazar div anterior por: <img class="lc-img" src="img/aerotech/producto.jpg" alt="Aero-Tech"> -->
+      <div class="lc-overlay">
+        <div class="lc-name">Aero-Tech</div>
+        <span class="lc-tag">Nando · PETG Industrial</span>
+        <a href="https://wa.me/541165497234?text=Hola! Me interesa la línea Aero-Tech" class="lc-wa" target="_blank">Consultar por WA →</a>
+      </div>
     </div>
 
     <div class="linea-card" style="--lc:#64748B">
-      <span class="lc-emoji">⚙️</span>
-      <div class="lc-name">Core Tech</div>
-      <div class="lc-frase">Ingeniería de componentes por Constantino. Si lo necesitás y no existe, lo fabricamos. Para talleres y escuelas técnicas.</div>
-      <span class="lc-tag">Constantino · 17 años</span>
-      <a href="https://wa.me/541165497234?text=Hola! Me interesa Core Tech" class="lc-wa" target="_blank">Consultar →</a>
+      <div class="lc-placeholder"><span class="lc-ph-icon">⚙️</span></div>
+      <!-- reemplazar div anterior por: <img class="lc-img" src="img/coretech/producto.jpg" alt="Core Tech"> -->
+      <div class="lc-overlay">
+        <div class="lc-name">Core Tech</div>
+        <span class="lc-tag">Constantino · 17 años</span>
+        <a href="https://wa.me/541165497234?text=Hola! Me interesa Core Tech" class="lc-wa" target="_blank">Consultar por WA →</a>
+      </div>
     </div>
 
     <div class="linea-card" style="--lc:#FBBF24">
-      <span class="lc-emoji">💊</span>
-      <div class="lc-name">Pharma DeLux</div>
-      <div class="lc-frase">Regalos que dicen todo. Maquetas anatómicas y obsequios corporativos de alta gama para el universo médico.</div>
-      <span class="lc-tag">Lucas · Corporate gifts</span>
-      <a href="https://wa.me/541165497234?text=Hola! Me interesa Pharma DeLux" class="lc-wa" target="_blank">Consultar →</a>
+      <div class="lc-placeholder"><span class="lc-ph-icon">💊</span></div>
+      <!-- reemplazar div anterior por: <img class="lc-img" src="img/pharma/producto.jpg" alt="Pharma DeLux"> -->
+      <div class="lc-overlay">
+        <div class="lc-name">Pharma DeLux</div>
+        <span class="lc-tag">Lucas · Corporate gifts</span>
+        <a href="https://wa.me/541165497234?text=Hola! Me interesa Pharma DeLux" class="lc-wa" target="_blank">Consultar por WA →</a>
+      </div>
     </div>
 
     <div class="linea-card" style="--lc:#94a3b8">
-      <span class="lc-emoji">🔧</span>
-      <div class="lc-name">Soluciones Cotidianas</div>
-      <div class="lc-frase">Lo que el mercado olvidó fabricar. Patas antivibrantes, repuestos del hogar, tapas, soportes. Si lo necesitás, lo hacemos.</div>
-      <span class="lc-tag">Bajo pedido · 48hs</span>
-      <a href="https://wa.me/541165497234?text=Hola! Necesito una pieza que no encuentro en el mercado" class="lc-wa" target="_blank">Consultar →</a>
+      <div class="lc-placeholder"><span class="lc-ph-icon">🔧</span></div>
+      <!-- reemplazar div anterior por: <img class="lc-img" src="img/soluciones/producto.jpg" alt="Soluciones Cotidianas"> -->
+      <div class="lc-overlay">
+        <div class="lc-name">Soluciones Cotidianas</div>
+        <span class="lc-tag">Bajo pedido · 48hs</span>
+        <a href="https://wa.me/541165497234?text=Hola! Necesito una pieza que no encuentro en el mercado" class="lc-wa" target="_blank">Consultar por WA →</a>
+      </div>
     </div>
 
   </div>
