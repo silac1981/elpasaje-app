@@ -156,12 +156,14 @@ with st.sidebar:
         <div style='text-align:center;padding:20px 0 10px;'>
             <div style='font-size:2.5rem;'>{linea_cfg['emoji']}</div>
             <div style='font-size:1rem;font-weight:600;margin-top:6px;'>{st.session_state['user']}</div>
-            <div style='font-size:0.75rem;color:#94a3b8;margin-top:2px;'>{"Administracion" if st.session_state["role"] == "admin" else "Socio"}</div>
+            <div style='font-size:0.75rem;color:#94a3b8;margin-top:2px;'>{"Administracion" if st.session_state["role"] == "admin" else ("Produccion" if st.session_state["role"] == "produccion" else "Socio")}</div>
         </div>
         <hr style='border-color:#ffffff22;margin:0 0 16px;'/>
     """, unsafe_allow_html=True)
     if st.session_state["role"] == "admin":
         menu = st.radio("", ["📊 Dashboard Alejandra","📦 Inventario Pro","🛠️ Produccion (Fer)","🤝 Socios","👥 Clientes","🌱 Impacto Social"], label_visibility="collapsed")
+    elif st.session_state["role"] == "produccion":
+        menu = st.radio("", ["🛠️ Produccion (Fer)"], label_visibility="collapsed")
     else:
         menu = st.radio("", ["📈 Mi Panel","🛒 Cargar Pedido"], label_visibility="collapsed")
     st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)
