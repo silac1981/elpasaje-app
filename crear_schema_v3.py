@@ -23,15 +23,26 @@ TABLAS = [
     # ─────────────────────────────────────────────
     ("tenants", """
         CREATE TABLE tenants (
-            id          TEXT PRIMARY KEY,
-            name        TEXT NOT NULL,
-            email       TEXT UNIQUE NOT NULL,
-            password    TEXT NOT NULL,
-            telefono    TEXT,
-            tipo        TEXT DEFAULT 'familia',   -- 'familia' | 'b2b' | 'admin'
-            sector      TEXT,                     -- área dentro de la empresa
-            fecha_alta  TEXT DEFAULT CURRENT_DATE,
-            activo      INTEGER DEFAULT 1
+            id                   TEXT PRIMARY KEY,
+            name                 TEXT NOT NULL,
+            email                TEXT UNIQUE NOT NULL,
+            password             TEXT NOT NULL,
+            telefono             TEXT,
+            tipo                 TEXT DEFAULT 'familia',   -- 'familia'|'b2b'|'admin'|'produccion'|'cliente_externo'
+            sector               TEXT,                     -- área dentro de la empresa
+            fecha_alta           TEXT DEFAULT CURRENT_DATE,
+            activo               INTEGER DEFAULT 1,
+            -- campos de segmentación comercial
+            segmento             TEXT,                     -- 'B2C'|'B2B'|'Corporativo'|'Institucional'
+            lead_source          TEXT,                     -- cómo llegó al ecosistema
+            potencial            TEXT,                     -- 'Alto'|'Medio'|'Bajo'
+            canal_preferido      TEXT,                     -- 'WhatsApp'|'Instagram'|'Presencial'|etc.
+            ciudad               TEXT DEFAULT 'Buenos Aires',
+            rubro                TEXT,
+            notas_agente         TEXT,                     -- notas del agente IA sobre el contacto
+            es_cliente_real      INTEGER DEFAULT 0,        -- 1 si realizó al menos una compra
+            fecha_primer_contacto TEXT,
+            linea_interes        TEXT                      -- línea o marca de interés principal
         )
     """),
 
@@ -183,16 +194,19 @@ TABLAS = [
 # ─────────────────────────────────────────────────
 #  DATOS INICIALES
 # ─────────────────────────────────────────────────
+# Columnas extras (las 10 de segmentación): segmento, lead_source, potencial, canal_preferido,
+# ciudad, rubro, notas_agente, es_cliente_real, fecha_primer_contacto, linea_interes
 TENANTS_INICIALES = [
-    ("admin",            "Alejandra",                         "admin@elpasaje.com",       "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9",  None,          "admin",   "Direccion Economica", HOY, 1),
-    ("olivia_coquette",  "Olivia",                            "coquette@elpasaje.com",    "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",    None,          "familia", None,                  HOY, 1),
-    ("francisco_sport",  "Francisco",                         "fsport@elpasaje.com",      "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",    None,          "familia", None,                  HOY, 1),
-    ("constantino_tech", "Constantino",                       "coretech@elpasaje.com",    "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",    None,          "familia", None,                  HOY, 1),
-    ("aviation",         "Fernando Gomez Aguilera (Nando)",   "aviation@elpasaje.com",    "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",    None,          "b2b",     "Mantenimiento",       HOY, 1),
-    ("oasis_animal",     "Oasis Animal",                      "oasisanimal@elpasaje.com", "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",    None,          "b2b",     None,                  HOY, 1),
-    ("oasis_del_estero", "Oasis del Estero",                  "oasisestero@elpasaje.com", "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",    None,          "b2b",     None,                  HOY, 1),
-    ("pharma_delux",     "Pharma DeLux",                      "pharma@elpasaje.com",      "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",    None,          "b2b",     None,                  HOY, 1),
-    ("fer_produccion",   "Fernando (Fer)",                     "fer@elpasaje.com",         "a29461d9796a45974014a214c0ece938a5f9dcd8799f26b26c34d3e8adf31c69",    None,          "produccion", "Fabricacion y Materiales", HOY, 1),
+    # id                  name                                  email                       password                                                           tel   tipo           sector                     fecha  activo  segmento       lead_source  potencial  canal_preferido  ciudad          rubro       notas_agente  es_cliente_real  fecha_primer_contacto  linea_interes
+    ("admin",            "Alejandra",                          "admin@elpasaje.com",        "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9", None, "admin",       "Direccion Economica",     HOY,   1,      None,          None,        None,      None,            "Buenos Aires", None,       None,         1,               HOY,                   "Todas"),
+    ("olivia_coquette",  "Olivia",                             "coquette@elpasaje.com",     "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",  None, "familia",     None,                      HOY,   1,      "B2C",         "Familia",   "Alto",    "Presencial",    "Buenos Aires", "Estética",  None,         1,               HOY,                   "Coquette"),
+    ("francisco_sport",  "Francisco",                          "fsport@elpasaje.com",       "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",  None, "familia",     None,                      HOY,   1,      "B2C",         "Familia",   "Alto",    "Presencial",    "Buenos Aires", "Deportes",  None,         1,               HOY,                   "Francisco Sport"),
+    ("constantino_tech", "Constantino",                        "coretech@elpasaje.com",     "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",  None, "familia",     None,                      HOY,   1,      "B2C",         "Familia",   "Alto",    "Presencial",    "Buenos Aires", "Tecnología",None,         1,               HOY,                   "Core Tech"),
+    ("aviation",         "Fernando Gomez Aguilera (Nando)",    "aviation@elpasaje.com",     "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",  None, "b2b",         "Mantenimiento AA",        HOY,   1,      "B2B",         "Red Nando", "Alto",    "WhatsApp",      "Buenos Aires", "Aeronáutico",None,        1,               HOY,                   "Aviation Pro"),
+    ("oasis_animal",     "Oasis Animal",                       "oasisanimal@elpasaje.com",  "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",  None, "b2b",         None,                      HOY,   1,      "B2B",         "Red Nando", "Alto",    "WhatsApp",      "Buenos Aires", "Veterinario",None,        1,               HOY,                   "Oasis Animal"),
+    ("oasis_del_estero", "Oasis del Estero",                   "oasisestero@elpasaje.com",  "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",  None, "b2b",         None,                      HOY,   1,      "B2B",         "Red Nando", "Medio",   "WhatsApp",      "Santiago del Estero", None, None,   1,               HOY,                   "Oasis del Estero"),
+    ("pharma_delux",     "Pharma DeLux",                       "pharma@elpasaje.com",       "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",  None, "b2b",         None,                      HOY,   1,      "B2B",         "Directo",   "Alto",    "Email",         "Buenos Aires", "Farmacéutico", None,      1,               HOY,                   "Pharma DeLux"),
+    ("fer_produccion",   "Fernando (Fer)",                     "fer@elpasaje.com",          "a29461d9796a45974014a214c0ece938a5f9dcd8799f26b26c34d3e8adf31c69",  None, "produccion",  "Fabricacion y Materiales",HOY,   1,      None,          None,        None,      "Presencial",    "Buenos Aires", None,       None,         1,               HOY,                   None),
 ]
 
 MATERIALS_INICIALES = [
@@ -243,9 +257,20 @@ with engine.connect() as conn:
     print("👥 Insertando tenants...")
     for row in TENANTS_INICIALES:
         conn.execute(text("""
-            INSERT INTO tenants (id, name, email, password, telefono, tipo, sector, fecha_alta, activo)
-            VALUES (:id, :name, :email, :pwd, :tel, :tipo, :sector, :fecha, :activo)
-        """), dict(zip(["id","name","email","pwd","tel","tipo","sector","fecha","activo"], row)))
+            INSERT INTO tenants
+            (id, name, email, password, telefono, tipo, sector, fecha_alta, activo,
+             segmento, lead_source, potencial, canal_preferido, ciudad, rubro,
+             notas_agente, es_cliente_real, fecha_primer_contacto, linea_interes)
+            VALUES
+            (:id, :name, :email, :pwd, :tel, :tipo, :sector, :fecha, :activo,
+             :segmento, :lead_source, :potencial, :canal_preferido, :ciudad, :rubro,
+             :notas_agente, :es_cliente_real, :fecha_primer_contacto, :linea_interes)
+        """), dict(zip(
+            ["id","name","email","pwd","tel","tipo","sector","fecha","activo",
+             "segmento","lead_source","potencial","canal_preferido","ciudad","rubro",
+             "notas_agente","es_cliente_real","fecha_primer_contacto","linea_interes"],
+            row
+        )))
         print(f"   ✅ {row[0]} — {row[1]}")
     print()
 
