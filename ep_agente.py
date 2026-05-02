@@ -79,6 +79,127 @@ def registrar_log(tipo, senal, dato="", accion="", etiquetas="", confianza=0.7):
     conn.close()
 
 # ══════════════════════════════════════════════════════
+# ALERTAS PARA EL DASHBOARD (importable desde main.py)
+# ══════════════════════════════════════════════════════
+
+def get_alertas_dashboard() -> list:
+    """
+    Devuelve lista de alertas actuales para mostrar en la UI de Streamlit.
+    Cada alerta: {"nivel": "critico"|"atencion"|"info", "titulo": str, "detalle": str, "accion": str}
+    Diseñada para ser llamada con @st.cache_data(ttl=120).
+    """
+    conn = get_conn()
+    cur  = conn.cursor()
+    alertas = []
+    hoy = datetime.now().date()
+
+    # ── 1. Stock crítico + proyección de días restantes ────────────
+    mats = cur.execute("""
+        SELECT m.material_id, m.name, m.stock_gr,
+               COALESCE(m.stock_minimo_gr, 200) AS stock_minimo_gr,
+               COALESCE(c.consumo_30d, 0)       AS consumo_30d
+        FROM materials m
+        LEFT JOIN (
+            SELECT material_id, SUM(gramos_usados) AS consumo_30d
+            FROM production_log
+            WHERE fecha_fin >= date('now', '-30 days')
+            GROUP BY material_id
+        ) c ON c.material_id = m.material_id
+    """).fetchall()
+
+    for m in mats:
+        stock     = m["stock_gr"] or 0
+        minimo    = m["stock_minimo_gr"]
+        consumo_d = (m["consumo_30d"] or 0) / 30
+        if stock <= minimo:
+            dias_txt = f"~{int(stock / consumo_d)}d de stock" if consumo_d > 0.5 else "ritmo bajo"
+            alertas.append({
+                "nivel":   "critico",
+                "titulo":  f"⚠️ {m['name']} — stock crítico",
+                "detalle": f"{stock:.0f}g restantes · mínimo {minimo:.0f}g · {dias_txt}",
+                "accion":  "Reponer ahora",
+            })
+        elif consumo_d > 0.5:
+            dias_stock = stock / consumo_d
+            if dias_stock <= 7:
+                alertas.append({
+                    "nivel":   "atencion",
+                    "titulo":  f"🟡 {m['name']} — queda ~{int(dias_stock)} días",
+                    "detalle": f"{stock:.0f}g a {consumo_d:.0f}g/día",
+                    "accion":  "Planificar compra esta semana",
+                })
+
+    # ── 2. Pedidos urgentes (entrega ≤ 2 días) ────────────────────
+    urgentes = cur.execute("""
+        SELECT id, client_id, status, fecha_entrega_est
+        FROM orders
+        WHERE status IN ('Pendiente','En Proceso')
+          AND fecha_entrega_est IS NOT NULL
+          AND julianday(fecha_entrega_est) - julianday('now') <= 2
+        ORDER BY fecha_entrega_est ASC
+    """).fetchall()
+
+    for u in urgentes:
+        try:
+            dias = (datetime.strptime(u["fecha_entrega_est"][:10], "%Y-%m-%d").date() - hoy).days
+        except Exception:
+            continue
+        nivel   = "critico" if dias <= 0 else "atencion"
+        cuando  = "¡Hoy!" if dias == 0 else ("¡Vencido!" if dias < 0 else f"en {dias} día{'s' if dias != 1 else ''}")
+        alertas.append({
+            "nivel":   nivel,
+            "titulo":  f"{'🚨' if dias <= 0 else '⏰'} Pedido #{u['id']} vence {cuando}",
+            "detalle": f"Estado: {u['status']} · Línea: {u['client_id']}",
+            "accion":  "Confirmar avance con Fer",
+        })
+
+    # ── 3. Tasa de fallos alta esta semana ────────────────────────
+    fallos = cur.execute("""
+        SELECT COUNT(*) AS total,
+               SUM(CASE WHEN resultado NOT LIKE 'ok%' THEN 1 ELSE 0 END) AS fallos
+        FROM production_log
+        WHERE fecha_fin >= date('now', '-7 days')
+    """).fetchone()
+
+    if fallos and (fallos["total"] or 0) >= 3:
+        tasa = (fallos["fallos"] or 0) / fallos["total"]
+        if tasa >= 0.25:
+            alertas.append({
+                "nivel":   "critico" if tasa >= 0.4 else "atencion",
+                "titulo":  f"🔴 Tasa de fallos — {tasa*100:.0f}% esta semana",
+                "detalle": f"{fallos['fallos']} fallos de {fallos['total']} fabricaciones",
+                "accion":  "Revisar material o calibración de impresora",
+            })
+
+    # ── 4. Socios sin pedir hace más de 21 días (con historial) ───
+    inactivos = cur.execute("""
+        SELECT t.name,
+               CAST(julianday('now') - julianday(MAX(o.date)) AS INTEGER) AS dias_sin_pedir
+        FROM tenants t
+        JOIN orders o ON o.client_id = t.id AND o.status != 'Cancelado'
+        WHERE t.id != 'admin'
+        GROUP BY t.id
+        HAVING COUNT(o.id) >= 2 AND dias_sin_pedir > 21
+        ORDER BY dias_sin_pedir DESC
+    """).fetchall()
+
+    for t in inactivos:
+        alertas.append({
+            "nivel":   "info",
+            "titulo":  f"💤 {t['name']} — sin pedir hace {t['dias_sin_pedir']} días",
+            "detalle": "Superó el umbral de 21 días de inactividad",
+            "accion":  "Hacer seguimiento",
+        })
+
+    conn.close()
+
+    # Orden: crítico primero, luego atención, luego info
+    _orden = {"critico": 0, "atencion": 1, "info": 2}
+    alertas.sort(key=lambda a: _orden.get(a["nivel"], 9))
+    return alertas
+
+
+# ══════════════════════════════════════════════════════
 # ANÁLISIS DE PATRONES
 # ══════════════════════════════════════════════════════
 

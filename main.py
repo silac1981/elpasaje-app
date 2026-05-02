@@ -6,6 +6,32 @@ from sqlalchemy import create_engine, text
 from datetime import datetime
 import hashlib
 from slicer_parser import parsear_archivo_slicer, match_material_idx
+from ep_agente import get_alertas_dashboard as _get_alertas_raw
+
+@st.cache_data(ttl=120)
+def get_alertas_dashboard():
+    try:
+        return _get_alertas_raw()
+    except Exception:
+        return []
+
+def _preguntar_mike(pregunta: str, contexto_extra: str = "") -> str:
+    try:
+        from anthropic import Anthropic
+        from context_elpasaje import SYSTEM_PROMPT, get_data_context
+        _c = Anthropic()
+        _sys = SYSTEM_PROMPT + "\n\n" + get_data_context()
+        if contexto_extra:
+            _sys += f"\n\nCONTEXTO DEL FORMULARIO ACTUAL:\n{contexto_extra}"
+        hist = st.session_state.get("mike_history", [])
+        hist.append({"role": "user", "content": pregunta})
+        r = _c.messages.create(model="claude-sonnet-4-6", max_tokens=800, system=_sys, messages=hist)
+        resp = r.content[0].text
+        hist.append({"role": "assistant", "content": resp})
+        st.session_state["mike_history"] = hist[-20:]
+        return resp
+    except Exception as e:
+        return f"No pude conectarme con Mike ahora mismo ({e})"
 
 st.set_page_config(
     page_title="El Pasaje - Sistema Integral",
@@ -222,6 +248,21 @@ with st.sidebar:
     if st.button("Cerrar Sesion", use_container_width=True):
         st.session_state.update({"auth": False, "user": None, "role": None, "uid": None})
         st.rerun()
+    # ── Alertas Mike (admin + produccion) ────────────────────────
+    if st.session_state["role"] in ("admin", "produccion"):
+        _alertas = get_alertas_dashboard()
+        if _alertas:
+            _n_crit = sum(1 for a in _alertas if a["nivel"] == "critico")
+            _n_atc  = sum(1 for a in _alertas if a["nivel"] == "atencion")
+            _resumen = f"{'🔴 ' + str(_n_crit) + ' crítica' + ('s' if _n_crit != 1 else '') + '  ' if _n_crit else ''}{'🟡 ' + str(_n_atc) if _n_atc else ''}".strip()
+            st.markdown(f"<div style='margin-top:18px;padding:8px 12px;background:#1e293b;border-radius:10px;border-left:3px solid {'#EF4444' if _n_crit else '#F59E0B'};'><div style='font-size:0.72rem;font-weight:700;color:{'#EF4444' if _n_crit else '#F59E0B'};'>🤖 MIKE · ALERTAS</div><div style='font-size:0.68rem;color:#CBD5E1;margin-top:3px;'>{_resumen}</div></div>", unsafe_allow_html=True)
+            for _a in _alertas[:4]:
+                _col = "#EF4444" if _a["nivel"] == "critico" else ("#F59E0B" if _a["nivel"] == "atencion" else "#94A3B8")
+                st.markdown(f"<div style='margin-top:6px;padding:6px 10px;background:#0f172a;border-radius:8px;border-left:2px solid {_col};'><div style='font-size:0.67rem;color:{_col};font-weight:600;'>{_a['titulo']}</div><div style='font-size:0.63rem;color:#94A3B8;margin-top:2px;'>{_a['accion']}</div></div>", unsafe_allow_html=True)
+            if len(_alertas) > 4:
+                st.markdown(f"<div style='font-size:0.62rem;color:#64748B;text-align:center;margin-top:4px;'>+{len(_alertas)-4} más · ver tab Mike</div>", unsafe_allow_html=True)
+        else:
+            st.markdown("<div style='margin-top:18px;padding:8px 12px;background:#1e293b;border-radius:10px;border-left:3px solid #22C55E;'><div style='font-size:0.72rem;font-weight:700;color:#22C55E;'>🤖 MIKE · SIN ALERTAS</div><div style='font-size:0.68rem;color:#CBD5E1;margin-top:3px;'>Todo en orden ✅</div></div>", unsafe_allow_html=True)
     st.markdown(f"<div style='font-size:0.7rem;color:#94a3b8;text-align:center;margin-top:20px;'>v2.6 · {datetime.now().strftime('%d/%m/%Y')}</div>", unsafe_allow_html=True)
 
 # DASHBOARD ALEJANDRA
@@ -332,7 +373,7 @@ elif menu == "🛠️ Produccion (Fer)":
     except Exception:
         _tenant_map = {}
     _pedidos_activos = _pedidos_all[_pedidos_all["status"].isin(["Pendiente","En Proceso"])] if not _pedidos_all.empty else pd.DataFrame()
-    tab_panel, tab_fab, tab_mats, tab_cola = st.tabs(["🛠️ Mi Panel", "📦 Cargar Fabricacion", "🧵 Materiales", "📋 Cola de Pedidos"])
+    tab_panel, tab_fab, tab_mats, tab_cola, tab_mike = st.tabs(["🛠️ Mi Panel", "📦 Cargar Fabricacion", "🧵 Materiales", "📋 Cola de Pedidos", "🤖 Mike"])
 
     # ══════════════════════════════════════════════════════
     # TAB 1 — MI PANEL PRODUCCION
@@ -612,6 +653,60 @@ elif menu == "🛠️ Produccion (Fer)":
                                     _conn.commit()
                                 st.success(f"#{_pid} → {_nuevo_est}")
                                 st.rerun()
+
+    # ══════════════════════════════════════════════════════
+    # TAB 5 — MIKE (alertas + chat contextual)
+    # ══════════════════════════════════════════════════════
+    with tab_mike:
+        st.markdown("<div class='section-title'>🤖 Mike — Asistente de Produccion</div>", unsafe_allow_html=True)
+
+        # Alertas actuales
+        _alertas_mike = get_alertas_dashboard()
+        if _alertas_mike:
+            _color_map = {"critico": "#EF4444", "atencion": "#F59E0B", "info": "#94A3B8"}
+            for _a in _alertas_mike:
+                _c = _color_map.get(_a["nivel"], "#94A3B8")
+                st.markdown(
+                    f"<div style='background:white;border-radius:10px;padding:10px 16px;"
+                    f"border-left:4px solid {_c};box-shadow:0 1px 4px rgba(0,0,0,0.06);margin-bottom:8px;'>"
+                    f"<div style='font-weight:600;color:{_c};font-size:0.85rem;'>{_a['titulo']}</div>"
+                    f"<div style='font-size:0.75rem;color:#6B7280;margin-top:3px;'>{_a['detalle']}</div>"
+                    f"<div style='font-size:0.72rem;color:#9CA3AF;margin-top:2px;'>→ {_a['accion']}</div>"
+                    f"</div>",
+                    unsafe_allow_html=True
+                )
+        else:
+            st.success("Sin alertas activas — todo en orden ✅")
+
+        st.markdown("<div class='section-title' style='margin-top:24px;'>💬 Consulta directa</div>", unsafe_allow_html=True)
+        st.caption("Preguntale a Mike sobre stock, pedidos, materiales, fallos o cualquier cosa del taller.")
+
+        # Historial de chat
+        if "mike_history" not in st.session_state:
+            st.session_state["mike_history"] = []
+        for _msg in st.session_state["mike_history"]:
+            with st.chat_message("user" if _msg["role"] == "user" else "assistant", avatar="👤" if _msg["role"] == "user" else "🤖"):
+                st.markdown(_msg["content"])
+
+        # Input
+        _mike_q = st.chat_input("Preguntale algo a Mike...", key="mike_chat_input")
+        if _mike_q:
+            # Contexto del estado actual de producción
+            _ctx = (
+                f"Pedidos activos: {len(_pedidos_activos)}\n"
+                f"Materiales críticos: {len(mats[mats['stock_gr'] <= mats['stock_minimo_gr']]) if not mats.empty else 0}\n"
+                f"Alertas activas: {len(_alertas_mike)}"
+            )
+            with st.chat_message("user", avatar="👤"):
+                st.markdown(_mike_q)
+            with st.chat_message("assistant", avatar="🤖"):
+                with st.spinner("Mike está pensando..."):
+                    _resp = _preguntar_mike(_mike_q, contexto_extra=_ctx)
+                st.markdown(_resp)
+
+        if st.session_state["mike_history"] and st.button("Limpiar conversacion", key="mike_clear"):
+            st.session_state["mike_history"] = []
+            st.rerun()
 
 elif menu == "🤝 Socios":
     st.markdown("<div class='main-header'><h1>🤝 Panel de Socios</h1><p>Ecosistema El Pasaje · Familia + B2B · Visión consolidada</p></div>", unsafe_allow_html=True)
