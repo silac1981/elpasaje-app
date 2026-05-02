@@ -282,71 +282,255 @@ elif menu == "📦 Inventario Pro":
     st.dataframe(df_show.style.format({"Precio":"${:,.0f}","Costo":"${:,.0f}","Ganancia":"${:,.0f}","Margen%":"{:.1f}%","Valor Total":"${:,.0f}"}), use_container_width=True, hide_index=True)
 
 elif menu == "🛠️ Produccion (Fer)":
-    st.markdown("<div class='main-header'><h1>🛠️ Centro de Produccion</h1><p>Gestion de materiales, insumos y cola de pedidos</p></div>", unsafe_allow_html=True)
+    st.markdown("<div class='main-header'><h1>🛠️ Centro de Produccion</h1><p>Cola de pedidos · Fabricacion · Materiales</p></div>", unsafe_allow_html=True)
+    _EC = {"Pendiente":{"color":"#F59E0B","emoji":"⏳"},"En Proceso":{"color":"#3B82F6","emoji":"🖨️"},"Listo":{"color":"#22C55E","emoji":"✅"},"Cancelado":{"color":"#EF4444","emoji":"❌"}}
+    _hoy_str = datetime.now().strftime("%Y-%m-%d")
+    # ── Cargar datos comunes ──────────────────────────────
     mats = cargar_materiales()
-    st.markdown("<div class='section-title'>📋 Cola de Pedidos</div>", unsafe_allow_html=True)
-    ESTADO_CONFIG = {"Pendiente":{"color":"#F59E0B","emoji":"⏳"},"En Proceso":{"color":"#3B82F6","emoji":"🖨️"},"Listo":{"color":"#22C55E","emoji":"✅"},"Cancelado":{"color":"#EF4444","emoji":"❌"}}
     try:
-        todos_pedidos = pd.read_sql("SELECT o.id, o.client_id, o.status, o.date, o.notas, oi.product_sku, oi.cantidad, oi.precio_unitario, p.name as product_name FROM orders o LEFT JOIN order_items oi ON oi.order_id = o.id LEFT JOIN products p ON p.sku = oi.product_sku WHERE o.status != 'Cancelado' ORDER BY o.date DESC", engine)
-    except:
-        todos_pedidos = pd.DataFrame()
-    if todos_pedidos.empty:
-        st.info("No hay pedidos pendientes. 🎉")
-    else:
-        rc1, rc2, rc3 = st.columns(3)
-        for col, estado, ecfg in [(rc1,"Pendiente",ESTADO_CONFIG["Pendiente"]),(rc2,"En Proceso",ESTADO_CONFIG["En Proceso"]),(rc3,"Listo",ESTADO_CONFIG["Listo"])]:
-            cant = len(todos_pedidos[todos_pedidos["status"] == estado])
-            with col:
-                st.markdown(f"<div style='background:white;border-radius:12px;padding:16px;text-align:center;border-top:4px solid {ecfg['color']};box-shadow:0 2px 8px rgba(0,0,0,0.05);margin-bottom:16px;'><div style='font-size:1.8rem;'>{ecfg['emoji']}</div><div style='font-size:2rem;font-weight:700;color:{ecfg['color']};'>{cant}</div><div style='font-size:0.8rem;color:#6B7280;'>{estado}</div></div>", unsafe_allow_html=True)
-        tenants_df = pd.read_sql("SELECT id, name FROM tenants", engine)
-        tenant_map = dict(zip(tenants_df["id"], tenants_df["name"]))
-        for _, p in todos_pedidos.iterrows():
-            estado = p.get("status","Pendiente")
-            ecfg = ESTADO_CONFIG.get(estado, ESTADO_CONFIG["Pendiente"])
-            socio = tenant_map.get(p["client_id"], p["client_id"])
-            fecha = str(p.get("date",""))[:10]
-            pid = p["id"]
-            col_info, col_btn = st.columns([3, 1])
-            with col_info:
-                st.markdown(f"<div style='background:white;border-radius:12px;padding:14px 20px;border-left:5px solid {ecfg['color']};box-shadow:0 2px 8px rgba(0,0,0,0.05);'><div style='font-weight:700;color:#1a1a2e;'>{ecfg['emoji']} {p['product_name']}</div><div style='font-size:0.8rem;color:#6B7280;margin-top:3px;'>👤 {socio} · 📅 {fecha} · <span style='background:{ecfg['color']}22;color:{ecfg['color']};padding:2px 8px;border-radius:99px;font-weight:600;'>{estado}</span></div></div>", unsafe_allow_html=True)
-            with col_btn:
-                nuevo_estado = st.selectbox("Estado", ["Pendiente","En Proceso","Listo","Cancelado"], index=["Pendiente","En Proceso","Listo","Cancelado"].index(estado), key=f"estado_{pid}", label_visibility="collapsed")
-                if nuevo_estado != estado:
-                    if st.button("Actualizar", key=f"btn_{pid}", type="primary"):
-                        with engine.connect() as conn:
-                            conn.execute(text("UPDATE orders SET status=:status WHERE id=:id"), {"status": nuevo_estado, "id": pid})
-                            conn.commit()
-                        st.success(f"✅ Pedido #{pid} → {nuevo_estado}")
-                        st.rerun()
-    st.markdown("<div class='section-title'>🧵 Stock de Filamentos</div>", unsafe_allow_html=True)
-    c1, c2 = st.columns(2)
-    for i, (_, mat) in enumerate(mats.iterrows()):
-        pct = min(mat["stock_gr"] / 1000 * 100, 100)
-        color_m = "#22C55E" if pct > 30 else ("#F59E0B" if pct > 10 else "#EF4444")
-        with (c1 if i == 0 else c2):
-            st.markdown(f"<div class='metric-card' style='border-top-color:{color_m}'><div class='metric-title'>🧵 {mat['name']}</div><div class='metric-value'>{mat['stock_gr']:.0f} g</div><div class='metric-sub'>${mat['cost_kg']:,.0f}/kg · Valor: ${mat['stock_gr']*mat['cost_kg']/1000:,.2f}</div><div style='background:#F3F4F6;border-radius:999px;height:10px;overflow:hidden;margin-top:12px;'><div style='width:{pct:.0f}%;background:{color_m};height:100%;border-radius:999px;'></div></div><div style='font-size:0.75rem;color:#6B7280;margin-top:4px;'>{pct:.0f}% de 1kg de referencia</div></div>", unsafe_allow_html=True)
-    with st.expander("➕ Reponer Filamento"):
-        mat_sel = st.selectbox("Material", mats["name"].tolist())
-        gramos = st.number_input("Gramos a agregar", min_value=100, max_value=5000, step=100)
-        if st.button("Registrar Reposicion", type="primary"):
-            with engine.connect() as conn:
-                conn.execute(text("UPDATE materials SET stock_gr = stock_gr + :gramos WHERE name = :nombre"), {"gramos": gramos, "nombre": mat_sel})
-                conn.commit()
-            st.success(f"✅ +{gramos}g agregados a {mat_sel}")
-            st.rerun()
-    st.markdown("<div class='section-title'>⚙️ Calculadora de Insumos</div>", unsafe_allow_html=True)
-    c1, c2 = st.columns(2)
-    with c1:
-        peso_g = st.number_input("Peso de pieza (gramos)", min_value=1.0, value=100.0, step=5.0)
-        mat_cal = st.selectbox("Material", mats["name"].tolist(), key="calc_mat")
-    with c2:
-        merma = st.slider("% Merma estimada", 5, 25, 10)
-        precio_v = st.number_input("Precio de venta ($)", min_value=0.0, value=5000.0, step=100.0)
-    costo_kg_sel = mats.loc[mats["name"] == mat_cal, "cost_kg"].iloc[0]
-    costo_calc = calcular_costo_pieza(peso_g, costo_kg_sel, merma / 100)
-    ganancia = precio_v - costo_calc
-    margen = (ganancia / precio_v * 100) if precio_v > 0 else 0
-    st.markdown(f"<div style='background:white;border-radius:16px;padding:20px;box-shadow:0 4px 12px rgba(0,0,0,0.06);margin-top:12px;'><div style='display:flex;gap:32px;flex-wrap:wrap;'><div><div class='metric-title'>💰 Costo Pieza</div><div style='font-size:2rem;font-weight:700;color:#DC2626;'>${costo_calc:,.2f}</div></div><div><div class='metric-title'>📈 Ganancia</div><div style='font-size:2rem;font-weight:700;color:#059669;'>${ganancia:,.2f}</div></div><div><div class='metric-title'>📊 Margen</div><div style='font-size:2rem;font-weight:700;color:#1E3A8A;'>{margen:.1f}%</div></div><div><div class='metric-title'>✅ Precio Regla x3</div><div style='font-size:2rem;font-weight:700;color:#7C3AED;'>${costo_calc * 3:,.2f}</div></div></div></div>", unsafe_allow_html=True)
+        _pedidos_all = pd.read_sql("""
+            SELECT o.id, o.client_id, o.status, o.date, o.notas, o.fecha_entrega_est,
+                   oi.product_sku, oi.cantidad,
+                   p.name AS product_name, p.weight_gr, p.material_id
+            FROM orders o
+            LEFT JOIN order_items oi ON oi.order_id = o.id
+            LEFT JOIN products p ON p.sku = oi.product_sku
+            ORDER BY o.date DESC
+        """, engine)
+    except Exception:
+        _pedidos_all = pd.DataFrame()
+    try:
+        _tenant_map = dict(pd.read_sql("SELECT id, name FROM tenants", engine).values)
+    except Exception:
+        _tenant_map = {}
+    _pedidos_activos = _pedidos_all[_pedidos_all["status"].isin(["Pendiente","En Proceso"])] if not _pedidos_all.empty else pd.DataFrame()
+    tab_panel, tab_fab, tab_mats, tab_cola = st.tabs(["🛠️ Mi Panel", "📦 Cargar Fabricacion", "🧵 Materiales", "📋 Cola de Pedidos"])
+
+    # ══════════════════════════════════════════════════════
+    # TAB 1 — MI PANEL PRODUCCION
+    # ══════════════════════════════════════════════════════
+    with tab_panel:
+        try:
+            _fab_total = pd.read_sql("SELECT COUNT(*) AS n FROM production_log", engine).iloc[0]["n"]
+        except Exception:
+            _fab_total = 0
+        _criticos = len(mats[mats["stock_gr"] <= mats["stock_minimo_gr"]]) if not mats.empty else 0
+        _nuevos_hoy = len(_pedidos_all[_pedidos_all["date"].astype(str).str.startswith(_hoy_str)]) if not _pedidos_all.empty else 0
+        _n_pendientes = len(_pedidos_all[_pedidos_all["status"] == "Pendiente"]) if not _pedidos_all.empty else 0
+        k1, k2, k3, k4 = st.columns(4)
+        for _col, _title, _val, _sub, _color in [
+            (k1, "⏳ Pendientes",       str(_n_pendientes), "en espera de produccion", "#F59E0B"),
+            (k2, "🆕 Nuevos Hoy",       str(_nuevos_hoy),   "pedidos del dia",         "#3B82F6"),
+            (k3, "✅ Piezas Fabricadas", str(_fab_total),    "registradas en log",      "#22C55E"),
+            (k4, "⚠️ Mat. Criticos",    str(_criticos),     "bajo stock minimo",       "#EF4444"),
+        ]:
+            with _col:
+                st.markdown(f"<div class='metric-card' style='border-top-color:{_color}'><div class='metric-title'>{_title}</div><div class='metric-value'>{_val}</div><div class='metric-sub'>{_sub}</div></div>", unsafe_allow_html=True)
+        st.markdown("<div class='section-title' style='margin-top:20px;'>📋 Cola Activa</div>", unsafe_allow_html=True)
+        if _pedidos_activos.empty:
+            st.success("No hay pedidos activos ahora mismo.")
+        else:
+            for _, _p in _pedidos_activos.iterrows():
+                _ecfg   = _EC.get(_p["status"], _EC["Pendiente"])
+                _socio  = _tenant_map.get(_p["client_id"], _p["client_id"])
+                _fecha  = str(_p["date"])[:10]
+                _pid    = _p["id"]
+                _prod   = _p.get("product_name") or "—"
+                _gramos = f"{_p['weight_gr']:.0f} g" if pd.notna(_p.get("weight_gr")) else "—"
+                _entrega = _p.get("fecha_entrega_est") or "—"
+                with st.expander(f"{_ecfg['emoji']} Pedido #{_pid} · {_prod} · {_socio}"):
+                    _c1, _c2, _c3, _c4 = st.columns(4)
+                    _c1.metric("Cliente", _socio)
+                    _c2.metric("Gramos estimados", _gramos)
+                    _c3.metric("Entrega est.", _entrega)
+                    _c4.metric("Cargado", _fecha)
+                    if _p.get("notas"):
+                        st.caption(f"Notas: {_p['notas']}")
+                    _nuevo_est = st.selectbox("Cambiar estado", ["Pendiente","En Proceso","Listo","Cancelado"],
+                                              index=["Pendiente","En Proceso","Listo","Cancelado"].index(_p["status"]),
+                                              key=f"panel_est_{_pid}")
+                    if _nuevo_est != _p["status"]:
+                        if st.button("Confirmar cambio", key=f"panel_btn_{_pid}", type="primary"):
+                            with engine.connect() as _conn:
+                                _conn.execute(text("UPDATE orders SET status=:s WHERE id=:id"), {"s": _nuevo_est, "id": _pid})
+                                _conn.commit()
+                            st.success(f"Pedido #{_pid} → {_nuevo_est}")
+                            st.rerun()
+
+    # ══════════════════════════════════════════════════════
+    # TAB 2 — CARGAR FABRICACION
+    # ══════════════════════════════════════════════════════
+    with tab_fab:
+        st.markdown("<div class='section-title'>Registrar produccion de una pieza</div>", unsafe_allow_html=True)
+        if _pedidos_activos.empty:
+            st.info("No hay pedidos activos para registrar fabricacion.")
+        else:
+            _ops_pedido = {f"#{r['id']} · {r.get('product_name','—')} · {_tenant_map.get(r['client_id'],r['client_id'])}": r["id"]
+                           for _, r in _pedidos_activos.drop_duplicates("id").iterrows()}
+            _sel_label  = st.selectbox("Pedido asociado", list(_ops_pedido.keys()), key="fab_pedido")
+            _sel_oid    = _ops_pedido[_sel_label]
+            _pedido_row = _pedidos_activos[_pedidos_activos["id"] == _sel_oid].iloc[0]
+            _sku_auto   = _pedido_row.get("product_sku") or ""
+            _mid_auto   = _pedido_row.get("material_id") or ""
+            _fc1, _fc2  = st.columns(2)
+            with _fc1:
+                _fab_sku   = st.text_input("SKU del producto", value=_sku_auto, key="fab_sku")
+                _fab_grams = st.number_input("Gramos consumidos", min_value=1.0, max_value=2000.0, value=max(float(_pedido_row.get("weight_gr") or 50), 1.0), step=5.0, key="fab_grams")
+                _fab_res   = st.selectbox("Resultado", ["ok","fallo","reimpresion"], key="fab_res")
+            with _fc2:
+                _mat_nombres = mats["name"].tolist() if not mats.empty else []
+                _mat_ids     = mats["material_id"].tolist() if not mats.empty else []
+                _mid_idx     = _mat_ids.index(_mid_auto) if _mid_auto in _mat_ids else 0
+                _fab_mat_nom = st.selectbox("Material usado", _mat_nombres, index=_mid_idx, key="fab_mat")
+                _fab_tiempo  = st.number_input("Tiempo real (minutos)", min_value=1, max_value=600, value=30, key="fab_tiempo")
+            _fab_desc = ""
+            if _fab_res != "ok":
+                _fab_desc = st.text_area("Descripcion del fallo/problema", height=60, key="fab_desc")
+            if st.button("Registrar Fabricacion", type="primary", key="fab_submit"):
+                _fab_mid = mats.loc[mats["name"] == _fab_mat_nom, "material_id"].iloc[0] if not mats.empty else ""
+                with engine.connect() as _conn:
+                    _conn.execute(text("""
+                        INSERT INTO production_log
+                        (order_id, product_sku, material_id, gramos_usados, tiempo_real_min, fecha_inicio, fecha_fin, resultado)
+                        VALUES (:oid, :sku, :mid, :grams, :tiempo, :fi, :ff, :res)
+                    """), {"oid": int(_sel_oid), "sku": _fab_sku, "mid": _fab_mid,
+                           "grams": _fab_grams, "tiempo": _fab_tiempo,
+                           "fi": _hoy_str, "ff": _hoy_str,
+                           "res": _fab_res + (f" — {_fab_desc}" if _fab_desc else "")})
+                    _conn.execute(text("UPDATE materials SET stock_gr = stock_gr - :g WHERE material_id = :mid"),
+                                  {"g": _fab_grams, "mid": _fab_mid})
+                    if _fab_res == "ok":
+                        _conn.execute(text("UPDATE orders SET status='Listo' WHERE id=:id"), {"id": int(_sel_oid)})
+                    _conn.commit()
+                st.success(f"Fabricacion registrada · {_fab_grams}g de {_fab_mat_nom} descontados del stock")
+                st.rerun()
+        st.markdown("<div class='section-title' style='margin-top:24px;'>Ultimas 20 fabricaciones</div>", unsafe_allow_html=True)
+        try:
+            _hist = pd.read_sql("""
+                SELECT pl.id, pl.order_id, pl.product_sku, m.name AS material,
+                       pl.gramos_usados, pl.tiempo_real_min, pl.fecha_fin, pl.resultado
+                FROM production_log pl
+                LEFT JOIN materials m ON m.material_id = pl.material_id
+                ORDER BY pl.id DESC LIMIT 20
+            """, engine)
+            if _hist.empty:
+                st.caption("Sin fabricaciones registradas todavia.")
+            else:
+                st.dataframe(_hist.rename(columns={"id":"#","order_id":"Pedido","product_sku":"SKU","material":"Material","gramos_usados":"Gramos","tiempo_real_min":"Min","fecha_fin":"Fecha","resultado":"Resultado"}), use_container_width=True, hide_index=True)
+        except Exception as _e:
+            st.caption(f"Sin datos: {_e}")
+
+    # ══════════════════════════════════════════════════════
+    # TAB 3 — MATERIALES (mejorado)
+    # ══════════════════════════════════════════════════════
+    with tab_mats:
+        if mats.empty:
+            st.info("No hay materiales cargados.")
+        else:
+            _mes_inicio = datetime.now().strftime("%Y-%m-01")
+            try:
+                _consumo_mes = pd.read_sql("""
+                    SELECT material_id, SUM(gramos_usados) AS consumido
+                    FROM production_log
+                    WHERE fecha_fin >= :mes
+                    GROUP BY material_id
+                """, engine, params={"mes": _mes_inicio})
+                _consumo_map = dict(zip(_consumo_mes["material_id"], _consumo_mes["consumido"]))
+            except Exception:
+                _consumo_map = {}
+            try:
+                _lineas_mat = pd.read_sql("""
+                    SELECT material_id, GROUP_CONCAT(DISTINCT client_id) AS lineas
+                    FROM products WHERE activo=1 GROUP BY material_id
+                """, engine)
+                _lineas_map = dict(zip(_lineas_mat["material_id"], _lineas_mat["lineas"]))
+            except Exception:
+                _lineas_map = {}
+            for _, _mat in mats.iterrows():
+                _mid      = _mat["material_id"]
+                _stock    = _mat["stock_gr"]
+                _min_g    = _mat.get("stock_minimo_gr") or 200
+                _ckg      = _mat["cost_kg"]
+                _valor    = _stock * _ckg / 1000
+                _consumido= _consumo_map.get(_mid, 0) or 0
+                _dias_est = f"{int(_stock / (_consumido / 30))}" if _consumido > 0 else "—"
+                _lineas_r = _lineas_map.get(_mid, "")
+                _lineas_nombres = " · ".join([LINEAS.get(l, {}).get("nombre", l) for l in (_lineas_r.split(",") if _lineas_r else [])])
+                _pct      = min(_stock / max(_min_g * 5, 1) * 100, 100)
+                _mc       = "#22C55E" if _stock > _min_g * 2 else ("#F59E0B" if _stock > _min_g else "#EF4444")
+                _alerta   = " ⚠️" if _stock <= _min_g else ""
+                with st.expander(f"🧵 {_mat['name']}{_alerta} · {_stock:.0f} g restantes"):
+                    _mc1, _mc2, _mc3, _mc4 = st.columns(4)
+                    _mc1.metric("Precio/kg", f"${_ckg:,.0f}")
+                    _mc2.metric("Valor en stock", f"${_valor:,.0f}")
+                    _mc3.metric("Consumido este mes", f"{_consumido:.0f} g")
+                    _mc4.metric("Dias de stock est.", _dias_est)
+                    _bar_html = (f"<div style='background:#F3F4F6;border-radius:999px;height:8px;overflow:hidden;margin:10px 0 6px;'>"
+                                 f"<div style='width:{_pct:.0f}%;background:{_mc};height:100%;border-radius:999px;'></div></div>"
+                                 f"<div style='font-size:0.72rem;color:#6B7280;'>{_stock:.0f} g de ~{int(_min_g*5)} g referencia · Stock mínimo: {_min_g:.0f} g</div>")
+                    if _lineas_nombres:
+                        _bar_html += f"<div style='font-size:0.72rem;color:#6B7280;margin-top:4px;'>Usado en: {_lineas_nombres}</div>"
+                    if _mat.get("fecha_compra"):
+                        _bar_html += f"<div style='font-size:0.72rem;color:#6B7280;margin-top:2px;'>Ultima compra: {_mat['fecha_compra']}</div>"
+                    st.markdown(_bar_html, unsafe_allow_html=True)
+                    st.markdown("**Compra rápida**")
+                    _rep_col1, _rep_col2 = st.columns([2, 1])
+                    with _rep_col1:
+                        _gramos_rep = st.number_input("Gramos a reponer", min_value=100, max_value=5000, step=100, value=1000, key=f"rep_{_mid}")
+                    with _rep_col2:
+                        st.markdown("<div style='height:28px'></div>", unsafe_allow_html=True)
+                        if st.button("Reponer", key=f"repbtn_{_mid}", type="primary"):
+                            with engine.connect() as _conn:
+                                _conn.execute(text("UPDATE materials SET stock_gr = stock_gr + :g, fecha_compra = :f WHERE material_id = :mid"),
+                                              {"g": _gramos_rep, "f": _hoy_str, "mid": _mid})
+                                _conn.commit()
+                            st.success(f"+{_gramos_rep}g agregados a {_mat['name']}")
+                            st.rerun()
+
+    # ══════════════════════════════════════════════════════
+    # TAB 4 — COLA DE PEDIDOS (completa)
+    # ══════════════════════════════════════════════════════
+    with tab_cola:
+        _filtro_est = st.radio("Filtrar por estado", ["Todos","Pendiente","En Proceso","Listo","Cancelado"],
+                               horizontal=True, key="cola_filtro")
+        if _pedidos_all.empty:
+            st.info("No hay pedidos registrados aun.")
+        else:
+            _df_cola = _pedidos_all if _filtro_est == "Todos" else _pedidos_all[_pedidos_all["status"] == _filtro_est]
+            _df_cola = _df_cola.drop_duplicates("id")
+            if _df_cola.empty:
+                st.info(f"No hay pedidos con estado '{_filtro_est}'.")
+            else:
+                for _, _p in _df_cola.iterrows():
+                    _ecfg  = _EC.get(_p["status"], _EC["Pendiente"])
+                    _socio = _tenant_map.get(_p["client_id"], _p["client_id"])
+                    _fecha = str(_p["date"])[:10]
+                    _prod  = _p.get("product_name") or "—"
+                    _pid   = _p["id"]
+                    _notas_html = f"<div style='font-size:0.75rem;color:#9CA3AF;margin-top:3px;'>{_p['notas']}</div>" if _p.get("notas") else ""
+                    _col_card, _col_sel = st.columns([3, 1])
+                    with _col_card:
+                        st.markdown(
+                            f"<div style='background:white;border-radius:12px;padding:12px 18px;"
+                            f"border-left:5px solid {_ecfg['color']};box-shadow:0 1px 6px rgba(0,0,0,0.06);'>"
+                            f"<div style='font-weight:700;color:#1a1a2e;'>{_ecfg['emoji']} {_prod}</div>"
+                            f"<div style='font-size:0.78rem;color:#6B7280;margin-top:3px;'>👤 {_socio} · 📅 {_fecha} · "
+                            f"<span style='background:{_ecfg['color']}22;color:{_ecfg['color']};padding:1px 8px;"
+                            f"border-radius:99px;font-weight:600;'>{_p['status']}</span></div>"
+                            f"{_notas_html}</div>",
+                            unsafe_allow_html=True
+                        )
+                    with _col_sel:
+                        _nuevo_est = st.selectbox("", ["Pendiente","En Proceso","Listo","Cancelado"],
+                                                  index=["Pendiente","En Proceso","Listo","Cancelado"].index(_p["status"]),
+                                                  key=f"cola_est_{_pid}", label_visibility="collapsed")
+                        if _nuevo_est != _p["status"]:
+                            if st.button("✓", key=f"cola_btn_{_pid}", type="primary"):
+                                with engine.connect() as _conn:
+                                    _conn.execute(text("UPDATE orders SET status=:s WHERE id=:id"), {"s": _nuevo_est, "id": _pid})
+                                    _conn.commit()
+                                st.success(f"#{_pid} → {_nuevo_est}")
+                                st.rerun()
 
 elif menu == "🤝 Socios":
     st.markdown("<div class='main-header'><h1>🤝 Panel de Socios</h1><p>Ecosistema El Pasaje · Familia + B2B · Visión consolidada</p></div>", unsafe_allow_html=True)
