@@ -443,24 +443,69 @@ elif menu == "📈 Mi Panel":
     cc1.metric("💰 Capital en Stock",    f"${prod['valor_stock'].sum():,.0f}")
     cc2.metric("📈 Ganancia Proyectada", f"${prod['ganancia_stock'].sum():,.0f}")
     cc3.metric("📦 Productos Activos",   f"{len(prod)} SKUs")
-    if role == "socio_multi" and sel_nombre == "Todas" and len(lineas_activas) > 1:
-        st.markdown("<div class='section-title'>📊 Por Línea</div>", unsafe_allow_html=True)
-        cols_l = st.columns(len(lineas_activas))
-        for i, lid in enumerate(lineas_activas):
-            lp = prod[prod["client_id"] == lid]
-            lc = LINEAS.get(lid, {"nombre": lid, "emoji": "●", "color": "#6366F1"})
-            with cols_l[i]:
-                st.markdown(f"<div class='metric-card' style='border-top-color:{lc['color']}'><div class='metric-title'>{lc['emoji']} {lc['nombre']}</div><div class='metric-value'>${lp['valor_stock'].sum():,.0f}</div><div class='metric-sub'>{len(lp)} productos</div></div>", unsafe_allow_html=True)
-    st.markdown("<div class='section-title'>📦 Mis Productos</div>", unsafe_allow_html=True)
-    if prod.empty:
-        st.info("Aun no tenes productos cargados en tu linea.")
-    else:
-        if role == "socio_multi" and sel_nombre == "Todas":
-            _disp = prod[["client_id","name","sku","price","stock","ganancia_unit","margen_pct"]].copy()
-            _disp["client_id"] = _disp["client_id"].map(lambda x: LINEAS.get(x, {}).get("nombre", x))
-            st.dataframe(_disp.rename(columns={"client_id":"Línea","name":"Producto","sku":"SKU","price":"Precio","stock":"Stock","ganancia_unit":"Ganancia Unit","margen_pct":"Margen%"}).style.format({"Precio":"${:,.0f}","Ganancia Unit":"${:,.0f}","Margen%":"{:.1f}%"}), use_container_width=True, hide_index=True)
+    tab_prod, tab_ped = st.tabs(["📦 Mis Productos", "🛒 Mis Pedidos"])
+    # ── TAB PRODUCTOS ──
+    with tab_prod:
+        if role == "socio_multi" and sel_nombre == "Todas" and len(lineas_activas) > 1:
+            st.markdown("<div class='section-title'>📊 Por Línea</div>", unsafe_allow_html=True)
+            cols_l = st.columns(len(lineas_activas))
+            for i, lid in enumerate(lineas_activas):
+                lp = prod[prod["client_id"] == lid]
+                lc = LINEAS.get(lid, {"nombre": lid, "emoji": "●", "color": "#6366F1"})
+                with cols_l[i]:
+                    st.markdown(f"<div class='metric-card' style='border-top-color:{lc['color']}'><div class='metric-title'>{lc['emoji']} {lc['nombre']}</div><div class='metric-value'>${lp['valor_stock'].sum():,.0f}</div><div class='metric-sub'>{len(lp)} productos</div></div>", unsafe_allow_html=True)
+        if prod.empty:
+            st.info("Aun no tenes productos cargados en tu linea.")
         else:
-            st.dataframe(prod[["name","sku","price","stock","ganancia_unit","margen_pct"]].rename(columns={"name":"Producto","sku":"SKU","price":"Precio","stock":"Stock","ganancia_unit":"Ganancia Unit","margen_pct":"Margen%"}).style.format({"Precio":"${:,.0f}","Ganancia Unit":"${:,.0f}","Margen%":"{:.1f}%"}), use_container_width=True, hide_index=True)
+            if role == "socio_multi" and sel_nombre == "Todas":
+                _disp = prod[["client_id","name","sku","price","stock","ganancia_unit","margen_pct"]].copy()
+                _disp["client_id"] = _disp["client_id"].map(lambda x: LINEAS.get(x, {}).get("nombre", x))
+                st.dataframe(_disp.rename(columns={"client_id":"Línea","name":"Producto","sku":"SKU","price":"Precio","stock":"Stock","ganancia_unit":"Ganancia Unit","margen_pct":"Margen%"}).style.format({"Precio":"${:,.0f}","Ganancia Unit":"${:,.0f}","Margen%":"{:.1f}%"}), use_container_width=True, hide_index=True)
+            else:
+                st.dataframe(prod[["name","sku","price","stock","ganancia_unit","margen_pct"]].rename(columns={"name":"Producto","sku":"SKU","price":"Precio","stock":"Stock","ganancia_unit":"Ganancia Unit","margen_pct":"Margen%"}).style.format({"Precio":"${:,.0f}","Ganancia Unit":"${:,.0f}","Margen%":"{:.1f}%"}), use_container_width=True, hide_index=True)
+    # ── TAB PEDIDOS ──
+    with tab_ped:
+        _STATUS_COLOR = {"Pendiente": "#F59E0B", "En Proceso": "#3B82F6", "Listo": "#10B981", "Cancelado": "#EF4444"}
+        _show_badge   = role == "socio_multi" and len(lineas_activas) > 1
+        with engine.connect() as _conn:
+            _oframes = [
+                pd.read_sql(
+                    text("""SELECT o.id, o.client_id, o.status, o.date, o.fecha_entrega_est, o.notas,
+                                   COALESCE(SUM(oi.cantidad * oi.precio_unitario), 0) AS total
+                            FROM orders o
+                            LEFT JOIN order_items oi ON oi.order_id = o.id
+                            WHERE o.client_id = :cid
+                            GROUP BY o.id ORDER BY o.date DESC"""),
+                    _conn, params={"cid": lid}
+                ) for lid in lineas_activas
+            ]
+        pedidos = pd.concat(_oframes, ignore_index=True) if _oframes else pd.DataFrame()
+        if not pedidos.empty and len(lineas_activas) > 1:
+            pedidos = pedidos.sort_values("date", ascending=False)
+        if pedidos.empty:
+            st.info("Todavía no tenés pedidos registrados.")
+        else:
+            for _, row in pedidos.iterrows():
+                s_color      = _STATUS_COLOR.get(row["status"], "#9CA3AF")
+                lnombre      = LINEAS.get(row["client_id"], {}).get("nombre", row["client_id"])
+                lcolor       = LINEAS.get(row["client_id"], {}).get("color", "#6366F1")
+                fecha_str    = str(row["date"])[:10] if row["date"] else "—"
+                entrega_str  = row["fecha_entrega_est"] or "—"
+                notas_html   = f"<div style='font-size:0.78rem;color:#9CA3AF;margin-top:2px;'>{row['notas']}</div>" if row["notas"] else ""
+                badge_html   = f"<span style='background:{lcolor}22;color:{lcolor};border:1px solid {lcolor}55;border-radius:999px;padding:2px 9px;font-size:0.68rem;font-weight:600;margin-left:8px;'>{lnombre}</span>" if _show_badge else ""
+                st.markdown(
+                    f"<div style='background:white;border-radius:12px;padding:14px 18px;margin-bottom:10px;"
+                    f"border-left:4px solid {s_color};box-shadow:0 1px 6px rgba(0,0,0,0.06);'>"
+                    f"<div style='display:flex;justify-content:space-between;align-items:flex-start;'>"
+                    f"<div><span style='font-weight:700;font-size:0.95rem;'>#{row['id']}</span>{badge_html}"
+                    f"<span style='background:{s_color}22;color:{s_color};border:1px solid {s_color}55;"
+                    f"border-radius:999px;padding:2px 9px;font-size:0.68rem;font-weight:600;margin-left:8px;'>{row['status']}</span>"
+                    f"<div style='font-size:0.78rem;color:#6B7280;margin-top:5px;'>Cargado: {fecha_str} · Entrega: {entrega_str}</div>"
+                    f"{notas_html}</div>"
+                    f"<div style='font-family:Cormorant Garamond,serif;font-size:1.4rem;font-weight:700;color:#1a1a2e;'>${row['total']:,.0f}</div>"
+                    f"</div></div>",
+                    unsafe_allow_html=True
+                )
 
 elif menu == "🛒 Cargar Pedido":
     uid  = st.session_state["uid"]
