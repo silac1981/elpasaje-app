@@ -138,13 +138,10 @@ def render():
         _prec_hist = pd.DataFrame()
 
     _cap_stock  = prod["valor_stock"].sum()
-    _gan_stock  = prod["ganancia_stock"].sum()
     _n_skus     = len(prod[prod["activo"]==1]) if "activo" in prod.columns else len(prod)
     _n_activos  = len(_pedidos_s[_pedidos_s["status"].isin(["Pendiente","En Proceso"])]) if not _pedidos_s.empty else 0
     _n_listo    = len(_pedidos_s[_pedidos_s["status"]=="Listo"]) if not _pedidos_s.empty else 0
     _fac_total  = float(_pedidos_s[_pedidos_s["status"]=="Listo"]["total"].sum()) if not _pedidos_s.empty else 0
-    _margen_avg = prod["margen_pct"].mean() if not prod.empty else 0
-    _mg_color   = "#10B981" if _margen_avg>=50 else ("#F59E0B" if _margen_avg>=25 else "#EF4444")
 
     _page_slug_s = PAGINAS_SOCIOS.get(uid if role != "socio_multi" else lineas_activas[0] if len(lineas_activas)==1 else uid)
     if _page_slug_s:
@@ -164,13 +161,12 @@ def render():
   </div>
 </div></a>""", unsafe_allow_html=True)
 
-    _sk1, _sk2, _sk3, _sk4, _sk5 = st.columns(5)
+    _sk1, _sk2, _sk3, _sk4 = st.columns(4)
     for _sc_col, _sv, _sl, _ss, _scolor in [
-        (_sk1, f"${_cap_stock:,.0f}",  "💰 Stock",           "valor precio venta",        hdr_color),
-        (_sk2, f"${_gan_stock:,.0f}",  "📈 Ganancia Stock",  "margen del inventario",     "#10B981"),
+        (_sk1, f"${_cap_stock:,.0f}",  "💰 Valor Stock",     "precio venta × unidades",   hdr_color),
+        (_sk2, str(_n_skus),           "📦 Productos",       "activos en tu catálogo",    hdr_color),
         (_sk3, f"${_fac_total:,.0f}",  "✅ Facturado Total", f"{_n_listo} pedidos listos","#3B82F6"),
         (_sk4, str(_n_activos),        "🏭 En Producción",   "pedidos activos hoy",       "#F59E0B"),
-        (_sk5, f"{_margen_avg:.1f}%",  "📊 Margen Prom.",    "promedio de tu catálogo",   _mg_color),
     ]:
         with _sc_col:
             st.markdown(f"<div style='background:#161B22;border-radius:14px;padding:18px 14px;border:1px solid #21262D;border-top:3px solid {_scolor};text-align:center;margin-bottom:8px;'><div style='font-size:1.5rem;font-weight:800;color:{_scolor};line-height:1;'>{_sv}</div><div style='font-size:0.72rem;font-weight:600;color:#C9D1D9;margin-top:8px;'>{_sl}</div><div style='font-size:0.62rem;color:#8B949E;margin-top:3px;'>{_ss}</div></div>", unsafe_allow_html=True)
@@ -197,10 +193,11 @@ def render():
         with _rb:
             st.markdown("<div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#58A6FF;margin-bottom:10px;'>ESTADO DE TU CATÁLOGO</div>", unsafe_allow_html=True)
             if not prod.empty:
-                _top3 = prod.sort_values("margen_pct", ascending=False).head(3)
+                _top3 = prod.sort_values("price", ascending=False).head(3)
                 for _, _p3 in _top3.iterrows():
-                    _mc3 = "#10B981" if _p3["margen_pct"]>=50 else ("#F59E0B" if _p3["margen_pct"]>=25 else "#EF4444")
-                    st.markdown(f"<div style='background:#161B22;border-radius:10px;padding:10px 14px;margin-bottom:6px;border:1px solid #21262D;'><div style='font-size:0.8rem;font-weight:600;color:#E6EDF3;'>{_p3['name']}</div><div style='background:#21262D;border-radius:3px;height:5px;margin:5px 0;'><div style='background:{_mc3};height:5px;border-radius:3px;width:{min(100,_p3['margen_pct']):.0f}%;'></div></div><div style='font-size:0.72rem;color:{_mc3};font-weight:700;'>{_p3['margen_pct']:.1f}% margen · ${_p3['price']:,.0f}</div></div>", unsafe_allow_html=True)
+                    _pstk3 = int(_p3.get("stock", 0) or 0)
+                    _stk_c3 = "#10B981" if _pstk3 > 5 else ("#F59E0B" if _pstk3 > 0 else "#EF4444")
+                    st.markdown(f"<div style='background:#161B22;border-radius:10px;padding:10px 14px;margin-bottom:6px;border:1px solid #21262D;'><div style='font-size:0.8rem;font-weight:600;color:#E6EDF3;'>{_p3['name']}</div><div style='font-size:0.72rem;color:#8B949E;margin-top:3px;'>${_p3['price']:,.0f} · <span style='color:{_stk_c3};font-weight:700;'>{_pstk3} u stock</span></div></div>", unsafe_allow_html=True)
                 _stock_bajo = prod[prod["stock"] <= 2] if "stock" in prod.columns else pd.DataFrame()
                 if not _stock_bajo.empty:
                     st.markdown(f"<div style='background:#2D2007;border-radius:10px;padding:10px 14px;border-left:3px solid #F59E0B;margin-top:6px;border:1px solid #3D2B0A;'><span style='color:#F59E0B;font-weight:700;font-size:0.8rem;'>⚠️ Stock bajo: {', '.join(_stock_bajo['name'].tolist()[:3])}</span></div>", unsafe_allow_html=True)
@@ -234,11 +231,11 @@ def render():
             else:
                 st.info("Aún no hay pedidos completados para graficar.")
         with _sb:
-            st.markdown("<div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#58A6FF;margin-bottom:8px;'>MARGEN POR PRODUCTO</div>", unsafe_allow_html=True)
+            st.markdown("<div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#58A6FF;margin-bottom:8px;'>PRECIO POR PRODUCTO</div>", unsafe_allow_html=True)
             if not prod.empty:
-                _mg_chart = prod.sort_values("margen_pct", ascending=False)[["name","margen_pct"]].head(12).copy()
-                _mg_chart["name"] = _mg_chart["name"].str[:22]
-                st.bar_chart(_mg_chart.set_index("name")[["margen_pct"]].rename(columns={"margen_pct":"Margen %"}), color="#3FB950", height=220)
+                _pr_chart = prod.sort_values("price", ascending=False)[["name","price"]].head(12).copy()
+                _pr_chart["name"] = _pr_chart["name"].str[:22]
+                st.bar_chart(_pr_chart.set_index("name")[["price"]].rename(columns={"price":"Precio $"}), color=hdr_color, height=220)
             else:
                 st.info("Sin productos para analizar.")
         st.markdown("<div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#58A6FF;margin-top:20px;margin-bottom:10px;'>DISTRIBUCIÓN DE PEDIDOS</div>", unsafe_allow_html=True)
@@ -281,23 +278,18 @@ def render():
                 st.info("Sin productos activos en esta línea.")
                 return
             _pcols2 = st.columns(3)
-            for _pii, (_, _prow) in enumerate(_df_act.sort_values("margen_pct", ascending=False).iterrows()):
-                _pmc       = "#10B981" if _prow["margen_pct"]>=50 else ("#F59E0B" if _prow["margen_pct"]>=25 else "#EF4444")
+            for _pii, (_, _prow) in enumerate(_df_act.sort_values("price", ascending=False).iterrows()):
                 _plincolor = LINEAS.get(_prow["client_id"],{}).get("color", _col_default)
                 _pstock_c  = "#10B981" if (_prow.get("stock",0) or 0) > 5 else ("#F59E0B" if (_prow.get("stock",0) or 0) > 0 else "#EF4444")
-                _costo_u   = _prow.get("costo_unit", 0) or 0
                 _peso_g    = int(_prow.get("weight_gr", 0) or 0)
                 with _pcols2[_pii % 3]:
                     st.markdown(f"""<div style='background:#161B22;border-radius:14px;padding:16px;border:1px solid #21262D;margin-bottom:10px;border-top:3px solid {_plincolor};'>
 <div style='font-size:0.62rem;color:{_plincolor};font-weight:700;letter-spacing:1px;text-transform:uppercase;'>{_prow.get('sku','')} · {_peso_g}g</div>
 <div style='font-size:0.9rem;font-weight:700;color:#E6EDF3;margin-top:4px;line-height:1.2;'>{_prow['name']}</div>
 <div style='font-size:0.68rem;color:#8B949E;margin-top:2px;'>{_prow.get('categoria','') or ''}</div>
-<div style='margin-top:10px;background:#21262D;border-radius:3px;height:5px;'><div style='background:{_pmc};height:5px;border-radius:3px;width:{min(100,max(0,_prow['margen_pct'])):.0f}%;'></div></div>
-<div style='margin-top:8px;display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:4px;'>
-  <div style='background:#0D1117;border-radius:6px;padding:5px 4px;text-align:center;'><div style='font-size:0.56rem;color:#8B949E;margin-bottom:2px;'>COSTO EP</div><div style='font-size:0.76rem;font-weight:700;color:#F59E0B;'>${_costo_u:,.0f}</div></div>
-  <div style='background:#0D1117;border-radius:6px;padding:5px 4px;text-align:center;'><div style='font-size:0.56rem;color:#8B949E;margin-bottom:2px;'>PRECIO</div><div style='font-size:0.76rem;font-weight:700;color:#E6EDF3;'>${_prow['price']:,.0f}</div></div>
-  <div style='background:#0D1117;border-radius:6px;padding:5px 4px;text-align:center;'><div style='font-size:0.56rem;color:#8B949E;margin-bottom:2px;'>MARGEN</div><div style='font-size:0.76rem;font-weight:700;color:{_pmc};'>{_prow['margen_pct']:.1f}%</div></div>
-  <div style='background:#0D1117;border-radius:6px;padding:5px 4px;text-align:center;'><div style='font-size:0.56rem;color:#8B949E;margin-bottom:2px;'>STOCK</div><div style='font-size:0.76rem;font-weight:700;color:{_pstock_c};'>{int(_prow.get("stock",0) or 0)} u</div></div>
+<div style='margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:4px;'>
+  <div style='background:#0D1117;border-radius:6px;padding:8px 4px;text-align:center;'><div style='font-size:0.56rem;color:#8B949E;margin-bottom:2px;'>PRECIO</div><div style='font-size:0.84rem;font-weight:700;color:#E6EDF3;'>${_prow['price']:,.0f}</div></div>
+  <div style='background:#0D1117;border-radius:6px;padding:8px 4px;text-align:center;'><div style='font-size:0.56rem;color:#8B949E;margin-bottom:2px;'>STOCK</div><div style='font-size:0.84rem;font-weight:700;color:{_pstock_c};'>{int(_prow.get("stock",0) or 0)} u</div></div>
 </div>
 </div>""", unsafe_allow_html=True)
 
@@ -311,15 +303,12 @@ def render():
                 _lp3 = prod[prod["client_id"]==_lid3]
                 _lc3 = LINEAS.get(_lid3, {"nombre":_lid3,"emoji":"●","color":"#6366F1"})
                 with _ltab:
-                    _ls1, _ls2, _ls3 = st.columns(3)
+                    _ls1, _ls2 = st.columns(2)
                     _n_act3 = len(_lp3[_lp3["activo"]==1]) if "activo" in _lp3.columns else len(_lp3)
-                    _mg3    = _lp3["margen_pct"].mean() if not _lp3.empty else 0
                     with _ls1:
                         st.markdown(f"<div style='background:#161B22;border-radius:10px;padding:10px;border:1px solid {_lc3['color']}33;text-align:center;'><div style='font-size:0.58rem;color:#8B949E;font-weight:600;letter-spacing:1px;'>PRODUCTOS</div><div style='font-size:1.5rem;font-weight:800;color:{_lc3['color']};'>{_n_act3}</div></div>", unsafe_allow_html=True)
                     with _ls2:
                         st.markdown(f"<div style='background:#161B22;border-radius:10px;padding:10px;border:1px solid {_lc3['color']}33;text-align:center;'><div style='font-size:0.58rem;color:#8B949E;font-weight:600;letter-spacing:1px;'>VALOR STOCK</div><div style='font-size:1.5rem;font-weight:800;color:{_lc3['color']};'>${_lp3['valor_stock'].sum():,.0f}</div></div>", unsafe_allow_html=True)
-                    with _ls3:
-                        st.markdown(f"<div style='background:#161B22;border-radius:10px;padding:10px;border:1px solid {_lc3['color']}33;text-align:center;'><div style='font-size:0.58rem;color:#8B949E;font-weight:600;letter-spacing:1px;'>MARGEN PROM.</div><div style='font-size:1.5rem;font-weight:800;color:{_lc3['color']};'>{_mg3:.1f}%</div></div>", unsafe_allow_html=True)
                     st.markdown("<div style='height:12px;'></div>", unsafe_allow_html=True)
                     _render_cards_linea(_lp3, _lc3["color"])
         else:
