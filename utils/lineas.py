@@ -50,9 +50,29 @@ _EC = {
 }
 
 
+TIPOS_PRODUCTO = {
+    "propio_3d":    {"label": "Propio 3D",          "color": "#3B82F6", "capa": 1},
+    "linea_propio": {"label": "Propio de Linea",     "color": "#10B981", "capa": 2},
+    "compartido":   {"label": "Compartido (Tipo C)", "color": "#F59E0B", "capa": 2},
+    "kit_mixto":    {"label": "Kit Mixto (Tipo D)",  "color": "#8B5CF6", "capa": 2},
+}
+
+IP_RESTRINGIDA = ["deadpool", "marshall", "hello kitty", "pokeball", "ferrari", "baby yoda"]
+
+
 def get_linea(cid: str) -> dict:
     """Retorna la configuración de color/emoji/nombre de una línea."""
     return LINEAS.get(cid, {"nombre": cid, "color": "#6B7280", "emoji": "📦"})
+
+
+@st.cache_data(ttl=60)
+def get_productos_capa2(client_id: str) -> pd.DataFrame:
+    """Retorna productos de Capa 2 (Tipo B/C/D) de una línea, excluyendo propio_3d."""
+    with engine.connect() as conn:
+        return pd.read_sql(
+            text("SELECT * FROM products WHERE client_id=:cid AND tipo_producto != 'propio_3d'"),
+            conn, params={"cid": client_id}
+        )
 
 
 @st.cache_data(ttl=60)

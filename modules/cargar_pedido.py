@@ -44,7 +44,7 @@ details{{background:#161B22!important;border:1px solid #21262D!important;border-
     with engine.connect() as _conn:
         _frames = [
             pd.read_sql(
-                text("SELECT name, sku, price, weight_gr, description, categoria, color, client_id FROM products WHERE client_id=:uid AND activo=1 ORDER BY name"),
+                text("SELECT name, sku, price, weight_gr, description, categoria, color, client_id, imagen_url FROM products WHERE client_id=:uid AND activo=1 ORDER BY name"),
                 _conn, params={"uid": lid}
             ) for lid in lineas_activas
         ]
@@ -54,40 +54,74 @@ details{{background:#161B22!important;border:1px solid #21262D!important;border-
         st.markdown("<div style='background:#161B22;border-radius:12px;padding:20px;border:1px solid #21262D;text-align:center;color:#8B949E;'>Sin productos cargados todavía. Contactá a Alejandra para agregarlos.</div>", unsafe_allow_html=True)
         st.stop()
 
-    st.markdown("<div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#58A6FF;margin-bottom:12px;'>SELECCIONÁ UN PRODUCTO</div>", unsafe_allow_html=True)
-
     if "cp_sel_sku" not in st.session_state:
         st.session_state["cp_sel_sku"] = None
 
-    _cp_cols = st.columns(3)
-    for _cpi, (_, _cpr) in enumerate(prods_socio.iterrows()):
-        _is_sel = st.session_state["cp_sel_sku"] == _cpr["sku"]
-        _cpc    = LINEAS.get(_cpr["client_id"], {}).get("color", "#6366F1")
-        _sel_style = f"border:2px solid {_cpc};background:#1C2128;" if _is_sel else "border:1px solid #21262D;background:#161B22;"
-        _sel_badge = f"<div style='background:{_cpc};color:white;font-size:0.6rem;font-weight:700;padding:2px 8px;border-radius:99px;display:inline-block;margin-bottom:6px;'>✓ SELECCIONADO</div>" if _is_sel else ""
-        with _cp_cols[_cpi % 3]:
-            st.markdown(f"""<div style='{_sel_style}border-radius:14px;padding:14px;margin-bottom:8px;cursor:pointer;'>
-{_sel_badge}
+    _sel_sku  = st.session_state.get("cp_sel_sku")
+    _sel_prod = prods_socio[prods_socio["sku"] == _sel_sku].iloc[0] if _sel_sku and not prods_socio[prods_socio["sku"]==_sel_sku].empty else None
+
+    # ── Sin selección: mostrar grid completo ──────────────────────
+    if _sel_prod is None:
+        st.markdown(
+            "<div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;"
+            "color:#58A6FF;margin-bottom:12px;'>SELECCIONÁ UN PRODUCTO</div>",
+            unsafe_allow_html=True,
+        )
+        _cp_cols = st.columns(3)
+        for _cpi, (_, _cpr) in enumerate(prods_socio.iterrows()):
+            _cpc    = LINEAS.get(_cpr["client_id"], {}).get("color", "#6366F1")
+            _img_url_cp = str(_cpr.get("imagen_url") or "")
+            _has_img_cp = _img_url_cp.startswith("http") or _img_url_cp.startswith("data:")
+            _img_tag = (f"<img src='{_img_url_cp}' style='width:100%;height:90px;object-fit:cover;"
+                        f"border-radius:8px;margin-bottom:8px;' onerror=\"this.style.display='none'\">") if _has_img_cp else ""
+            with _cp_cols[_cpi % 3]:
+                st.markdown(f"""<div style='border:1px solid #21262D;background:#161B22;border-radius:14px;padding:14px;margin-bottom:8px;'>
+{_img_tag}
 <div style='font-size:0.6rem;color:{_cpc};font-weight:700;letter-spacing:1px;text-transform:uppercase;'>{_cpr['sku']}</div>
 <div style='font-size:0.88rem;font-weight:700;color:#E6EDF3;margin-top:3px;'>{_cpr['name']}</div>
 <div style='font-size:0.68rem;color:#8B949E;margin-top:2px;'>{_cpr.get('categoria','') or ''}</div>
 <div style='margin-top:8px;font-size:1rem;font-weight:800;color:{_cpc};'>${float(_cpr['price']):,.0f}</div>
 <div style='font-size:0.65rem;color:#6B7280;'>{float(_cpr.get('weight_gr',0) or 0):.0f} g · {str(_cpr.get('description','') or '')[:50]}</div>
 </div>""", unsafe_allow_html=True)
-            if st.button("Seleccionar", key=f"cpbtn_{_cpr['sku']}", use_container_width=True,
-                         type="primary" if _is_sel else "secondary"):
-                st.session_state["cp_sel_sku"] = _cpr["sku"]
-                st.rerun()
-
-    _sel_sku  = st.session_state.get("cp_sel_sku")
-    _sel_prod = prods_socio[prods_socio["sku"] == _sel_sku].iloc[0] if _sel_sku and not prods_socio[prods_socio["sku"]==_sel_sku].empty else None
-
-    if _sel_prod is None:
-        st.markdown("<div style='background:#0D1B2E;border-radius:10px;padding:12px 18px;border:1px solid #1B2D4A;margin-top:8px;'><span style='color:#58A6FF;font-size:0.82rem;'>👆 Seleccioná un producto de los cards de arriba para continuar</span></div>", unsafe_allow_html=True)
+                if st.button("Seleccionar", key=f"cpbtn_{_cpr['sku']}", use_container_width=True, type="secondary"):
+                    st.session_state["cp_sel_sku"] = _cpr["sku"]
+                    st.rerun()
         st.stop()
 
-    st.markdown("<div style='border-top:1px solid #21262D;margin:20px 0;'></div>", unsafe_allow_html=True)
-    st.markdown(f"<div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#58A6FF;margin-bottom:12px;'>DETALLE DEL PEDIDO · {_sel_prod['name'].upper()}</div>", unsafe_allow_html=True)
+    # ── Con selección: banner compacto + formulario inmediatamente ──
+    _cpc_s = LINEAS.get(_sel_prod["client_id"], {}).get("color", "#6366F1")
+    _img_s = str(_sel_prod.get("imagen_url") or "")
+    _img_s = _img_s if (_img_s.startswith("http") or _img_s.startswith("data:")) else ""
+
+    _bn_img = _img_s
+    _bn_img_html = ""
+    if _bn_img:
+        _bn_img_html = f"<img src='{_bn_img}' style='width:56px;height:56px;object-fit:cover;border-radius:8px;margin-right:14px;flex-shrink:0;'>"
+    else:
+        _bn_img_html = f"<div style='width:56px;height:56px;background:{_cpc_s}22;border-radius:8px;display:flex;align-items:center;justify-content:center;margin-right:14px;flex-shrink:0;font-size:1.5rem;'>{cfg.get('emoji','📦')}</div>"
+
+    st.markdown(
+        f"<div style='background:#161B22;border-radius:14px;padding:14px 18px;border:2px solid {_cpc_s};"
+        f"margin-bottom:16px;display:flex;align-items:center;'>"
+        f"{_bn_img_html}"
+        f"<div style='flex:1;min-width:0;'>"
+        f"<div style='font-size:0.6rem;color:{_cpc_s};font-weight:700;letter-spacing:1px;text-transform:uppercase;'>"
+        f"✓ SELECCIONADO · {_sel_prod['sku']}</div>"
+        f"<div style='font-size:1rem;font-weight:800;color:#E6EDF3;margin-top:2px;'>{_sel_prod['name']}</div>"
+        f"<div style='font-size:0.72rem;color:#8B949E;margin-top:2px;'>"
+        f"{str(_sel_prod.get('description','') or '')} · ${float(_sel_prod['price']):,.0f} · "
+        f"{float(_sel_prod.get('weight_gr',0) or 0):.0f} g</div></div></div>",
+        unsafe_allow_html=True,
+    )
+    if st.button("✏️ Cambiar producto", key="cp_cambiar"):
+        st.session_state["cp_sel_sku"] = None
+        st.rerun()
+
+    st.markdown(
+        f"<div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;"
+        f"color:#58A6FF;margin:16px 0 12px;'>DETALLE DEL PEDIDO · {_sel_prod['name'].upper()}</div>",
+        unsafe_allow_html=True,
+    )
 
     _fd1, _fd2 = st.columns(2)
     with _fd1:
@@ -130,6 +164,17 @@ details{{background:#161B22!important;border:1px solid #21262D!important;border-
         _fnames = [f.name for f in _cp_files]
         st.markdown(f"<div style='background:#0D2818;border-radius:8px;padding:8px 14px;border:1px solid #238636;'><span style='color:#3FB950;font-size:0.8rem;'>📎 {len(_cp_files)} archivo{'s' if len(_cp_files)>1 else ''} adjunto{'s' if len(_cp_files)>1 else ''}: {', '.join(_fnames)}</span></div>", unsafe_allow_html=True)
 
+    st.markdown("<div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#58A6FF;margin-top:16px;margin-bottom:8px;'>MÉTODO DE PAGO</div>", unsafe_allow_html=True)
+    _cp_metodo_opts = ["Transferencia", "Efectivo", "MercadoPago (próximamente)"]
+    _cp_metodo = st.radio("", _cp_metodo_opts, horizontal=True, key="cp_metodo", label_visibility="collapsed")
+    if _cp_metodo == "MercadoPago (próximamente)":
+        st.info("💳 MercadoPago estará disponible cuando se configure la cuenta vendedor. Tu pedido se registrará como pendiente de pago.")
+        _cp_metodo_clean = "mp"
+    elif _cp_metodo == "Efectivo":
+        _cp_metodo_clean = "efectivo"
+    else:
+        _cp_metodo_clean = "transferencia"
+
     _total_est = float(_sel_prod["price"]) * _cp_qty
     st.markdown(f"""
 <div style='background:#161B22;border-radius:14px;padding:16px 20px;border:1px solid {_cp_color}44;
@@ -171,6 +216,13 @@ details{{background:#161B22!important;border:1px solid #21262D!important;border-
                 {"oid": order_id, "sku": _sel_sku, "qty": _cp_qty,
                  "precio": float(prod_q["price"].iloc[0]) if not prod_q.empty else float(_sel_prod["price"])}
             )
+            try:
+                _conn2.execute(
+                    text("INSERT INTO pagos (order_id, monto, metodo, estado) VALUES (:oid, :monto, :metodo, 'pendiente')"),
+                    {"oid": order_id, "monto": _total_est, "metodo": _cp_metodo_clean},
+                )
+            except Exception:
+                pass
             _conn2.commit()
         st.session_state.pop("cp_sel_sku", None)
         st.success(f"✅ Pedido #{order_id} enviado a Fer — {_cp_qty}x {_sel_prod['name']} · ${_total_est:,.0f}")

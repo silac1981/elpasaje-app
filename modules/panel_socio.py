@@ -5,6 +5,12 @@ from datetime import datetime
 from sqlalchemy import text
 from utils.db import engine
 from utils.lineas import LINEAS, PAGINAS_SOCIOS, _BASE_PAGES, get_linea, get_lineas_usuario, _SC, get_productos_capa2, IP_RESTRINGIDA
+from utils.whatsapp import (
+    get_numero_linea as _get_wa_numero,
+    link_producto as _wa_link_producto,
+    link_presupuesto as _wa_link_presup,
+    texto_presupuesto as _wa_texto_presup,
+)
 
 
 def render():
@@ -72,14 +78,26 @@ def render():
     try:
         _pedidos_s = pd.read_sql(f"""
             SELECT o.id, o.client_id, o.status, o.date, o.fecha_entrega_est, o.notas,
-                   COALESCE(SUM(oi.cantidad * oi.precio_unitario), 0) AS total
+                   COALESCE(SUM(oi.cantidad * oi.precio_unitario), 0) AS total,
+                   pag.estado AS pago_estado, pag.metodo AS pago_metodo
             FROM orders o
             LEFT JOIN order_items oi ON oi.order_id = o.id
+            LEFT JOIN pagos pag ON pag.order_id = o.id
             WHERE o.client_id IN ('{_lid_str}')
             GROUP BY o.id ORDER BY o.date DESC
         """, engine)
     except Exception:
-        _pedidos_s = pd.DataFrame()
+        try:
+            _pedidos_s = pd.read_sql(f"""
+                SELECT o.id, o.client_id, o.status, o.date, o.fecha_entrega_est, o.notas,
+                       COALESCE(SUM(oi.cantidad * oi.precio_unitario), 0) AS total
+                FROM orders o
+                LEFT JOIN order_items oi ON oi.order_id = o.id
+                WHERE o.client_id IN ('{_lid_str}')
+                GROUP BY o.id ORDER BY o.date DESC
+            """, engine)
+        except Exception:
+            _pedidos_s = pd.DataFrame()
 
     try:
         _hist_mes = pd.read_sql(f"""
@@ -157,8 +175,9 @@ def render():
         with _sc_col:
             st.markdown(f"<div style='background:#161B22;border-radius:14px;padding:18px 14px;border:1px solid #21262D;border-top:3px solid {_scolor};text-align:center;margin-bottom:8px;'><div style='font-size:1.5rem;font-weight:800;color:{_scolor};line-height:1;'>{_sv}</div><div style='font-size:0.72rem;font-weight:600;color:#C9D1D9;margin-top:8px;'>{_sl}</div><div style='font-size:0.62rem;color:#8B949E;margin-top:3px;'>{_ss}</div></div>", unsafe_allow_html=True)
 
-    _t_res, _t_stats, _t_prod, _t_ped, _t_tienda, _t_mike = st.tabs([
-        "🏠 Resumen", "📊 Estadísticas", "📦 Productos", "🛒 Pedidos", "🏪 Mi Tienda", "🤖 Mike"
+    _t_res, _t_stats, _t_prod, _t_ped, _t_tienda, _t_presup, _t_mike, _t_linea = st.tabs([
+        "🏠 Resumen", "📊 Estadísticas", "📦 Productos", "🛒 Pedidos",
+        "🏪 Mi Tienda", "🧮 Presupuesto", "🤖 Mike", "⚙️ Mi Línea",
     ])
 
     # ══ TAB RESUMEN ══
@@ -319,6 +338,11 @@ def render():
             _pf_df  = _pedidos_s if _pf_est=="Todos" else _pedidos_s[_pedidos_s["status"]==_pf_est]
             if _pf_df.empty:
                 st.info(f"Sin pedidos en estado {_pf_est}.")
+            _pago_badge_map = {
+                "pendiente":  ("💳 Pendiente", "#9CA3AF"),
+                "acreditado": ("✅ Acreditado", "#10B981"),
+                "devuelto":   ("↩️ Devuelto",   "#EF4444"),
+            }
             for _, _pr2 in _pf_df.iterrows():
                 _sc3   = _SC.get(_pr2["status"], "#9CA3AF")
                 _lnom2 = LINEAS.get(_pr2["client_id"],{}).get("nombre","")
@@ -327,6 +351,16 @@ def render():
                 _ent2  = str(_pr2.get("fecha_entrega_est","—") or "—")
                 _not2  = f"<div style='font-size:0.75rem;color:#8B949E;margin-top:4px;'><em>{_pr2['notas']}</em></div>" if _pr2.get("notas") else ""
                 _badge2 = f"<span style='background:{_lcol2}22;color:{_lcol2};border:1px solid {_lcol2}44;border-radius:99px;padding:2px 9px;font-size:0.68rem;font-weight:600;margin-left:8px;'>{_lnom2}</span>" if _show_badge else ""
+                _pest2 = None
+                if "pago_estado" in _pedidos_s.columns:
+                    _raw_pest = _pr2.get("pago_estado")
+                    if _raw_pest is not None and not pd.isna(_raw_pest):
+                        _pest2 = str(_raw_pest)
+                if _pest2:
+                    _pb_txt, _pb_col = _pago_badge_map.get(_pest2, (_pest2, "#9CA3AF"))
+                    _pago_badge2 = f"<span style='background:{_pb_col}22;color:{_pb_col};border:1px solid {_pb_col}44;border-radius:99px;padding:2px 9px;font-size:0.68rem;font-weight:600;margin-left:8px;'>{_pb_txt}</span>"
+                else:
+                    _pago_badge2 = ""
                 st.markdown(
                     f"<div style='background:#161B22;border-radius:14px;padding:16px 20px;margin-bottom:10px;"
                     f"border-left:4px solid {_sc3};border:1px solid #21262D;'>"
@@ -334,7 +368,7 @@ def render():
                     f"<div><span style='font-weight:800;font-size:1rem;color:#E6EDF3;'>#{int(_pr2['id'])}</span>"
                     f"<span style='background:{_sc3}22;color:{_sc3};border:1px solid {_sc3}44;"
                     f"border-radius:99px;padding:2px 10px;font-size:0.7rem;font-weight:700;margin-left:8px;'>{_pr2['status']}</span>"
-                    f"{_badge2}"
+                    f"{_badge2}{_pago_badge2}"
                     f"<div style='font-size:0.72rem;color:#8B949E;margin-top:5px;'>📅 {_fec2} → entrega {_ent2}</div>"
                     f"{_not2}</div>"
                     f"<div style='font-family:Cormorant Garamond,serif;font-size:1.5rem;font-weight:700;color:#E6EDF3;'>${float(_pr2['total']):,.0f}</div>"
@@ -364,6 +398,18 @@ def render():
 </div>""", unsafe_allow_html=True)
 
             df_c2 = get_productos_capa2(lid)
+
+            # Verificar si la línea tiene número de WhatsApp configurado
+            _wa_configured = False
+            try:
+                with engine.connect() as _wa_chk:
+                    _wa_chk_row = _wa_chk.execute(
+                        text("SELECT whatsapp_numero FROM lineas_config WHERE client_id=:cid"),
+                        {"cid": lid},
+                    ).fetchone()
+                _wa_configured = bool(_wa_chk_row and _wa_chk_row[0] and str(_wa_chk_row[0]).strip())
+            except Exception:
+                pass
 
             # Preload kit components para todos los kits de esta línea (evita N+1 queries)
             try:
@@ -457,6 +503,34 @@ def render():
                                     f"Total componentes: ${_kit_total:,.0f}</div>",
                                     unsafe_allow_html=True
                                 )
+
+                    # ── Links de WhatsApp por producto ──────────────────
+                    if _vis2 != "pausado":
+                        _is_ip_wa = any(kw in (_r2.get("name", "") or "").lower() for kw in IP_RESTRINGIDA)
+                        if _is_ip_wa:
+                            st.markdown(
+                                "<div style='font-size:0.72rem;color:#9CA3AF;padding:4px 2px;'>"
+                                "🔒 Solo uso interno</div>",
+                                unsafe_allow_html=True,
+                            )
+                        elif not _wa_configured:
+                            st.caption("⚠️ Configurá el número de WhatsApp de tu línea en ⚙️ Mi Línea")
+                        else:
+                            _wa_lnk = _wa_link_producto(
+                                _r2.get("name", ""), _r2.get("sku", ""),
+                                float(_r2.get("price", 0) or 0), lid, engine,
+                            )
+                            _wa_txt_u = (
+                                f"Hola! Me interesa el {_r2.get('name','')} "
+                                f"(SKU: {_r2.get('sku','')}) — "
+                                f"${float(_r2.get('price', 0) or 0):,.0f} ¿Está disponible?"
+                            )
+                            _wa_c1, _wa_c2 = st.columns(2)
+                            with _wa_c1:
+                                st.link_button("📲 WhatsApp", url=_wa_lnk, use_container_width=True)
+                            with _wa_c2:
+                                st.code(_wa_txt_u, language=None)
+
                     st.markdown("<div style='height:4px;'></div>", unsafe_allow_html=True)
 
             # ── Formulario nuevo Tipo B ──────────────────────────────────
@@ -725,6 +799,142 @@ def render():
             _tienda_linea(uid, hdr_nombre, hdr_color)
             _render_export_btn(uid, hdr_nombre)
 
+    # ══ TAB PRESUPUESTO ══
+    with _t_presup:
+        if role == "socio_multi" and len(lineas_activas) > 1:
+            _pb_lid = st.selectbox(
+                "Línea para el presupuesto",
+                lineas_activas,
+                format_func=lambda x: LINEAS.get(x, {}).get("nombre", x),
+                key="presup_linea_sel",
+            )
+        else:
+            _pb_lid = uid
+
+        _pb_cfg    = get_linea(_pb_lid)
+        _pb_color  = _pb_cfg["color"]
+        _pb_nombre = _pb_cfg["nombre"]
+        _pb_prods  = prod[(prod["client_id"] == _pb_lid) & (prod["activo"] == 1)].copy() if not prod.empty else pd.DataFrame()
+
+        st.markdown(
+            f"<div style='font-size:0.65rem;font-weight:700;letter-spacing:3px;"
+            f"text-transform:uppercase;color:{_pb_color};margin-bottom:14px;'>"
+            f"🧮 PRESUPUESTADOR EXPRESS · {_pb_nombre}</div>",
+            unsafe_allow_html=True,
+        )
+
+        if _pb_prods.empty:
+            st.info("Aún no tenés productos activos. Agregá uno desde 🏪 Mi Tienda.")
+        else:
+            _paso_key  = f"presup_paso_{_pb_lid}"
+            _items_key = f"presup_items_{_pb_lid}"
+            _paso_act  = st.session_state.get(_paso_key, 1)
+
+            if _paso_act == 1:
+                # ── Paso 1: armar presupuesto ──────────────────────────
+                _pb_opts    = _pb_prods["sku"].tolist()
+                _pb_lbl_map = {
+                    r["sku"]: f"{r['sku']} — {r['name']} — ${float(r['price']):,.0f}"
+                    for _, r in _pb_prods.iterrows()
+                }
+                _pb_sel = st.multiselect(
+                    "Seleccioná los productos",
+                    _pb_opts,
+                    format_func=lambda x: _pb_lbl_map.get(x, x),
+                    key=f"presup_sel_{_pb_lid}",
+                )
+
+                _pb_total_live = 0.0
+                if _pb_sel:
+                    for _pb_sku in _pb_sel:
+                        _pb_row = _pb_prods[_pb_prods["sku"] == _pb_sku].iloc[0]
+                        _pb_qty = st.number_input(
+                            f"{_pb_row['name']}  (${float(_pb_row['price']):,.0f} c/u)",
+                            min_value=1, value=1, step=1,
+                            key=f"presup_qty_{_pb_sku}_{_pb_lid}",
+                        )
+                        _pb_sub = float(_pb_row["price"]) * int(_pb_qty)
+                        _pb_total_live += _pb_sub
+                        st.caption(f"Subtotal: ${_pb_sub:,.0f}")
+
+                    st.markdown(
+                        f"<div style='background:#0D2E10;border-radius:12px;padding:14px 20px;"
+                        f"border:1px solid #1a4a20;margin:12px 0;text-align:center;'>"
+                        f"<div style='font-size:0.62rem;color:#3FB950;font-weight:700;"
+                        f"letter-spacing:2px;'>TOTAL ESTIMADO</div>"
+                        f"<div style='font-size:2rem;font-weight:800;color:#3FB950;margin-top:4px;'>"
+                        f"💰 ${_pb_total_live:,.0f}</div></div>",
+                        unsafe_allow_html=True,
+                    )
+
+                    if st.button("Generar presupuesto →", type="primary",
+                                 use_container_width=True, key=f"presup_gen_{_pb_lid}"):
+                        _final_items = []
+                        for _pb_sku2 in st.session_state.get(f"presup_sel_{_pb_lid}", []):
+                            _r2 = _pb_prods[_pb_prods["sku"] == _pb_sku2]
+                            if _r2.empty:
+                                continue
+                            _r2 = _r2.iloc[0]
+                            _qty2 = int(st.session_state.get(f"presup_qty_{_pb_sku2}_{_pb_lid}", 1))
+                            _final_items.append({
+                                "nombre":   _r2["name"],
+                                "sku":      _pb_sku2,
+                                "cantidad": _qty2,
+                                "precio":   float(_r2["price"]),
+                            })
+                        st.session_state[_items_key] = _final_items
+                        st.session_state[_paso_key]  = 2
+                        st.rerun()
+                else:
+                    st.caption("Seleccioná al menos un producto para armar el presupuesto.")
+
+            else:
+                # ── Paso 2: presupuesto generado ───────────────────────
+                _pb_items_f = st.session_state.get(_items_key, [])
+                _pb_total_f = sum(float(it["precio"]) * int(it["cantidad"]) for it in _pb_items_f)
+                _pb_numero  = _get_wa_numero(_pb_lid, engine)
+
+                st.markdown(
+                    f"<div style='background:#161B22;border-radius:14px;padding:20px 24px;"
+                    f"border:1px solid #21262D;border-left:4px solid {_pb_color};margin-bottom:16px;'>"
+                    f"<div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;"
+                    f"text-transform:uppercase;color:{_pb_color};margin-bottom:12px;'>"
+                    f"📋 PRESUPUESTO · {_pb_nombre.upper()}</div>"
+                    + "".join(
+                        f"<div style='font-size:0.85rem;color:#E6EDF3;padding:5px 0;"
+                        f"border-bottom:1px solid #21262D;'>"
+                        f"• {it['cantidad']}x <b>{it['nombre']}</b>"
+                        f"<span style='float:right;color:#3FB950;font-weight:700;'>"
+                        f"${float(it['precio']) * int(it['cantidad']):,.0f}</span></div>"
+                        for it in _pb_items_f
+                    )
+                    + f"<div style='font-size:1.1rem;font-weight:800;color:#3FB950;text-align:right;"
+                    f"margin-top:12px;padding-top:8px;border-top:2px solid #21262D;'>"
+                    f"TOTAL: ${_pb_total_f:,.0f}</div>"
+                    f"<div style='font-size:0.68rem;color:#6B7280;margin-top:8px;'>"
+                    f"Válido por 48 horas · Entrega bajo pedido 48-72hs · El Pasaje 3D Studio</div></div>",
+                    unsafe_allow_html=True,
+                )
+
+                _txt_copy = _wa_texto_presup(
+                    _pb_items_f, _pb_total_f,
+                    linea_nombre=_pb_nombre,
+                    numero=_pb_numero,
+                )
+                st.markdown("**📋 Texto para copiar:**")
+                st.code(_txt_copy, language=None)
+
+                _pb_btn1, _pb_btn2 = st.columns(2)
+                with _pb_btn1:
+                    _lnk_presup = _wa_link_presup(_pb_items_f, _pb_total_f, _pb_lid, engine)
+                    st.link_button("📲 Enviar por WhatsApp", url=_lnk_presup, use_container_width=True)
+                with _pb_btn2:
+                    if st.button("🔄 Nuevo presupuesto", use_container_width=True,
+                                 key=f"presup_reset_{_pb_lid}"):
+                        st.session_state.pop(_items_key, None)
+                        st.session_state[_paso_key] = 1
+                        st.rerun()
+
     # ══ TAB MIKE ══
     with _t_mike:
         st.markdown(f"""
@@ -796,3 +1006,147 @@ def render():
             if st.button("Limpiar chat", key=f"smk_clear_{uid}"):
                 st.session_state[_smk_key] = []
                 st.rerun()
+
+    # ══ TAB MI LÍNEA ══
+    with _t_linea:
+        if role == "socio_multi" and len(lineas_activas) > 1:
+            _lc_lid = st.selectbox(
+                "Seleccionar línea a configurar",
+                lineas_activas,
+                format_func=lambda x: LINEAS.get(x, {}).get("nombre", x),
+                key="linea_cfg_sel",
+            )
+        else:
+            _lc_lid = uid
+
+        _lc_cfg   = get_linea(_lc_lid)
+        _lc_color = _lc_cfg["color"]
+        _lc_nom   = _lc_cfg["nombre"]
+
+        st.markdown(
+            f"<div style='font-size:0.65rem;font-weight:700;letter-spacing:3px;"
+            f"text-transform:uppercase;color:{_lc_color};margin-bottom:16px;'>"
+            f"⚙️ CONFIGURACIÓN · {_lc_nom}</div>",
+            unsafe_allow_html=True,
+        )
+
+        _lc_wa_current = ""
+        try:
+            with engine.connect() as _lc_conn:
+                _lc_row = _lc_conn.execute(
+                    text("SELECT whatsapp_numero FROM lineas_config WHERE client_id=:cid"),
+                    {"cid": _lc_lid},
+                ).fetchone()
+            if _lc_row and _lc_row[0]:
+                _lc_wa_current = str(_lc_row[0])
+        except Exception:
+            pass
+
+        with st.form(f"form_linea_cfg_{_lc_lid}"):
+            st.markdown(
+                "<div style='font-size:0.75rem;color:#8B949E;margin-bottom:12px;'>"
+                "Número de WhatsApp de tu línea — se usa para generar los links de contacto "
+                "en 🏪 Mi Tienda y 🧮 Presupuesto.</div>",
+                unsafe_allow_html=True,
+            )
+            _lc_wa_input = st.text_input(
+                "Número de WhatsApp",
+                value=_lc_wa_current,
+                placeholder="Ej: 5491155443322 (sin + ni espacios)",
+                key=f"lc_wa_{_lc_lid}",
+            )
+            _lc_submit = st.form_submit_button("Guardar", use_container_width=True, type="primary")
+
+            if _lc_submit:
+                _wa_clean = _lc_wa_input.strip().replace(" ", "").replace("+", "")
+                if _wa_clean and not (_wa_clean.isdigit() and 10 <= len(_wa_clean) <= 15):
+                    st.error("El número debe contener entre 10 y 15 dígitos numéricos (sin +, espacios ni guiones).")
+                else:
+                    try:
+                        with engine.begin() as _lc_conn2:
+                            _lc_res = _lc_conn2.execute(
+                                text("UPDATE lineas_config SET whatsapp_numero=:wa WHERE client_id=:cid"),
+                                {"wa": _wa_clean or None, "cid": _lc_lid},
+                            )
+                        if _lc_res.rowcount == 0:
+                            st.warning("No se encontró la configuración de tu línea. Contactá a Alejandra para inicializarla.")
+                        else:
+                            st.success(f"Número guardado: {_wa_clean or '(vacío)'}")
+                    except Exception as _lce:
+                        st.error(f"Error al guardar: {_lce}")
+
+        # ── Fotos de productos ──────────────────────────────────────
+        st.markdown(
+            f"<div style='font-size:0.65rem;font-weight:700;letter-spacing:3px;"
+            f"text-transform:uppercase;color:{_lc_color};margin:28px 0 12px;'>"
+            f"📷 FOTOS DE PRODUCTOS</div>",
+            unsafe_allow_html=True,
+        )
+        st.markdown(
+            "<div style='font-size:0.78rem;color:#8B949E;margin-bottom:16px;'>"
+            "Subí una foto por producto. Aparecerá en los cards de 🛒 Cargar Pedido y en el catálogo. "
+            "Tamaño máximo: 5 MB. Formatos: JPG, PNG, WEBP.</div>",
+            unsafe_allow_html=True,
+        )
+        try:
+            _lc_prods = pd.read_sql(
+                text("SELECT sku, name, imagen_url FROM products WHERE client_id=:cid AND activo=1 ORDER BY name"),
+                engine, params={"cid": _lc_lid},
+            )
+        except Exception:
+            _lc_prods = pd.DataFrame()
+
+        if _lc_prods.empty:
+            st.caption("Sin productos cargados en esta línea.")
+        else:
+            import base64 as _b64
+            for _, _lcp in _lc_prods.iterrows():
+                _lcp_img = str(_lcp.get("imagen_url") or "")
+                _has_lcp_img = bool(_lcp_img and (_lcp_img.startswith("http") or _lcp_img.startswith("data:")))
+                _img_status = "✅ Con imagen" if _has_lcp_img else "⬜ Sin imagen"
+                with st.expander(f"{_img_status} · {_lcp['name']} ({_lcp['sku']})"):
+                    _lcp_c1, _lcp_c2 = st.columns([1, 2])
+                    with _lcp_c1:
+                        if _has_lcp_img:
+                            try:
+                                st.image(_lcp_img, width=120)
+                            except Exception:
+                                st.caption("Error al cargar imagen")
+                        else:
+                            st.markdown(
+                                f"<div style='background:{_lc_color}22;border-radius:8px;width:120px;height:90px;"
+                                f"display:flex;align-items:center;justify-content:center;border:1px dashed {_lc_color}44;'>"
+                                f"<span style='font-size:1.8rem;'>📷</span></div>",
+                                unsafe_allow_html=True,
+                            )
+                    with _lcp_c2:
+                        _lcp_up = st.file_uploader(
+                            "Subir foto",
+                            type=["jpg", "jpeg", "png", "webp"],
+                            key=f"lcp_img_{_lcp['sku']}",
+                        )
+                        if _lcp_up is not None:
+                            if _lcp_up.size > 5 * 1024 * 1024:
+                                st.error("La imagen supera 5 MB.")
+                            else:
+                                _lcp_b64 = _b64.b64encode(_lcp_up.read()).decode("utf-8")
+                                _lcp_mime = "image/jpeg" if "jpeg" in (_lcp_up.type or "") else "image/png"
+                                _lcp_uri  = f"data:{_lcp_mime};base64,{_lcp_b64}"
+                                if st.button("Guardar foto", key=f"lcp_save_{_lcp['sku']}", type="primary", use_container_width=True):
+                                    with engine.connect() as _lcp_conn:
+                                        _lcp_conn.execute(
+                                            text("UPDATE products SET imagen_url=:url WHERE sku=:sku"),
+                                            {"url": _lcp_uri, "sku": _lcp["sku"]},
+                                        )
+                                        _lcp_conn.commit()
+                                    st.success("Foto guardada ✅")
+                                    st.rerun()
+                        if _has_lcp_img:
+                            if st.button("🗑 Quitar foto", key=f"lcp_del_{_lcp['sku']}"):
+                                with engine.connect() as _lcp_conn:
+                                    _lcp_conn.execute(
+                                        text("UPDATE products SET imagen_url=NULL WHERE sku=:sku"),
+                                        {"sku": _lcp["sku"]},
+                                    )
+                                    _lcp_conn.commit()
+                                st.rerun()

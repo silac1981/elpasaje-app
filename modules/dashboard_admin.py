@@ -8,7 +8,7 @@ from utils.db import engine
 from utils.lineas import get_linea
 
 
-def render():
+def _dash_main():
     st.markdown("<div class='main-header'><h1>📊 Dashboard de Magnitud</h1><p>Inteligencia de negocios en tiempo real · Ecosistema El Pasaje</p></div>", unsafe_allow_html=True)
     from utils.pricing import cargar_productos, cargar_materiales
     df   = cargar_productos()
@@ -214,3 +214,176 @@ def render():
                     f"</div>", unsafe_allow_html=True)
     else:
         st.info("Completá pedidos para ver el ranking de facturación.")
+
+    # ── Novedades del ecosistema — últimos 7 días ──────────────────
+    st.markdown("<div style='height:24px'></div>", unsafe_allow_html=True)
+    st.markdown("<div class='section-title'>🆕 Novedades del Ecosistema (últimos 7 días)</div>", unsafe_allow_html=True)
+    try:
+        _df_nov = pd.read_sql("""
+            SELECT sku, name, price, stock, client_id, tipo_producto, visibilidad, fecha_alta
+            FROM products
+            WHERE tipo_producto != 'propio_3d'
+              AND fecha_alta >= date('now', '-7 days')
+            ORDER BY fecha_alta DESC
+        """, engine)
+    except Exception:
+        _df_nov = pd.DataFrame()
+
+    _TIPO_LABEL_D = {"linea_propio": "Tipo B", "compartido": "Tipo C", "kit_mixto": "Tipo D"}
+    _VIS_C_D      = {"publico": "#10B981", "borrador": "#F59E0B", "pausado": "#6B7280"}
+    _VIS_L_D      = {"publico": "Publico",  "borrador": "Borrador",  "pausado": "Pausado"}
+
+    if _df_nov.empty:
+        st.markdown("<div style='background:#F9FAFB;border-radius:12px;padding:14px 20px;border:1px solid #E5E7EB;color:#6B7280;'>Sin productos nuevos de Capa 2 en los últimos 7 días.</div>", unsafe_allow_html=True)
+    else:
+        _nov_cols = st.columns(3)
+        for _ni, (_, _nr) in enumerate(_df_nov.head(6).iterrows()):
+            _nl  = get_linea(_nr["client_id"])
+            _nvis = _nr.get("visibilidad", "borrador") or "borrador"
+            _nvc  = _VIS_C_D.get(_nvis, "#6B7280")
+            _nvl  = _VIS_L_D.get(_nvis, _nvis)
+            _ntl  = _TIPO_LABEL_D.get(_nr.get("tipo_producto", ""), "Capa 2")
+            with _nov_cols[_ni % 3]:
+                st.markdown(f"""
+<div style='background:white;border-radius:12px;padding:14px 16px;margin-bottom:10px;
+     box-shadow:0 2px 8px rgba(0,0,0,0.07);border-top:3px solid {_nl["color"]};'>
+  <div style='display:flex;justify-content:space-between;align-items:flex-start;'>
+    <div style='font-size:0.75rem;color:{_nl["color"]};font-weight:700;'>{_nl["emoji"]} {_nl["nombre"]}</div>
+    <div style='display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;'>
+      <span style='background:{_nvc}18;color:{_nvc};border:1px solid {_nvc}44;border-radius:99px;padding:2px 7px;font-size:0.6rem;font-weight:700;'>{_nvl}</span>
+      <span style='background:#EEF2FF;color:#6366F1;border-radius:99px;padding:2px 7px;font-size:0.6rem;font-weight:700;'>{_ntl}</span>
+    </div>
+  </div>
+  <div style='font-size:0.88rem;font-weight:700;color:#1a1a2e;margin-top:6px;'>{_nr['name']}</div>
+  <div style='display:flex;justify-content:space-between;margin-top:8px;align-items:center;'>
+    <span style='font-size:0.72rem;color:#6B7280;'>SKU: {_nr.get('sku','')}</span>
+    <span style='font-size:0.9rem;font-weight:800;color:#1E3A8A;'>${float(_nr.get('price', 0) or 0):,.0f}</span>
+  </div>
+  <div style='font-size:0.63rem;color:#9CA3AF;margin-top:2px;'>Alta: {str(_nr.get('fecha_alta', ''))[:10]}</div>
+</div>""", unsafe_allow_html=True)
+
+    # ── Gestión de productos — Pausa y Visibilidad ─────────────────
+    st.markdown("<div style='height:24px'></div>", unsafe_allow_html=True)
+    st.markdown("<div class='section-title'>⚙️ Gestión de Productos — Pausa y Visibilidad</div>", unsafe_allow_html=True)
+
+    _ga, _gb, _gc = st.columns(3)
+    with _ga:
+        _g_linea = st.selectbox(
+            "Filtrar línea",
+            ["Todas"] + sorted(df["client_id"].dropna().unique().tolist()),
+            format_func=lambda x: "Todas" if x == "Todas" else f"{get_linea(x)['emoji']} {get_linea(x)['nombre']}",
+            key="g_linea_filter"
+        )
+    with _gb:
+        _g_tipo = st.selectbox(
+            "Tipo de producto",
+            ["Todos", "propio_3d", "linea_propio", "compartido", "kit_mixto"],
+            format_func=lambda x: "Todos" if x == "Todos" else x.replace("_", " ").title(),
+            key="g_tipo_filter"
+        )
+    with _gc:
+        _g_vis = st.selectbox(
+            "Visibilidad actual",
+            ["Todos", "publico", "borrador", "pausado"],
+            format_func=lambda x: "Todos" if x == "Todos" else x.title(),
+            key="g_vis_filter"
+        )
+
+    df_g = df.copy()
+    if _g_linea != "Todas":
+        df_g = df_g[df_g["client_id"] == _g_linea]
+    if _g_tipo != "Todos" and "tipo_producto" in df_g.columns:
+        df_g = df_g[df_g["tipo_producto"] == _g_tipo]
+    if _g_vis != "Todos" and "visibilidad" in df_g.columns:
+        df_g = df_g[df_g["visibilidad"] == _g_vis]
+
+    if df_g.empty:
+        st.info("No hay productos con ese filtro.")
+    else:
+        df_ed = df_g[["sku","name","linea_nombre","tipo_producto","visibilidad","activo","price","stock"]].copy()
+        df_ed = df_ed.rename(columns={
+            "name": "Producto", "linea_nombre": "Linea",
+            "tipo_producto": "Tipo", "visibilidad": "Visibilidad",
+            "activo": "Activo", "price": "Precio", "stock": "Stock"
+        }).reset_index(drop=True)
+
+        df_edited = st.data_editor(
+            df_ed,
+            column_config={
+                "sku":         st.column_config.TextColumn("SKU",      disabled=True, width="small"),
+                "Producto":    st.column_config.TextColumn("Producto", disabled=True),
+                "Linea":       st.column_config.TextColumn("Línea",    disabled=True, width="small"),
+                "Tipo":        st.column_config.TextColumn("Tipo",     disabled=True, width="small"),
+                "Precio":      st.column_config.NumberColumn("Precio", disabled=True, format="$%d", width="small"),
+                "Stock":       st.column_config.NumberColumn("Stock",  disabled=True, width="small"),
+                "Visibilidad": st.column_config.SelectboxColumn("Visibilidad", options=["publico","borrador","pausado"], width="small"),
+                "Activo":      st.column_config.CheckboxColumn("Activo", width="small"),
+            },
+            hide_index=True,
+            use_container_width=True,
+            key="gestion_editor"
+        )
+
+        if st.button("Guardar cambios", use_container_width=False):
+            _changed_mask = (
+                (df_edited["Visibilidad"] != df_ed["Visibilidad"]) |
+                (df_edited["Activo"].astype(int) != df_ed["Activo"].astype(int))
+            )
+            _changed = df_edited[_changed_mask]
+            if _changed.empty:
+                st.info("No hay cambios para guardar.")
+            else:
+                with engine.begin() as _cn_g:
+                    for _, _cr_g in _changed.iterrows():
+                        _cn_g.execute(
+                            text("UPDATE products SET visibilidad=:v, activo=:a WHERE sku=:s"),
+                            {"v": _cr_g["Visibilidad"], "a": int(_cr_g["Activo"]), "s": _cr_g["sku"]}
+                        )
+                from utils.pricing import cargar_productos as _cp_dash
+                _cp_dash.clear()
+                st.success(f"{len(_changed)} producto(s) actualizados.")
+                st.rerun()
+
+    # ── Revenue Sharing — Reglas activas ──────────────────────────
+    st.markdown("<div style='height:24px'></div>", unsafe_allow_html=True)
+    st.markdown("<div class='section-title'>🤝 Revenue Sharing — Reglas Activas</div>", unsafe_allow_html=True)
+    try:
+        _df_rev = pd.read_sql("""
+            SELECT rr.product_sku, p.name AS producto,
+                   rr.linea_a, rr.linea_b, rr.split_a, rr.split_b,
+                   rr.notas, rr.activo, rr.created_at
+            FROM revenue_rules rr
+            LEFT JOIN products p ON p.sku = rr.product_sku
+            ORDER BY rr.activo DESC, rr.created_at DESC
+        """, engine)
+    except Exception:
+        _df_rev = pd.DataFrame()
+
+    if _df_rev.empty:
+        st.markdown("<div style='background:#F9FAFB;border-radius:12px;padding:16px 20px;border:1px solid #E5E7EB;color:#6B7280;'>Sin reglas de revenue sharing configuradas. Se agregan al crear un Producto Tipo C (compartido).</div>", unsafe_allow_html=True)
+    else:
+        _df_rev_show = _df_rev.copy()
+        _df_rev_show["linea_a"]    = _df_rev_show["linea_a"].apply(lambda x: f"{get_linea(x)['emoji']} {get_linea(x)['nombre']}")
+        _df_rev_show["linea_b"]    = _df_rev_show["linea_b"].apply(lambda x: f"{get_linea(x)['emoji']} {get_linea(x)['nombre']}")
+        _df_rev_show["split_a"]    = _df_rev_show["split_a"].apply(lambda x: f"{x*100:.0f}%")
+        _df_rev_show["split_b"]    = _df_rev_show["split_b"].apply(lambda x: f"{x*100:.0f}%")
+        _df_rev_show["activo"]     = _df_rev_show["activo"].apply(lambda x: "Si" if x else "No")
+        _df_rev_show["created_at"] = _df_rev_show["created_at"].astype(str).str[:10]
+        st.dataframe(
+            _df_rev_show[["product_sku","producto","linea_a","split_a","linea_b","split_b","notas","activo","created_at"]].rename(columns={
+                "product_sku": "SKU", "producto": "Producto",
+                "linea_a": "Línea A", "split_a": "% A",
+                "linea_b": "Línea B", "split_b": "% B",
+                "notas": "Notas", "activo": "Activo", "created_at": "Creado"
+            }),
+            use_container_width=True, hide_index=True
+        )
+
+
+def render():
+    _tab_dash, _tab_mike = st.tabs(["📊 Dashboard", "🤖 Mike"])
+    with _tab_dash:
+        _dash_main()
+    with _tab_mike:
+        from modules.panel_mike import render as _mike_render
+        _mike_render()
