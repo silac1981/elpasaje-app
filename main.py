@@ -1088,79 +1088,360 @@ elif menu == "📈 Mi Panel":
             hdr_color  = _lc["color"]
     else:
         lineas_activas = [uid]
-        sel_nombre     = uid
         cfg            = get_linea(uid)
         hdr_nombre, hdr_emoji, hdr_color = cfg["nombre"], cfg["emoji"], cfg["color"]
-    st.markdown(f"<div class='main-header' style='background:linear-gradient(135deg,{hdr_color}cc,{hdr_color}88);'><h1>{hdr_emoji} Panel {hdr_nombre}</h1><p>Bienvenido/a, {st.session_state['user']}</p></div>", unsafe_allow_html=True)
-    df   = cargar_productos()
-    prod = df[df["client_id"].isin(lineas_activas)]
-    cc1, cc2, cc3 = st.columns(3)
-    cc1.metric("💰 Capital en Stock",    f"${prod['valor_stock'].sum():,.0f}")
-    cc2.metric("📈 Ganancia Proyectada", f"${prod['ganancia_stock'].sum():,.0f}")
-    cc3.metric("📦 Productos Activos",   f"{len(prod)} SKUs")
-    tab_prod, tab_ped = st.tabs(["📦 Mis Productos", "🛒 Mis Pedidos"])
-    # ── TAB PRODUCTOS ──
-    with tab_prod:
-        if role == "socio_multi" and sel_nombre == "Todas" and len(lineas_activas) > 1:
-            st.markdown("<div class='section-title'>📊 Por Línea</div>", unsafe_allow_html=True)
-            cols_l = st.columns(len(lineas_activas))
-            for i, lid in enumerate(lineas_activas):
-                lp = prod[prod["client_id"] == lid]
-                lc = LINEAS.get(lid, {"nombre": lid, "emoji": "●", "color": "#6366F1"})
-                with cols_l[i]:
-                    st.markdown(f"<div class='metric-card' style='border-top-color:{lc['color']}'><div class='metric-title'>{lc['emoji']} {lc['nombre']}</div><div class='metric-value'>${lp['valor_stock'].sum():,.0f}</div><div class='metric-sub'>{len(lp)} productos</div></div>", unsafe_allow_html=True)
-        if prod.empty:
-            st.info("Aun no tenes productos cargados en tu linea.")
-        else:
-            if role == "socio_multi" and sel_nombre == "Todas":
-                _disp = prod[["client_id","name","sku","price","stock","ganancia_unit","margen_pct"]].copy()
-                _disp["client_id"] = _disp["client_id"].map(lambda x: LINEAS.get(x, {}).get("nombre", x))
-                st.dataframe(_disp.rename(columns={"client_id":"Línea","name":"Producto","sku":"SKU","price":"Precio","stock":"Stock","ganancia_unit":"Ganancia Unit","margen_pct":"Margen%"}).style.format({"Precio":"${:,.0f}","Ganancia Unit":"${:,.0f}","Margen%":"{:.1f}%"}), use_container_width=True, hide_index=True)
+
+    _SC = {"Pendiente":"#F59E0B","En Proceso":"#3B82F6","Listo":"#10B981","Cancelado":"#EF4444"}
+    _hoy_s = datetime.now().strftime("%Y-%m-%d")
+    _mes_s = datetime.now().strftime("%Y-%m")
+
+    # ── Header con branding de línea ──────────────────────────
+    st.markdown(f"""
+<div style='background:linear-gradient(135deg,{hdr_color}dd,{hdr_color}88);
+     border-radius:20px;padding:24px 32px;margin-bottom:4px;
+     border:1px solid {hdr_color}44;'>
+  <div style='font-size:0.65rem;font-weight:700;letter-spacing:3px;
+       text-transform:uppercase;color:rgba(255,255,255,0.7);'>EL PASAJE 3D STUDIO · SOCIO</div>
+  <div style='font-size:2rem;font-weight:800;color:white;margin-top:8px;'>{hdr_emoji} {hdr_nombre}</div>
+  <div style='font-size:0.8rem;color:rgba(255,255,255,0.75);margin-top:4px;'>
+    Bienvenido/a, {st.session_state['user']} · {datetime.now().strftime('%A %d/%m/%Y')}
+  </div>
+</div>""", unsafe_allow_html=True)
+
+    # ── Cargar datos del socio ─────────────────────────────────
+    df_all = cargar_productos()
+    prod   = df_all[df_all["client_id"].isin(lineas_activas)].copy()
+
+    _lid_str = "','".join(lineas_activas)
+    try:
+        _pedidos_s = pd.read_sql(f"""
+            SELECT o.id, o.client_id, o.status, o.date, o.fecha_entrega_est, o.notas,
+                   COALESCE(SUM(oi.cantidad * oi.precio_unitario), 0) AS total
+            FROM orders o
+            LEFT JOIN order_items oi ON oi.order_id = o.id
+            WHERE o.client_id IN ('{_lid_str}')
+            GROUP BY o.id ORDER BY o.date DESC
+        """, engine)
+    except Exception:
+        _pedidos_s = pd.DataFrame()
+
+    try:
+        _hist_mes = pd.read_sql(f"""
+            SELECT strftime('%Y-%m', o.date) AS mes,
+                   COUNT(DISTINCT o.id) AS pedidos,
+                   SUM(oi.cantidad * oi.precio_unitario) AS facturado
+            FROM orders o
+            JOIN order_items oi ON oi.order_id = o.id
+            WHERE o.client_id IN ('{_lid_str}') AND o.status='Listo'
+            GROUP BY mes ORDER BY mes
+        """, engine)
+    except Exception:
+        _hist_mes = pd.DataFrame()
+
+    try:
+        _fab_socio = pd.read_sql(f"""
+            SELECT pl.product_sku, pl.gramos_usados, pl.resultado, pl.fecha_fin,
+                   p.name AS producto
+            FROM production_log pl
+            JOIN orders o ON o.id = pl.order_id
+            JOIN products p ON p.sku = pl.product_sku
+            WHERE o.client_id IN ('{_lid_str}')
+            ORDER BY pl.fecha_fin DESC
+        """, engine)
+    except Exception:
+        _fab_socio = pd.DataFrame()
+
+    try:
+        _prec_hist = pd.read_sql(f"""
+            SELECT ph.product_sku, p.name AS producto,
+                   ph.precio_anterior, ph.precio_nuevo, ph.fecha, ph.motivo
+            FROM price_history ph
+            JOIN products p ON p.sku = ph.product_sku
+            WHERE p.client_id IN ('{_lid_str}')
+            ORDER BY ph.fecha DESC LIMIT 20
+        """, engine)
+    except Exception:
+        _prec_hist = pd.DataFrame()
+
+    # ── KPIs ──────────────────────────────────────────────────
+    _cap_stock  = prod["valor_stock"].sum()
+    _gan_stock  = prod["ganancia_stock"].sum()
+    _n_skus     = len(prod[prod["activo"]==1]) if "activo" in prod.columns else len(prod)
+    _n_activos  = len(_pedidos_s[_pedidos_s["status"].isin(["Pendiente","En Proceso"])]) if not _pedidos_s.empty else 0
+    _n_listo    = len(_pedidos_s[_pedidos_s["status"]=="Listo"]) if not _pedidos_s.empty else 0
+    _fac_total  = float(_pedidos_s[_pedidos_s["status"]=="Listo"]["total"].sum()) if not _pedidos_s.empty else 0
+    _margen_avg = prod["margen_pct"].mean() if not prod.empty else 0
+    _mg_color   = "#10B981" if _margen_avg>=50 else ("#F59E0B" if _margen_avg>=25 else "#EF4444")
+
+    _sk1,_sk2,_sk3,_sk4,_sk5 = st.columns(5)
+    for _sc,_sv,_sl,_ss,_scolor in [
+        (_sk1, f"${_cap_stock:,.0f}",  "💰 Stock",           "valor precio venta",        hdr_color),
+        (_sk2, f"${_gan_stock:,.0f}",  "📈 Ganancia Stock",  "margen del inventario",     "#10B981"),
+        (_sk3, f"${_fac_total:,.0f}",  "✅ Facturado Total", f"{_n_listo} pedidos listos","#3B82F6"),
+        (_sk4, str(_n_activos),        "🏭 En Producción",   "pedidos activos hoy",       "#F59E0B"),
+        (_sk5, f"{_margen_avg:.1f}%",  "📊 Margen Prom.",    "promedio de tu catálogo",   _mg_color),
+    ]:
+        with _sc:
+            st.markdown(f"<div style='background:white;border-radius:14px;padding:18px 14px;border:1px solid #E5E7EB;border-top:3px solid {_scolor};text-align:center;margin-bottom:8px;box-shadow:0 2px 8px rgba(0,0,0,0.05);'><div style='font-size:1.5rem;font-weight:800;color:{_scolor};line-height:1;'>{_sv}</div><div style='font-size:0.72rem;font-weight:600;color:#374151;margin-top:8px;'>{_sl}</div><div style='font-size:0.62rem;color:#9CA3AF;margin-top:3px;'>{_ss}</div></div>", unsafe_allow_html=True)
+
+    # ── Tabs ──────────────────────────────────────────────────
+    _t_res, _t_stats, _t_prod, _t_ped, _t_mike = st.tabs([
+        "🏠 Resumen", "📊 Estadísticas", "📦 Productos", "🛒 Pedidos", "🤖 Mike"
+    ])
+
+    # ══ TAB RESUMEN ══════════════════════════════════════════
+    with _t_res:
+        _ra, _rb = st.columns([1.4, 1])
+        with _ra:
+            st.markdown("<div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#6B7280;margin-bottom:10px;'>PEDIDOS ACTIVOS</div>", unsafe_allow_html=True)
+            _pact = _pedidos_s[_pedidos_s["status"].isin(["Pendiente","En Proceso"])] if not _pedidos_s.empty else pd.DataFrame()
+            if _pact.empty:
+                st.markdown("<div style='background:#F0FDF4;border-radius:12px;padding:16px 20px;border:1px solid #BBF7D0;border-left:4px solid #10B981;'><span style='color:#10B981;font-weight:700;'>✅ Sin pedidos en curso</span><br><span style='color:#6B7280;font-size:0.8rem;'>Podés cargar un nuevo pedido desde el menú 🛒</span></div>", unsafe_allow_html=True)
             else:
-                st.dataframe(prod[["name","sku","price","stock","ganancia_unit","margen_pct"]].rename(columns={"name":"Producto","sku":"SKU","price":"Precio","stock":"Stock","ganancia_unit":"Ganancia Unit","margen_pct":"Margen%"}).style.format({"Precio":"${:,.0f}","Ganancia Unit":"${:,.0f}","Margen%":"{:.1f}%"}), use_container_width=True, hide_index=True)
-    # ── TAB PEDIDOS ──
-    with tab_ped:
-        _STATUS_COLOR = {"Pendiente": "#F59E0B", "En Proceso": "#3B82F6", "Listo": "#10B981", "Cancelado": "#EF4444"}
-        _show_badge   = role == "socio_multi" and len(lineas_activas) > 1
-        with engine.connect() as _conn:
-            _oframes = [
-                pd.read_sql(
-                    text("""SELECT o.id, o.client_id, o.status, o.date, o.fecha_entrega_est, o.notas,
-                                   COALESCE(SUM(oi.cantidad * oi.precio_unitario), 0) AS total
-                            FROM orders o
-                            LEFT JOIN order_items oi ON oi.order_id = o.id
-                            WHERE o.client_id = :cid
-                            GROUP BY o.id ORDER BY o.date DESC"""),
-                    _conn, params={"cid": lid}
-                ) for lid in lineas_activas
-            ]
-        pedidos = pd.concat(_oframes, ignore_index=True) if _oframes else pd.DataFrame()
-        if not pedidos.empty and len(lineas_activas) > 1:
-            pedidos = pedidos.sort_values("date", ascending=False)
-        if pedidos.empty:
+                for _, _pr in _pact.iterrows():
+                    _sc2 = _SC.get(_pr["status"],"#9CA3AF")
+                    _lid2 = LINEAS.get(_pr["client_id"],{}).get("nombre","")
+                    _fecha2 = str(_pr["date"])[:10] if _pr["date"] else "—"
+                    _entrega2 = str(_pr.get("fecha_entrega_est","—") or "—")
+                    st.markdown(f"<div style='background:white;border-radius:12px;padding:14px 18px;margin-bottom:8px;border-left:4px solid {_sc2};box-shadow:0 2px 8px rgba(0,0,0,0.06);'><div style='font-weight:700;font-size:0.95rem;color:#111827;'>Pedido #{int(_pr['id'])} <span style='background:{_sc2}22;color:{_sc2};border:1px solid {_sc2}44;border-radius:99px;padding:2px 10px;font-size:0.7rem;font-weight:600;margin-left:6px;'>{_pr['status']}</span></div><div style='font-size:0.75rem;color:#6B7280;margin-top:4px;'>Cargado: {_fecha2} · Entrega: {_entrega2}</div><div style='font-size:0.88rem;font-weight:700;color:{_sc2};margin-top:6px;'>${float(_pr['total']):,.0f}</div></div>", unsafe_allow_html=True)
+
+        with _rb:
+            st.markdown("<div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#6B7280;margin-bottom:10px;'>ESTADO DE TU CATÁLOGO</div>", unsafe_allow_html=True)
+            if not prod.empty:
+                _top3 = prod.sort_values("margen_pct", ascending=False).head(3)
+                for _, _p3 in _top3.iterrows():
+                    _mc3 = "#10B981" if _p3["margen_pct"]>=50 else ("#F59E0B" if _p3["margen_pct"]>=25 else "#EF4444")
+                    st.markdown(f"<div style='background:white;border-radius:10px;padding:10px 14px;margin-bottom:6px;border:1px solid #F3F4F6;'><div style='font-size:0.8rem;font-weight:600;color:#111827;'>{_p3['name']}</div><div style='background:#F3F4F6;border-radius:3px;height:5px;margin:5px 0;'><div style='background:{_mc3};height:5px;border-radius:3px;width:{min(100,_p3['margen_pct']):.0f}%;'></div></div><div style='font-size:0.72rem;color:{_mc3};font-weight:700;'>{_p3['margen_pct']:.1f}% margen · ${_p3['price']:,.0f}</div></div>", unsafe_allow_html=True)
+                _stock_bajo = prod[prod["stock"] <= 2] if "stock" in prod.columns else pd.DataFrame()
+                if not _stock_bajo.empty:
+                    st.markdown(f"<div style='background:#FFF7ED;border-radius:10px;padding:10px 14px;border-left:3px solid #F59E0B;margin-top:6px;'><span style='color:#F59E0B;font-weight:700;font-size:0.8rem;'>⚠️ Stock bajo: {', '.join(_stock_bajo['name'].tolist()[:3])}</span></div>", unsafe_allow_html=True)
+
+        # Últimas fabricaciones
+        if not _fab_socio.empty:
+            st.markdown("<div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#6B7280;margin-top:20px;margin-bottom:10px;'>ÚLTIMAS FABRICACIONES</div>", unsafe_allow_html=True)
+            _fab_show = _fab_socio.head(5).copy()
+            _fab_show["resultado"] = _fab_show["resultado"].fillna("ok")
+            _fab_show["fecha_fin"] = _fab_show["fecha_fin"].astype(str).str[:10]
+            _fab_show["gramos_usados"] = _fab_show["gramos_usados"].apply(lambda x: f"{x:.0f} g" if pd.notna(x) else "—")
+            st.dataframe(
+                _fab_show[["fecha_fin","producto","gramos_usados","resultado"]].rename(
+                    columns={"fecha_fin":"Fecha","producto":"Producto","gramos_usados":"Gramos","resultado":"Resultado"}
+                ), use_container_width=True, hide_index=True
+            )
+
+    # ══ TAB ESTADÍSTICAS ═════════════════════════════════════
+    with _t_stats:
+        _sa, _sb = st.columns(2)
+        with _sa:
+            st.markdown("<div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#6B7280;margin-bottom:8px;'>FACTURACIÓN MENSUAL (pedidos listos)</div>", unsafe_allow_html=True)
+            if not _hist_mes.empty and len(_hist_mes) > 0:
+                _chart_df = _hist_mes.set_index("mes")[["facturado"]].rename(columns={"facturado":"Facturado $"})
+                st.bar_chart(_chart_df, color=hdr_color, height=220)
+                # Delta mes actual vs anterior
+                _meses_ord = _hist_mes.sort_values("mes")
+                if len(_meses_ord) >= 2:
+                    _fac_act = float(_meses_ord.iloc[-1]["facturado"])
+                    _fac_ant = float(_meses_ord.iloc[-2]["facturado"])
+                    _delta   = _fac_act - _fac_ant
+                    _delta_s = f"+${_delta:,.0f}" if _delta >= 0 else f"-${abs(_delta):,.0f}"
+                    st.metric("Este mes vs mes anterior", f"${_fac_act:,.0f}", _delta_s)
+            else:
+                st.info("Aún no hay pedidos completados para graficar.")
+
+        with _sb:
+            st.markdown("<div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#6B7280;margin-bottom:8px;'>MARGEN POR PRODUCTO</div>", unsafe_allow_html=True)
+            if not prod.empty:
+                _mg_chart = prod.sort_values("margen_pct",ascending=False)[["name","margen_pct"]].head(12).copy()
+                _mg_chart["name"] = _mg_chart["name"].str[:22]
+                st.bar_chart(_mg_chart.set_index("name")[["margen_pct"]].rename(columns={"margen_pct":"Margen %"}), height=220)
+            else:
+                st.info("Sin productos para analizar.")
+
+        # Estado de pedidos (distribución)
+        st.markdown("<div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#6B7280;margin-top:20px;margin-bottom:10px;'>DISTRIBUCIÓN DE PEDIDOS</div>", unsafe_allow_html=True)
+        if not _pedidos_s.empty:
+            _dist_cols = st.columns(4)
+            for _dci, _dst in enumerate(["Pendiente","En Proceso","Listo","Cancelado"]):
+                _dn = len(_pedidos_s[_pedidos_s["status"]==_dst])
+                _dc = _SC[_dst]
+                with _dist_cols[_dci]:
+                    st.markdown(f"<div style='background:white;border-radius:12px;padding:16px;border:1px solid #E5E7EB;border-top:3px solid {_dc};text-align:center;'><div style='font-size:1.8rem;font-weight:800;color:{_dc};'>{_dn}</div><div style='font-size:0.7rem;color:#6B7280;margin-top:4px;'>{_dst}</div></div>", unsafe_allow_html=True)
+
+        # Historial de precios
+        if not _prec_hist.empty:
+            st.markdown("<div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#6B7280;margin-top:24px;margin-bottom:8px;'>HISTORIAL DE PRECIOS</div>", unsafe_allow_html=True)
+            _ph_show = _prec_hist.copy()
+            _ph_show["fecha"] = _ph_show["fecha"].astype(str).str[:10]
+            _ph_show["precio_anterior"] = _ph_show["precio_anterior"].apply(lambda x: f"${x:,.0f}")
+            _ph_show["precio_nuevo"]    = _ph_show["precio_nuevo"].apply(lambda x: f"${x:,.0f}")
+            st.dataframe(
+                _ph_show[["fecha","producto","precio_anterior","precio_nuevo","motivo"]].rename(
+                    columns={"fecha":"Fecha","producto":"Producto","precio_anterior":"Precio Anterior",
+                             "precio_nuevo":"Precio Nuevo","motivo":"Motivo"}
+                ), use_container_width=True, hide_index=True
+            )
+
+        # Top productos por volumen de fabricación
+        if not _fab_socio.empty:
+            st.markdown("<div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#6B7280;margin-top:20px;margin-bottom:8px;'>PRODUCTOS MÁS FABRICADOS</div>", unsafe_allow_html=True)
+            _vol_prod = _fab_socio.groupby("producto").agg(
+                fabricaciones=("resultado","count"),
+                gramos_total=("gramos_usados","sum")
+            ).sort_values("fabricaciones",ascending=False).head(8).reset_index()
+            st.dataframe(
+                _vol_prod.rename(columns={"producto":"Producto","fabricaciones":"Fabricaciones","gramos_total":"Gramos totales"})
+                .style.format({"Gramos totales":"{:.0f} g"}),
+                use_container_width=True, hide_index=True
+            )
+
+    # ══ TAB PRODUCTOS ════════════════════════════════════════
+    with _t_prod:
+        if role == "socio_multi" and len(lineas_activas) > 1:
+            _lc_cols = st.columns(len(lineas_activas))
+            for _li, _lid3 in enumerate(lineas_activas):
+                _lp3 = prod[prod["client_id"]==_lid3]
+                _lc3 = LINEAS.get(_lid3, {"nombre":_lid3,"emoji":"●","color":"#6366F1"})
+                with _lc_cols[_li]:
+                    st.markdown(f"<div style='background:{_lc3['color']}11;border-radius:10px;padding:12px 16px;border:1px solid {_lc3['color']}33;text-align:center;'><div style='font-size:1.5rem;'>{_lc3['emoji']}</div><div style='font-weight:700;color:#111827;font-size:0.82rem;'>{_lc3['nombre']}</div><div style='color:{_lc3['color']};font-weight:700;font-size:0.9rem;'>${_lp3['valor_stock'].sum():,.0f}</div><div style='color:#9CA3AF;font-size:0.68rem;'>{len(_lp3)} productos</div></div>", unsafe_allow_html=True)
+            st.markdown("---")
+
+        if prod.empty:
+            st.info("Aún no tenés productos cargados en tu línea.")
+        else:
+            _pcols2 = st.columns(3)
+            for _pii, (_, _prow) in enumerate(prod.sort_values("margen_pct",ascending=False).iterrows()):
+                _pmc = "#10B981" if _prow["margen_pct"]>=50 else ("#F59E0B" if _prow["margen_pct"]>=25 else "#EF4444")
+                _plin = LINEAS.get(_prow["client_id"],{})
+                _plincolor = _plin.get("color","#6B7280")
+                _pstock_color = "#10B981" if (_prow.get("stock",0) or 0) > 5 else ("#F59E0B" if (_prow.get("stock",0) or 0) > 0 else "#EF4444")
+                with _pcols2[_pii % 3]:
+                    st.markdown(f"""<div style='background:white;border-radius:14px;padding:16px;border:1px solid #E5E7EB;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,0.04);border-top:3px solid {_plincolor};'>
+<div style='font-size:0.62rem;color:{_plincolor};font-weight:700;letter-spacing:1px;text-transform:uppercase;'>{_prow.get('sku','')}</div>
+<div style='font-size:0.9rem;font-weight:700;color:#111827;margin-top:4px;line-height:1.2;'>{_prow['name']}</div>
+<div style='font-size:0.68rem;color:#9CA3AF;margin-top:2px;'>{_prow.get('categoria','') or ''}</div>
+<div style='margin-top:10px;background:#F3F4F6;border-radius:3px;height:5px;'><div style='background:{_pmc};height:5px;border-radius:3px;width:{min(100,max(0,_prow['margen_pct'])):.0f}%;'></div></div>
+<div style='margin-top:8px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;'>
+  <div><div style='font-size:0.6rem;color:#9CA3AF;'>PVP</div><div style='font-size:0.82rem;font-weight:700;color:#111827;'>${_prow['price']:,.0f}</div></div>
+  <div><div style='font-size:0.6rem;color:#9CA3AF;'>Margen</div><div style='font-size:0.82rem;font-weight:700;color:{_pmc};'>{_prow['margen_pct']:.1f}%</div></div>
+  <div><div style='font-size:0.6rem;color:#9CA3AF;'>Stock</div><div style='font-size:0.82rem;font-weight:700;color:{_pstock_color};'>{int(_prow.get("stock",0) or 0)} u</div></div>
+</div>
+</div>""", unsafe_allow_html=True)
+
+    # ══ TAB PEDIDOS ══════════════════════════════════════════
+    with _t_ped:
+        _show_badge = role == "socio_multi" and len(lineas_activas) > 1
+        if _pedidos_s.empty:
             st.info("Todavía no tenés pedidos registrados.")
         else:
-            for _, row in pedidos.iterrows():
-                s_color      = _STATUS_COLOR.get(row["status"], "#9CA3AF")
-                lnombre      = LINEAS.get(row["client_id"], {}).get("nombre", row["client_id"])
-                lcolor       = LINEAS.get(row["client_id"], {}).get("color", "#6366F1")
-                fecha_str    = str(row["date"])[:10] if row["date"] else "—"
-                entrega_str  = row["fecha_entrega_est"] or "—"
-                notas_html   = f"<div style='font-size:0.78rem;color:#9CA3AF;margin-top:2px;'>{row['notas']}</div>" if row["notas"] else ""
-                badge_html   = f"<span style='background:{lcolor}22;color:{lcolor};border:1px solid {lcolor}55;border-radius:999px;padding:2px 9px;font-size:0.68rem;font-weight:600;margin-left:8px;'>{lnombre}</span>" if _show_badge else ""
+            # Filtro rápido
+            _pf_est = st.selectbox("Filtrar por estado", ["Todos","Pendiente","En Proceso","Listo","Cancelado"], key="ped_filtro_socio")
+            _pf_df  = _pedidos_s if _pf_est=="Todos" else _pedidos_s[_pedidos_s["status"]==_pf_est]
+            if _pf_df.empty:
+                st.info(f"Sin pedidos en estado {_pf_est}.")
+            for _, _pr2 in _pf_df.iterrows():
+                _sc3    = _SC.get(_pr2["status"],"#9CA3AF")
+                _lnom2  = LINEAS.get(_pr2["client_id"],{}).get("nombre","")
+                _lcol2  = LINEAS.get(_pr2["client_id"],{}).get("color",hdr_color)
+                _fec2   = str(_pr2["date"])[:10] if _pr2["date"] else "—"
+                _ent2   = str(_pr2.get("fecha_entrega_est","—") or "—")
+                _not2   = f"<div style='font-size:0.75rem;color:#6B7280;margin-top:4px;'><em>{_pr2['notas']}</em></div>" if _pr2.get("notas") else ""
+                _badge2 = f"<span style='background:{_lcol2}22;color:{_lcol2};border:1px solid {_lcol2}44;border-radius:99px;padding:2px 9px;font-size:0.68rem;font-weight:600;margin-left:8px;'>{_lnom2}</span>" if _show_badge else ""
                 st.markdown(
-                    f"<div style='background:white;border-radius:12px;padding:14px 18px;margin-bottom:10px;"
-                    f"border-left:4px solid {s_color};box-shadow:0 1px 6px rgba(0,0,0,0.06);'>"
-                    f"<div style='display:flex;justify-content:space-between;align-items:flex-start;'>"
-                    f"<div><span style='font-weight:700;font-size:0.95rem;'>#{row['id']}</span>{badge_html}"
-                    f"<span style='background:{s_color}22;color:{s_color};border:1px solid {s_color}55;"
-                    f"border-radius:999px;padding:2px 9px;font-size:0.68rem;font-weight:600;margin-left:8px;'>{row['status']}</span>"
-                    f"<div style='font-size:0.78rem;color:#6B7280;margin-top:5px;'>Cargado: {fecha_str} · Entrega: {entrega_str}</div>"
-                    f"{notas_html}</div>"
-                    f"<div style='font-family:Cormorant Garamond,serif;font-size:1.4rem;font-weight:700;color:#1a1a2e;'>${row['total']:,.0f}</div>"
+                    f"<div style='background:white;border-radius:14px;padding:16px 20px;margin-bottom:10px;"
+                    f"border-left:4px solid {_sc3};box-shadow:0 2px 8px rgba(0,0,0,0.05);'>"
+                    f"<div style='display:flex;justify-content:space-between;align-items:center;'>"
+                    f"<div><span style='font-weight:800;font-size:1rem;color:#111827;'>#{int(_pr2['id'])}</span>"
+                    f"<span style='background:{_sc3}22;color:{_sc3};border:1px solid {_sc3}44;"
+                    f"border-radius:99px;padding:2px 10px;font-size:0.7rem;font-weight:700;margin-left:8px;'>{_pr2['status']}</span>"
+                    f"{_badge2}"
+                    f"<div style='font-size:0.72rem;color:#9CA3AF;margin-top:5px;'>📅 {_fec2} → entrega {_ent2}</div>"
+                    f"{_not2}</div>"
+                    f"<div style='font-family:Cormorant Garamond,serif;font-size:1.5rem;font-weight:700;color:#111827;'>${float(_pr2['total']):,.0f}</div>"
                     f"</div></div>",
                     unsafe_allow_html=True
                 )
+            # Resumen total
+            _tot_fac = float(_pedidos_s[_pedidos_s["status"]=="Listo"]["total"].sum())
+            st.markdown(f"<div style='background:#F0F9FF;border-radius:10px;padding:12px 18px;margin-top:6px;border:1px solid #BAE6FD;text-align:right;'><span style='color:#0369A1;font-weight:700;'>Total facturado (pedidos Listo): ${_tot_fac:,.0f}</span></div>", unsafe_allow_html=True)
+
+    # ══ TAB MIKE ════════════════════════════════════════════
+    with _t_mike:
+        st.markdown(f"""
+<div style='background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:16px;
+     padding:20px 24px;border:1px solid #0F3460;margin-bottom:12px;'>
+  <div style='font-size:0.62rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;
+       color:#58A6FF;'>ASISTENTE IA</div>
+  <div style='font-size:1.4rem;font-weight:800;color:white;margin-top:6px;'>🤖 Mike para {hdr_nombre}</div>
+  <div style='font-size:0.78rem;color:#8B949E;margin-top:4px;'>
+    Mike conoce tu línea, tus productos y tu historial — preguntale lo que quieras.
+  </div>
+</div>""", unsafe_allow_html=True)
+
+        # Preguntas rápidas contextualizadas
+        _mqs = [
+            ("📋 Estado de mi línea",    f"Haceme un resumen del estado actual de la línea {hdr_nombre}: pedidos, stock, margen y oportunidades."),
+            ("💰 Mis mejores productos", f"¿Cuáles son mis productos con mejor margen en {hdr_nombre} y por qué?"),
+            ("📈 Tendencia de ventas",   f"¿Cómo evolucionaron mis ventas en {hdr_nombre} en los últimos meses? ¿Qué me recomendás?"),
+            ("🛒 Cuándo pedir",         f"¿Cuándo conviene que haga el próximo pedido de producción en {hdr_nombre} según el stock y la demanda?"),
+            ("⚠️ Riesgos",              f"¿Qué riesgos o alertas tengo en mi línea {hdr_nombre} ahora mismo?"),
+            ("🚀 Oportunidades",        f"¿Qué oportunidades de crecimiento ves para la línea {hdr_nombre}?"),
+        ]
+        _mqc1, _mqc2, _mqc3 = st.columns(3)
+        for _mqi, (_mql, _mqt) in enumerate(_mqs):
+            with [_mqc1, _mqc2, _mqc3][_mqi % 3]:
+                if st.button(_mql, key=f"smq_{_mqi}", use_container_width=True):
+                    st.session_state["socio_mike_auto"] = _mqt
+
+        st.markdown("<div style='margin-top:16px;'></div>", unsafe_allow_html=True)
+
+        _smk_key = f"socio_mike_hist_{uid}"
+        if _smk_key not in st.session_state:
+            st.session_state[_smk_key] = []
+        for _smsg in st.session_state[_smk_key]:
+            with st.chat_message("user" if _smsg["role"]=="user" else "assistant", avatar="👤" if _smsg["role"]=="user" else "🤖"):
+                st.markdown(_smsg["content"])
+
+        _smk_q    = st.chat_input(f"Preguntale a Mike sobre {hdr_nombre}...", key=f"smk_input_{uid}")
+        _smk_auto = st.session_state.pop("socio_mike_auto", None)
+        _smk_preg = _smk_q or _smk_auto
+
+        if _smk_preg:
+            _ctx_socio = (
+                f"Línea del socio: {hdr_nombre}\n"
+                f"SKUs activos: {_n_skus}\n"
+                f"Capital en stock: ${_cap_stock:,.0f}\n"
+                f"Ganancia proyectada stock: ${_gan_stock:,.0f}\n"
+                f"Margen promedio catálogo: {_margen_avg:.1f}%\n"
+                f"Pedidos activos: {_n_activos}\n"
+                f"Total facturado histórico: ${_fac_total:,.0f}\n"
+                f"Pedidos completados: {_n_listo}\n"
+            )
+            if not prod.empty:
+                _ctx_socio += "Productos: " + ", ".join(f"{r['name']} (${r['price']:,.0f}, {r['margen_pct']:.0f}% margen)" for _,r in prod.iterrows()) + "\n"
+            try:
+                from anthropic import Anthropic as _Anthropic
+                from context_elpasaje import SYSTEM_PROMPT, get_data_context
+                _ac = _Anthropic()
+                _sys_s = SYSTEM_PROMPT + f"\n\nEres el asistente personal de {hdr_nombre} dentro del ecosistema El Pasaje 3D Studio.\n" + get_data_context()
+                _sys_s += f"\n\nCONTEXTO DEL SOCIO:\n{_ctx_socio}"
+                _hist_s = st.session_state[_smk_key]
+                _hist_s.append({"role":"user","content":_smk_preg})
+                with st.chat_message("user", avatar="👤"):
+                    st.markdown(_smk_preg)
+                with st.chat_message("assistant", avatar="🤖"):
+                    with st.spinner("Mike está pensando..."):
+                        _rr = _ac.messages.create(model="claude-sonnet-4-6",max_tokens=800,system=_sys_s,messages=_hist_s)
+                        _resp_s = _rr.content[0].text
+                    st.markdown(_resp_s)
+                _hist_s.append({"role":"assistant","content":_resp_s})
+                st.session_state[_smk_key] = _hist_s[-20:]
+            except Exception as _e:
+                st.error(f"Mike no pudo conectarse: {_e}")
+
+        if st.session_state.get(_smk_key):
+            if st.button("Limpiar chat", key=f"smk_clear_{uid}"):
+                st.session_state[_smk_key] = []
+                st.rerun()
 
 elif menu == "🛒 Cargar Pedido":
     uid  = st.session_state["uid"]
