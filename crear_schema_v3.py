@@ -95,13 +95,21 @@ TABLAS = [
 
     ("orders", """
         CREATE TABLE IF NOT EXISTS orders (
-            id                INTEGER PRIMARY KEY AUTOINCREMENT,
-            client_id         TEXT NOT NULL REFERENCES tenants(id),
-            status            TEXT DEFAULT 'Pendiente',
-            date              TEXT DEFAULT CURRENT_TIMESTAMP,
-            fecha_entrega_est TEXT,
-            notas             TEXT,
-            color_pedido      TEXT
+            id                        INTEGER PRIMARY KEY AUTOINCREMENT,
+            client_id                 TEXT NOT NULL REFERENCES tenants(id),
+            status                    TEXT DEFAULT 'Pendiente',
+            date                      TEXT DEFAULT CURRENT_TIMESTAMP,
+            fecha_entrega_est         TEXT,
+            notas                     TEXT,
+            color_pedido              TEXT,
+            maquina_id                TEXT DEFAULT 'creality_k2_plus_01',
+            horas_impresion           REAL,
+            gramos_consumidos         REAL,
+            costo_real                REAL,
+            fallo_impresion           INTEGER DEFAULT 0,
+            motivo_fallo              TEXT,
+            referencia_archivo        TEXT,
+            fecha_entrega_solicitada  TEXT
         )
     """),
 
@@ -221,7 +229,7 @@ TENANTS_INICIALES = [
     ("pharma_delux",     "Pharma DeLux",                       "pharma@elpasaje.com",       "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",  None, "b2b",           None,                               HOY, 1, "B2B", "Directo",   "Alto", "Email",        "Buenos Aires",        "Farmacéutico",             None, 1, HOY, "Pharma DeLux"),
     ("fer_produccion",   "Fernando (Fer)",                     "fer@elpasaje.com",          "a29461d9796a45974014a214c0ece938a5f9dcd8799f26b26c34d3e8adf31c69",  None, "produccion",    "Fabricacion y Materiales",         HOY, 1, None,  None,        None,   "Presencial",   "Buenos Aires",        None,                       None, 1, HOY, None),
     ("agustina",         "Agustina",                           "agustina@elpasaje.com",     "1baedd25059490937a8f7a52dbaf5a7c168bc49f5bac0d7bc48bd6b58a84a421",  None, "socio_multi",   None,                               HOY, 1, "B2B", "Directo",   "Alto", "WhatsApp",     "Buenos Aires",        "Decoracion / Veterinaria", None, 1, HOY, "Oasis Animal + VK-Home"),
-    ("vkhome_cliente",   "VK-Home / Agustina",                 "vkhome@cliente.com",        "pendiente",                                                             None, "cliente_externo",None,                             HOY, 1, "B2B", "Directo",   "Alto", "Presencial",   "Buenos Aires",        "Decoracion",               None, 1, HOY, "VK-Home"),
+    ("vkhome_cliente",   "VK-Home / Agustina",                 "vkhome@cliente.com",        "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",  None, "cliente_externo",None,                             HOY, 1, "B2B", "Directo",   "Alto", "Presencial",   "Buenos Aires",        "Decoracion",               None, 1, HOY, "VK-Home"),
 ]
 
 TENANT_LINEAS_INICIALES = [
@@ -253,6 +261,53 @@ PRODUCTS_AVIATION = [
     ("AVP-011", "aviation", "pla_seda_gris","Soporte Monitor Desk",      "Elevador de monitor con bandeja inferior.",                     "Tech",   "Gris Acero",       7500, 180, 90, 3),
     ("AVP-012", "aviation", "petg_gris",    "Portacelular 360",          "Porta celular articulado 360° base pesada antideslizante.",     "Tech",   "Gris Mecánico",    3800, 65,  33, 6),
     ("AVP-013", "aviation", "pla_seda_gris","Hub Organizador USB",       "Soporte para hub USB y cables de carga.",                       "Tech",   "Gris Acero",       4500, 95,  48, 4),
+]
+
+# (sku, client_id, material_id, name, description, categoria, color, price, weight_gr, tiempo_min, stock)
+PRODUCTS_SOCIOS = [
+    # ── COQUETTE (olivia_coquette) ──────────────────────────
+    ("COQ-MON-001","olivia_coquette","pla_rosa",   "Mono Textil Silk",         "Mono artesanal impresion 3D acabado seda",                  "accesorios","#F9A8D4",1500, 22,  35, 5),
+    ("COQ-MON-002","olivia_coquette","pla_rosa",   "Monedero Silk Coquette",   "Monedero 3D cierre magnetico acabado silk",                 "accesorios","#F9A8D4",2800, 60,  90, 3),
+    ("COQ-LLA-001","olivia_coquette","pla_rosa",   "Llavero Peonia",           "Llavero floral detalle fino",                               "accesorios","#F9A8D4",1200, 15,  25, 8),
+    ("COQ-ARG-001","olivia_coquette","pla_rosa",   "Argolla Coquette",         "Aro decorativo 3D personalizable",                         "joyeria",   "#F9A8D4",1800, 20,  30, 4),
+    ("COQ-PRE-001","olivia_coquette","pla_rosa",   "Prendedor Floral",         "Prendedor 3D estilo romantico",                            "accesorios","#F9A8D4",1400, 18,  28, 6),
+    ("COQ-CAJ-001","olivia_coquette","pla_rosa",   "Cajita Corazon",           "Cajita regalo 3D acabado mate",                            "regaleria", "#F9A8D4",2200, 45,  65, 3),
+    ("COQ-XVA-001","olivia_coquette","pla_rosa",   "Kit Quinceanyera",         "Set 3 piezas personalizado XV anios",                      "especiales","#F9A8D4",4500, 120, 180,2),
+    # ── SPORT (francisco_sport) ─────────────────────────────
+    ("FZ-CAP-001", "francisco_sport","pla_negro",  "Cap-Hanger Pro",           "Soporte aerodinamico para gorras no deforma la visera",     "deportivo", "#F97316",1800, 45,  60, 4),
+    ("FZ-PFX-001", "francisco_sport","pla_negro",  "Parche Flexible",          "Aplique 3D para mochila/campera personalizable",            "identidad", "#F97316",900,  25,  35, 10),
+    ("FZ-GMR-001", "francisco_sport","pla_negro",  "Aplique Gamer",            "Soporte auriculares sello El Pasaje escritorio gamer",      "gamer",     "#F97316",1200, 30,  45, 6),
+    ("FZ-TRO-001", "francisco_sport","pla_negro",  "Trofeo Mini",              "Trofeo impreso personalizable nombre y deporte",            "trofeos",   "#F97316",2200, 65,  90, 3),
+    ("FZ-NUM-001", "francisco_sport","pla_negro",  "Numero de Camiseta",       "Numero 3D rigido para camiseta o mochila",                  "identidad", "#F97316",600,  12,  18, 20),
+    ("FZ-ORC-001", "francisco_sport","pla_negro",  "Organizador Cancha",       "Soporte pizarron tactico mini para escritorio",             "entrenamiento","#F97316",3900,95, 130,2),
+    # ── CORE TECH (constantino_tech) ────────────────────────
+    ("CT-SIM-001", "constantino_tech","petg_gris", "Soporte Instrumento Medicion","Base calibres micrometros laboratorio escuela",          "educativo", "#64748B",2400, 70,  95, 4),
+    ("CT-GAB-001", "constantino_tech","petg_gris", "Gabinete Microelectronica","Carcasa Arduino/ESP32/RaspberryPi",                         "electronica","#64748B",3800, 100, 140,3),
+    ("CT-ORG-001", "constantino_tech","petg_gris", "Organizador Anti-Estatico","Bandeja componentes electronicos anti-ESD",                 "electronica","#64748B",4200, 110, 155,2),
+    ("CT-KAI-001", "constantino_tech","petg_gris", "Organizador Kaizen",       "Sistema modular 5S estacion de trabajo",                   "productividad","#64748B",5500,150,210,2),
+    ("CT-CUB-001", "constantino_tech","petg_gris", "Cubo Infinito Magnetico",  "Cubo articulado 8 segmentos imanes integrados",             "juguete",   "#64748B",3800, 90,  125,3),
+    ("CT-RPI-001", "constantino_tech","petg_gris", "Case Raspberry Pi 5",      "Carcasa ventilada RPi5 soporte activo",                     "electronica","#64748B",4500, 120, 165,2),
+    # ── PHARMA DELUX (pharma_delux) ─────────────────────────
+    ("PD-ORG-001", "pharma_delux",   "pla_blanco", "Organizador Consultorio",  "Soporte instrumental medico escritorio consultorio",        "medico",    "#FBBF24",5200, 140, 195,2),
+    ("PD-ORL-001", "pharma_delux",   "pla_blanco", "Organizador con Logo Lab", "Organizador con logo laboratorio farmaceutico",             "medico",    "#FBBF24",6000, 155, 215,2),
+    ("PD-PAS-001", "pharma_delux",   "pla_blanco", "Porta-Pastillas Semanal",  "Pastillero 7 compartimentos etiquetado",                   "salud",     "#FBBF24",1800, 50,  70, 8),
+    ("PD-MUE-001", "pharma_delux",   "pla_blanco", "Muestrero Medico",         "Soporte tarjetas muestras medicas escritorio",              "medico",    "#FBBF24",2800, 75,  105,4),
+    ("PD-SER-001", "pharma_delux",   "pla_blanco", "Soporte Seringa",          "Porta-jeringas organizador tecnico",                       "medico",    "#FBBF24",3800, 100, 140,3),
+    ("PD-GIF-001", "pharma_delux",   "pla_blanco", "Gift Set Laboratorio",     "Kit 3 piezas personalizado para laboratorio",               "gift",      "#FBBF24",4500, 125, 175,2),
+    # ── OASIS DEL ESTERO (oasis_del_estero) ─────────────────
+    ("OE-MAC-001", "oasis_del_estero","pla_blanco","Maceta Modular",           "Maceta geometrica minimalista drenaje integrado apilable",  "hogar",     "#34D399",1200, 55,  75, 6),
+    ("OE-MAC-002", "oasis_del_estero","pla_blanco","Maceta Colgante",          "Sistema sujecion integrado balcon/ventana",                 "hogar",     "#34D399",1500, 65,  90, 5),
+    ("OE-ID-001",  "oasis_del_estero","pla_blanco","Identificador Planta",     "Tag nombre planta personalizable resistente al agua",       "jardin",    "#34D399",400,  10,  15, 25),
+    ("OE-REG-001", "oasis_del_estero","pla_blanco","Regadera Decorativa Mini", "Regadera impresa 3D ornamental",                           "jardin",    "#34D399",800,  35,  50, 8),
+    ("OE-SOP-001", "oasis_del_estero","pla_blanco","Soporte Macetas Pared",    "Rack impreso 3 macetas en linea para pared",                "hogar",     "#34D399",2200, 90,  125,3),
+    ("OE-FAU-001", "oasis_del_estero","pla_blanco","Figura Fauna Local",       "Animal chaquenio impreso decorativo coleccionable",         "arte",      "#34D399",2800, 80,  115,4),
+    # ── OASIS ANIMAL (oasis_animal) — ya existe, OR IGNORE protege
+    ("OAS-COM-001","oasis_animal",   "pla_blanco", "Soporte Comedero con Cuenco","Soporte impreso patita para comedero",                   "mascotas",  "#F472B6",4500, 95,  60, 5),
+    # ── VKHOME (vkhome_cliente) ──────────────────────────────
+    ("VKH-ORG-001","vkhome_cliente", "pla_blanco", "Organizador Escritorio VK","Set modular escritorio hogar-oficina 3 piezas",             "hogar",     "#A78BFA",3500, 95,  135,3),
+    ("VKH-POT-001","vkhome_cliente", "pla_blanco", "Porta-Cables VK",          "Organizador cables escritorio adhesivo",                    "hogar",     "#A78BFA",1200, 30,  45, 8),
+    ("VKH-COC-001","vkhome_cliente", "pla_blanco", "Soporte Cocina VK",        "Soporte utensilios cocina imantado",                       "cocina",    "#A78BFA",2800, 75,  105,4),
+    ("VKH-DEC-001","vkhome_cliente", "pla_blanco", "Marco Foto 3D",            "Marco fotografico geometrico personalizable",               "deco",      "#A78BFA",2200, 60,  85, 4),
 ]
 
 _TENANT_COLS = ("id","name","email","pwd","tel","tipo","sector","fecha","activo",
@@ -304,6 +359,38 @@ def init_schema():
                  price,weight_gr,tiempo_impresion_min,stock)
                 VALUES (:sku,:cid,:mid,:name,:desc,:cat,:color,:price,:weight,:tiempo,:stock)
             """), dict(zip(["sku","cid","mid","name","desc","cat","color","price","weight","tiempo","stock"], row)))
+
+        for row in PRODUCTS_SOCIOS:
+            conn.execute(text("""
+                INSERT OR IGNORE INTO products
+                (sku,client_id,material_id,name,description,categoria,color,
+                 price,weight_gr,tiempo_impresion_min,stock)
+                VALUES (:sku,:cid,:mid,:name,:desc,:cat,:color,:price,:weight,:tiempo,:stock)
+            """), dict(zip(["sku","cid","mid","name","desc","cat","color","price","weight","tiempo","stock"], row)))
+
+        # ── Migraciones para installs existentes ──────────────
+        _migrations = [
+            "ALTER TABLE orders ADD COLUMN maquina_id TEXT DEFAULT 'creality_k2_plus_01'",
+            "ALTER TABLE orders ADD COLUMN horas_impresion REAL",
+            "ALTER TABLE orders ADD COLUMN gramos_consumidos REAL",
+            "ALTER TABLE orders ADD COLUMN costo_real REAL",
+            "ALTER TABLE orders ADD COLUMN fallo_impresion INTEGER DEFAULT 0",
+            "ALTER TABLE orders ADD COLUMN motivo_fallo TEXT",
+            "ALTER TABLE orders ADD COLUMN referencia_archivo TEXT",
+            "ALTER TABLE orders ADD COLUMN fecha_entrega_solicitada TEXT",
+            "ALTER TABLE senales_mercado ADD COLUMN segmento_detectado TEXT",
+            "ALTER TABLE senales_mercado ADD COLUMN oportunidad TEXT",
+        ]
+        for _m in _migrations:
+            try:
+                conn.execute(text(_m))
+            except Exception:
+                pass  # columna ya existe
+
+        # ── Actualizar password de vkhome si tiene valor legacy ──
+        conn.execute(text(
+            "UPDATE tenants SET password=:h WHERE id='vkhome_cliente' AND password='pendiente'"
+        ), {"h": "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3"})
 
         conn.commit()
 
