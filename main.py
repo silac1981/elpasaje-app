@@ -351,7 +351,21 @@ elif menu == "📦 Inventario Pro":
     st.dataframe(df_show.style.format({"Precio":"${:,.0f}","Costo":"${:,.0f}","Ganancia":"${:,.0f}","Margen%":"{:.1f}%","Valor Total":"${:,.0f}"}), use_container_width=True, hide_index=True)
 
 elif menu == "🛠️ Produccion (Fer)":
-    st.markdown("<div class='main-header'><h1>🛠️ Centro de Produccion</h1><p>Cola de pedidos · Fabricacion · Materiales</p></div>", unsafe_allow_html=True)
+    st.markdown("""<style>
+.stApp,[data-testid="stAppViewContainer"],[data-testid="stMain"]{background-color:#0D1117!important}
+.stTabs [data-baseweb="tab-list"]{background:#161B22!important;border-radius:12px!important;padding:4px!important;gap:2px!important}
+.stTabs [data-baseweb="tab"]{color:#8B949E!important;font-weight:600!important;border-radius:8px!important}
+.stTabs [aria-selected="true"]{background:#21262D!important;color:#F0F6FC!important}
+[data-testid="stMetricValue"]{color:#E6EDF3!important}
+[data-testid="stMetricLabel"]{color:#8B949E!important}
+details{background:#161B22!important;border-radius:12px!important;border:1px solid #21262D!important}
+details summary{color:#E6EDF3!important;padding:8px 12px!important}
+[data-testid="stChatMessage"]{background:#161B22!important;border-radius:12px!important;margin-bottom:8px!important}
+[data-testid="stChatMessageContent"] p{color:#E6EDF3!important}
+.stRadio label{color:#8B949E!important}
+[data-testid="stFileUploaderDropzone"]{background:#161B22!important;border-color:#30363D!important}
+</style>""", unsafe_allow_html=True)
+    st.markdown(f"<div style='background:#161B22;border-radius:16px;padding:22px 28px;border:1px solid #21262D;border-left:4px solid #3FB950;margin-bottom:8px;'><div style='font-size:0.65rem;font-weight:700;letter-spacing:3px;color:#3FB950;text-transform:uppercase;'>EL PASAJE 3D STUDIO · PRODUCCION</div><div style='font-size:1.7rem;font-weight:800;color:#F0F6FC;margin-top:6px;'>🖨️ Centro de Fabricacion</div><div style='font-size:0.78rem;color:#8B949E;margin-top:6px;'>Fernando · {datetime.now().strftime('%A %d/%m/%Y')} · {datetime.now().strftime('%H:%M')}</div></div>", unsafe_allow_html=True)
     _EC = {"Pendiente":{"color":"#F59E0B","emoji":"⏳"},"En Proceso":{"color":"#3B82F6","emoji":"🖨️"},"Listo":{"color":"#22C55E","emoji":"✅"},"Cancelado":{"color":"#EF4444","emoji":"❌"}}
     _hoy_str = datetime.now().strftime("%Y-%m-%d")
     # ── Cargar datos comunes ──────────────────────────────
@@ -388,14 +402,14 @@ elif menu == "🛠️ Produccion (Fer)":
         _n_pendientes = len(_pedidos_all[_pedidos_all["status"] == "Pendiente"]) if not _pedidos_all.empty else 0
         k1, k2, k3, k4 = st.columns(4)
         for _col, _title, _val, _sub, _color in [
-            (k1, "⏳ Pendientes",       str(_n_pendientes), "en espera de produccion", "#F59E0B"),
-            (k2, "🆕 Nuevos Hoy",       str(_nuevos_hoy),   "pedidos del dia",         "#3B82F6"),
-            (k3, "✅ Piezas Fabricadas", str(_fab_total),    "registradas en log",      "#22C55E"),
-            (k4, "⚠️ Mat. Criticos",    str(_criticos),     "bajo stock minimo",       "#EF4444"),
+            (k1, "⏳ Pendientes",  str(_n_pendientes), "en espera",       "#F59E0B"),
+            (k2, "🆕 Hoy",        str(_nuevos_hoy),   "pedidos del dia", "#3B82F6"),
+            (k3, "✅ Fabricadas",  str(_fab_total),    "en el log",       "#22C55E"),
+            (k4, "⚠️ Criticos",   str(_criticos),     "bajo minimo",     "#EF4444"),
         ]:
             with _col:
-                st.markdown(f"<div class='metric-card' style='border-top-color:{_color}'><div class='metric-title'>{_title}</div><div class='metric-value'>{_val}</div><div class='metric-sub'>{_sub}</div></div>", unsafe_allow_html=True)
-        st.markdown("<div class='section-title' style='margin-top:20px;'>📋 Cola Activa</div>", unsafe_allow_html=True)
+                st.markdown(f"<div style='background:#161B22;border-radius:14px;padding:20px 16px;border:1px solid #21262D;border-top:3px solid {_color};text-align:center;margin-bottom:8px;'><div style='font-size:2.2rem;font-weight:800;color:{_color};line-height:1;'>{_val}</div><div style='font-size:0.75rem;font-weight:600;color:#C9D1D9;margin-top:8px;'>{_title}</div><div style='font-size:0.64rem;color:#6B7280;margin-top:4px;letter-spacing:0.5px;'>{_sub}</div></div>", unsafe_allow_html=True)
+        st.markdown("<div style='margin-top:24px;margin-bottom:12px;font-size:0.68rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#58A6FF;'>📋 COLA ACTIVA</div>", unsafe_allow_html=True)
         if _pedidos_activos.empty:
             try:
                 _mat_mas_usado = pd.read_sql("""
@@ -409,7 +423,7 @@ elif menu == "🛠️ Produccion (Fer)":
                 _ultima_fab_row = pd.DataFrame()
             _mat_nom = _mat_mas_usado.iloc[0]["name"] if not _mat_mas_usado.empty else "—"
             _ult_f   = str(_ultima_fab_row.iloc[0]["fecha_fin"])[:10] if not _ultima_fab_row.empty else "—"
-            st.markdown("<div style='background:white;border-radius:16px;padding:20px 24px;border-left:5px solid #22C55E;box-shadow:0 2px 8px rgba(0,0,0,0.06);margin-bottom:16px;'><div style='font-size:1.05rem;font-weight:700;color:#22C55E;'>Sin pedidos activos — el sistema está al día ✅</div><div style='font-size:0.82rem;color:#6B7280;margin-top:6px;'>Podés registrar fabricaciones libres desde la pestaña 📦 Cargar Fabricacion</div></div>", unsafe_allow_html=True)
+            st.markdown("<div style='background:#0D2818;border-radius:16px;padding:20px 24px;border:1px solid #238636;border-left:4px solid #3FB950;margin-bottom:16px;'><div style='font-size:1.05rem;font-weight:700;color:#3FB950;'>Sin pedidos activos — el taller está al día ✅</div><div style='font-size:0.82rem;color:#8B949E;margin-top:6px;'>Podés registrar fabricaciones libres desde la pestaña 📦 Cargar Fabricacion</div></div>", unsafe_allow_html=True)
             _es1, _es2, _es3 = st.columns(3)
             _es1.metric("Piezas fabricadas", _fab_total)
             _es2.metric("Material más usado", _mat_nom)
@@ -658,55 +672,101 @@ elif menu == "🛠️ Produccion (Fer)":
     # TAB 5 — MIKE (alertas + chat contextual)
     # ══════════════════════════════════════════════════════
     with tab_mike:
-        st.markdown("<div class='section-title'>🤖 Mike — Asistente de Produccion</div>", unsafe_allow_html=True)
-
-        # Alertas actuales
+        # ── Identity header ──────────────────────────────────
         _alertas_mike = get_alertas_dashboard()
-        if _alertas_mike:
-            _color_map = {"critico": "#EF4444", "atencion": "#F59E0B", "info": "#94A3B8"}
-            for _a in _alertas_mike:
-                _c = _color_map.get(_a["nivel"], "#94A3B8")
-                st.markdown(
-                    f"<div style='background:white;border-radius:10px;padding:10px 16px;"
-                    f"border-left:4px solid {_c};box-shadow:0 1px 4px rgba(0,0,0,0.06);margin-bottom:8px;'>"
-                    f"<div style='font-weight:600;color:{_c};font-size:0.85rem;'>{_a['titulo']}</div>"
-                    f"<div style='font-size:0.75rem;color:#6B7280;margin-top:3px;'>{_a['detalle']}</div>"
-                    f"<div style='font-size:0.72rem;color:#9CA3AF;margin-top:2px;'>→ {_a['accion']}</div>"
-                    f"</div>",
-                    unsafe_allow_html=True
-                )
+        _n_crit = sum(1 for a in _alertas_mike if a["nivel"] == "critico")
+        _n_atc  = sum(1 for a in _alertas_mike if a["nivel"] == "atencion")
+        _est_color = "#EF4444" if _n_crit > 0 else ("#F59E0B" if _n_atc > 0 else "#3FB950")
+        _est_txt   = f"{_n_crit} crítica{'s' if _n_crit!=1 else ''}" if _n_crit > 0 else ("Todo en orden" if not _n_atc else f"{_n_atc} atención")
+        st.markdown(f"""
+<div style='background:#161B22;border-radius:16px;padding:20px 24px;border:1px solid #21262D;margin-bottom:4px;'>
+  <div style='font-size:0.65rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#58A6FF;'>ASISTENTE DE PRODUCCION</div>
+  <div style='font-size:1.5rem;font-weight:800;color:#F0F6FC;margin-top:6px;'>🤖 Mike</div>
+  <div style='margin-top:10px;'>
+    <span style='background:{_est_color}22;color:{_est_color};padding:4px 12px;border-radius:99px;font-weight:700;font-size:0.78rem;border:1px solid {_est_color}44;'>● {_est_txt}</span>
+    <span style='color:#6B7280;margin-left:12px;font-size:0.72rem;'>{len(_alertas_mike)} alertas · actualizado ahora</span>
+  </div>
+</div>""", unsafe_allow_html=True)
+
+        # ── KPIs del taller ───────────────────────────────────
+        try:
+            _fab_wk = pd.read_sql("SELECT COUNT(*) AS t, SUM(CASE WHEN resultado NOT LIKE 'ok%' THEN 1 ELSE 0 END) AS f FROM production_log WHERE fecha_fin >= date('now','-7 days')", engine).iloc[0]
+            _fab_semana, _fallos_semana = int(_fab_wk["t"] or 0), int(_fab_wk["f"] or 0)
+        except Exception:
+            _fab_semana = _fallos_semana = 0
+        _tasa_txt = f"{_fallos_semana/_fab_semana*100:.0f}%" if _fab_semana > 0 else "—"
+        _mat_crit_n = len(mats[mats["stock_gr"] <= mats["stock_minimo_gr"]]) if not mats.empty else 0
+        _mk1, _mk2, _mk3, _mk4 = st.columns(4)
+        for _col, _v, _l, _c in [
+            (_mk1, str(len(_pedidos_activos)), "Pedidos activos",  "#3B82F6"),
+            (_mk2, str(_fab_semana),           "Fab. esta semana", "#22C55E"),
+            (_mk3, _tasa_txt,                  "Tasa de fallos",   "#EF4444" if _fab_semana > 0 and _fallos_semana/_fab_semana >= 0.25 else "#4B5563"),
+            (_mk4, str(_mat_crit_n),           "Mat. críticos",   "#F59E0B" if _mat_crit_n > 0 else "#4B5563"),
+        ]:
+            with _col:
+                st.markdown(f"<div style='background:#161B22;border-radius:12px;padding:16px;border:1px solid #21262D;border-top:3px solid {_c};text-align:center;margin-bottom:4px;'><div style='font-size:1.8rem;font-weight:800;color:{_c};line-height:1;'>{_v}</div><div style='font-size:0.64rem;color:#8B949E;margin-top:6px;text-transform:uppercase;letter-spacing:1px;'>{_l}</div></div>", unsafe_allow_html=True)
+
+        # ── Alertas ───────────────────────────────────────────
+        st.markdown("<div style='margin:20px 0 10px;font-size:0.65rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#58A6FF;'>ALERTAS ACTIVAS</div>", unsafe_allow_html=True)
+        if not _alertas_mike:
+            st.markdown("<div style='background:#0D2818;border-radius:12px;padding:14px 20px;border:1px solid #238636;'><span style='color:#3FB950;font-weight:700;font-size:0.88rem;'>✅ Sin alertas</span><span style='color:#8B949E;margin-left:12px;font-size:0.8rem;'>El taller está en orden — buen trabajo.</span></div>", unsafe_allow_html=True)
         else:
-            st.success("Sin alertas activas — todo en orden ✅")
+            _cm = {"critico":"#EF4444","atencion":"#F59E0B","info":"#58A6FF"}
+            _bm = {"critico":"#2D1117","atencion":"#2D2007","info":"#0D1B2E"}
+            _dm = {"critico":"#451B1B","atencion":"#3D2B0A","info":"#1B2D4A"}
+            for _i, _a in enumerate(_alertas_mike):
+                _c  = _cm.get(_a["nivel"], "#8B949E")
+                _bg = _bm.get(_a["nivel"], "#161B22")
+                _bd = _dm.get(_a["nivel"], "#21262D")
+                st.markdown(f"<div style='background:{_bg};border-radius:12px;padding:14px 18px;border:1px solid {_bd};border-left:4px solid {_c};margin-bottom:8px;'><div style='font-size:0.88rem;font-weight:700;color:{_c};'>{_a['titulo']}</div><div style='font-size:0.75rem;color:#8B949E;margin-top:4px;'>{_a['detalle']}</div><div style='font-size:0.7rem;color:#6B7280;margin-top:3px;'>→ {_a['accion']}</div></div>", unsafe_allow_html=True)
+                if st.button(f"Preguntarle a Mike →", key=f"ask_a_{_i}", help=_a["titulo"]):
+                    st.session_state["mike_auto_q"] = f"Tengo esta alerta activa: {_a['titulo']} — {_a['detalle']}. Acción sugerida: {_a['accion']}. ¿Qué me recomendás hacer exactamente y cómo lo soluciono?"
 
-        st.markdown("<div class='section-title' style='margin-top:24px;'>💬 Consulta directa</div>", unsafe_allow_html=True)
-        st.caption("Preguntale a Mike sobre stock, pedidos, materiales, fallos o cualquier cosa del taller.")
+        # ── Preguntas rápidas ─────────────────────────────────
+        st.markdown("<div style='margin:20px 0 10px;font-size:0.65rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#58A6FF;'>PREGUNTAS RÁPIDAS</div>", unsafe_allow_html=True)
+        _qs = [
+            ("📋 Prioridades de hoy",   "¿Qué pedidos tengo que priorizar hoy y en qué orden los fabrico?"),
+            ("🧵 Días de stock",         "¿Cuántos días de stock me queda en cada material al ritmo de consumo actual?"),
+            ("🔴 Analizar fallos",       "Tuve fallos de fabricación esta semana. ¿Cuáles son las causas más probables y cómo los prevengo?"),
+            ("💰 Mejor margen",          "¿Qué piezas debería fabricar primero para maximizar el margen del taller hoy?"),
+            ("🛒 Qué comprar",           "¿Qué materiales necesito comprar esta semana y en qué cantidad para no quedarme sin stock?"),
+            ("📊 Estado del taller",     "Haceme un diagnóstico rápido del estado general del taller ahora mismo."),
+        ]
+        _qc1, _qc2, _qc3 = st.columns(3)
+        for _qi, (_ql, _qt) in enumerate(_qs):
+            with [_qc1, _qc2, _qc3][_qi % 3]:
+                if st.button(_ql, key=f"qs_{_qi}", use_container_width=True):
+                    st.session_state["mike_auto_q"] = _qt
 
-        # Historial de chat
+        # ── Chat ──────────────────────────────────────────────
+        st.markdown("<div style='margin:20px 0 10px;font-size:0.65rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#58A6FF;'>CHAT CON MIKE</div>", unsafe_allow_html=True)
         if "mike_history" not in st.session_state:
             st.session_state["mike_history"] = []
         for _msg in st.session_state["mike_history"]:
             with st.chat_message("user" if _msg["role"] == "user" else "assistant", avatar="👤" if _msg["role"] == "user" else "🤖"):
                 st.markdown(_msg["content"])
-
-        # Input
-        _mike_q = st.chat_input("Preguntale algo a Mike...", key="mike_chat_input")
-        if _mike_q:
-            # Contexto del estado actual de producción
+        _mike_q    = st.chat_input("Escribile a Mike...", key="mike_chat_input")
+        _mike_auto = st.session_state.pop("mike_auto_q", None)
+        _pregunta  = _mike_q or _mike_auto
+        if _pregunta:
+            _mat_stock_str = ", ".join(f"{r['name']} {r['stock_gr']:.0f}g" for _, r in mats.iterrows()) if not mats.empty else "sin datos"
             _ctx = (
                 f"Pedidos activos: {len(_pedidos_activos)}\n"
-                f"Materiales críticos: {len(mats[mats['stock_gr'] <= mats['stock_minimo_gr']]) if not mats.empty else 0}\n"
-                f"Alertas activas: {len(_alertas_mike)}"
+                f"Alertas: {len(_alertas_mike)} ({_n_crit} críticas, {_n_atc} atención)\n"
+                f"Fabricaciones esta semana: {_fab_semana} ({_fallos_semana} fallos)\n"
+                f"Materiales críticos: {_mat_crit_n}\n"
+                f"Stock materiales: {_mat_stock_str}"
             )
             with st.chat_message("user", avatar="👤"):
-                st.markdown(_mike_q)
+                st.markdown(_pregunta)
             with st.chat_message("assistant", avatar="🤖"):
                 with st.spinner("Mike está pensando..."):
-                    _resp = _preguntar_mike(_mike_q, contexto_extra=_ctx)
+                    _resp = _preguntar_mike(_pregunta, contexto_extra=_ctx)
                 st.markdown(_resp)
-
-        if st.session_state["mike_history"] and st.button("Limpiar conversacion", key="mike_clear"):
-            st.session_state["mike_history"] = []
-            st.rerun()
+        if st.session_state["mike_history"]:
+            if st.button("Limpiar chat", key="mike_clear"):
+                st.session_state["mike_history"] = []
+                st.rerun()
 
 elif menu == "🤝 Socios":
     st.markdown("<div class='main-header'><h1>🤝 Panel de Socios</h1><p>Ecosistema El Pasaje · Familia + B2B · Visión consolidada</p></div>", unsafe_allow_html=True)
