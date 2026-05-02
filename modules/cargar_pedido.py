@@ -60,32 +60,44 @@ details{{background:#161B22!important;border:1px solid #21262D!important;border-
     _sel_sku  = st.session_state.get("cp_sel_sku")
     _sel_prod = prods_socio[prods_socio["sku"] == _sel_sku].iloc[0] if _sel_sku and not prods_socio[prods_socio["sku"]==_sel_sku].empty else None
 
-    # ── Sin selección: mostrar grid completo ──────────────────────
+    # ── Sin selección: grid agrupado por línea ────────────────────
     if _sel_prod is None:
         st.markdown(
             "<div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;"
             "color:#58A6FF;margin-bottom:12px;'>SELECCIONÁ UN PRODUCTO</div>",
             unsafe_allow_html=True,
         )
-        _cp_cols = st.columns(3)
-        for _cpi, (_, _cpr) in enumerate(prods_socio.iterrows()):
-            _cpc    = LINEAS.get(_cpr["client_id"], {}).get("color", "#6366F1")
-            _img_url_cp = str(_cpr.get("imagen_url") or "")
-            _has_img_cp = _img_url_cp.startswith("http") or _img_url_cp.startswith("data:")
-            _img_tag = (f"<img src='{_img_url_cp}' style='width:100%;height:90px;object-fit:cover;"
-                        f"border-radius:8px;margin-bottom:8px;' onerror=\"this.style.display='none'\">") if _has_img_cp else ""
-            with _cp_cols[_cpi % 3]:
-                st.markdown(f"""<div style='border:1px solid #21262D;background:#161B22;border-radius:14px;padding:14px;margin-bottom:8px;'>
+        _multi = len(lineas_activas) > 1
+        for _lid in lineas_activas:
+            _ldf = prods_socio[prods_socio["client_id"] == _lid]
+            if _ldf.empty:
+                continue
+            _lcfg   = get_linea(_lid)
+            _lcolor = _lcfg["color"]
+            _ln     = len(_ldf)
+            _ctx = st.expander(
+                f"{_lcfg['emoji']} {_lcfg['nombre']}  ·  {_ln} producto{'s' if _ln != 1 else ''}",
+                expanded=True,
+            ) if _multi else st.container()
+            with _ctx:
+                _cp_cols = st.columns(3)
+                for _cpi, (_, _cpr) in enumerate(_ldf.iterrows()):
+                    _img_url_cp = str(_cpr.get("imagen_url") or "")
+                    _has_img_cp = _img_url_cp.startswith("http") or _img_url_cp.startswith("data:")
+                    _img_tag = (f"<img src='{_img_url_cp}' style='width:100%;height:90px;object-fit:cover;"
+                                f"border-radius:8px;margin-bottom:8px;' onerror=\"this.style.display='none'\">") if _has_img_cp else ""
+                    with _cp_cols[_cpi % 3]:
+                        st.markdown(f"""<div style='border:1px solid {_lcolor}44;background:#161B22;border-radius:14px;padding:14px;margin-bottom:8px;'>
 {_img_tag}
-<div style='font-size:0.6rem;color:{_cpc};font-weight:700;letter-spacing:1px;text-transform:uppercase;'>{_cpr['sku']}</div>
+<div style='font-size:0.6rem;color:{_lcolor};font-weight:700;letter-spacing:1px;text-transform:uppercase;'>{_cpr['sku']}</div>
 <div style='font-size:0.88rem;font-weight:700;color:#E6EDF3;margin-top:3px;'>{_cpr['name']}</div>
 <div style='font-size:0.68rem;color:#8B949E;margin-top:2px;'>{_cpr.get('categoria','') or ''}</div>
-<div style='margin-top:8px;font-size:1rem;font-weight:800;color:{_cpc};'>${float(_cpr['price']):,.0f}</div>
+<div style='margin-top:8px;font-size:1rem;font-weight:800;color:{_lcolor};'>${float(_cpr['price']):,.0f}</div>
 <div style='font-size:0.65rem;color:#6B7280;'>{float(_cpr.get('weight_gr',0) or 0):.0f} g · {str(_cpr.get('description','') or '')[:50]}</div>
 </div>""", unsafe_allow_html=True)
-                if st.button("Seleccionar", key=f"cpbtn_{_cpr['sku']}", use_container_width=True, type="secondary"):
-                    st.session_state["cp_sel_sku"] = _cpr["sku"]
-                    st.rerun()
+                        if st.button("Seleccionar", key=f"cpbtn_{_cpr['sku']}", use_container_width=True, type="secondary"):
+                            st.session_state["cp_sel_sku"] = _cpr["sku"]
+                            st.rerun()
         st.stop()
 
     # ── Con selección: banner compacto + formulario inmediatamente ──
