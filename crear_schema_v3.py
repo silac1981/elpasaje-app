@@ -302,10 +302,10 @@ PRODUCTS_SOCIOS = [
     # ── VKHOME (vkhome_cliente) — catálogo oficial VK-Home Agustina, Mayo 2026 ──────
     # Diseño propio Fer en Fusion 360 — canal de ventas: VK-Home
     ("OE-BRR-S","vkhome_cliente","pla_negro",   "Bandeja Organica Redonda S","Bandeja redonda organica S, 2 patas bola, diseno Fer",     "bandejas patitas",   "#A78BFA", 6500,  629, 190, 1, 1),
-    ("OE-BRR-M","vkhome_cliente","pla_negro",   "Bandeja Organica Redonda M","Bandeja redonda organica M, 3 patas bola, diseno Fer",     "bandejas patitas",   "#A78BFA", 9900,  957, 290, 1, 1),
-    ("OE-BOV-S","vkhome_cliente","pla_negro",   "Bandeja Oval S",            "Bandeja oval S, diseno propio Fer Fusion 360",             "bandejas ovaladas",  "#A78BFA", 8500,  822, 250, 1, 1),
-    ("OE-BOV-M","vkhome_cliente","pla_negro",   "Bandeja Oval M",            "Bandeja oval M, diseno propio Fer Fusion 360",             "bandejas ovaladas",  "#A78BFA",14000, 1354, 410, 1, 1),
-    ("OE-BOV-L","vkhome_cliente","pla_negro",   "Bandeja Oval L",            "Bandeja oval L, por pedido, diseno Fer",                   "bandejas ovaladas",  "#A78BFA",19900, 1925, 580, 0, 1),
+    ("OE-BRR-M","vkhome_cliente","pla_negro",   "Bandeja Organica Redonda M","Bandeja redonda organica M, 3 patas bola, diseno Fer",     "bandejas patitas",   "#A78BFA", 8000,  957, 290, 1, 1),
+    ("OE-BOV-S","vkhome_cliente","pla_negro",   "Bandeja Oval S",            "Bandeja oval S, diseno propio Fer Fusion 360",             "bandejas ovaladas",  "#A78BFA", 3000,  822, 250, 1, 1),
+    ("OE-BOV-M","vkhome_cliente","pla_negro",   "Bandeja Oval M",            "Bandeja oval M, diseno propio Fer Fusion 360",             "bandejas ovaladas",  "#A78BFA", 6000, 1354, 410, 1, 1),
+    ("OE-BOV-L","vkhome_cliente","pla_negro",   "Bandeja Oval L",            "Bandeja oval L, por pedido, diseno Fer",                   "bandejas ovaladas",  "#A78BFA", 9000, 1925, 580, 0, 1),
     ("OE-BAS-S","vkhome_cliente","pla_negro",   "Bandeja Asimetrica S",      "Bandeja organica asimetrica S, diseno propio Fer",         "bandejas asimetricas","#A78BFA", 9900,  957, 290, 1, 1),
     ("OE-BAS-M","vkhome_cliente","pla_negro",   "Bandeja Asimetrica M",      "Bandeja organica asimetrica M, diseno propio Fer",         "bandejas asimetricas","#A78BFA",15900, 1538, 460, 1, 1),
     ("OE-SAR-U","vkhome_cliente","pla_negro",   "Soporte Aromatico Circular","Soporte aromatico circular, por pedido",                   "accesorios",         "#A78BFA", 8000,  774, 230, 0, 1),
@@ -453,6 +453,73 @@ def init_schema():
         conn.execute(text(
             "DELETE FROM products WHERE sku IN ('VKH-ORG-001','VKH-POT-001','VKH-COC-001','VKH-DEC-001')"
         ))
+
+        # ── Precios reales VKH según último pedido Agustina (Mayo 2026) ──
+        _precios_vkh_reales = [
+            ("OE-BOV-S", 8500,  3000),
+            ("OE-BOV-M", 14000, 6000),
+            ("OE-BOV-L", 19900, 9000),
+            ("OE-BRR-M", 9900,  8000),
+        ]
+        for _psku, _pant, _pnvo in _precios_vkh_reales:
+            conn.execute(text("UPDATE products SET price=:p WHERE sku=:sku"), {"p": _pnvo, "sku": _psku})
+            _ph_ya = conn.execute(
+                text("SELECT COUNT(*) FROM price_history WHERE product_sku=:sku AND precio_nuevo=:p"),
+                {"sku": _psku, "p": _pnvo}
+            ).fetchone()[0]
+            if not _ph_ya:
+                try:
+                    conn.execute(text("""
+                        INSERT INTO price_history (product_sku, precio_anterior, precio_nuevo, fecha, motivo)
+                        VALUES (:sku, :ant, :nvo, '2026-05-02', 'Ajuste precio real segun ultimo pedido Agustina')
+                    """), {"sku": _psku, "ant": _pant, "nvo": _pnvo})
+                except Exception:
+                    pass
+
+        # ── Histórico último pedido Agustina ─────────────────────────────────────
+        _hist_ya = conn.execute(
+            text("SELECT COUNT(*) FROM orders WHERE notas LIKE '%HIST_AGUSTINA_ULTIMO%'")
+        ).fetchone()[0]
+        if not _hist_ya:
+            # Orden 1 — Oasis Animal: 29 × Llavero Perrito Globo
+            _r1 = conn.execute(text("""
+                INSERT INTO orders (client_id, status, date, notas, canal_origen)
+                VALUES ('oasis_animal', 'Entregado', '2026-05-02',
+                        'HIST_AGUSTINA_ULTIMO | 29 x Llavero Perrito Globo', 'WhatsApp')
+            """))
+            _oid1 = _r1.lastrowid
+            conn.execute(text(
+                "INSERT INTO order_items (order_id, product_sku, cantidad, precio_unitario) VALUES (:oid, 'OA-LPG-U', 29, 1000)"
+            ), {"oid": _oid1})
+            try:
+                conn.execute(text(
+                    "INSERT INTO pagos (order_id, monto, metodo, estado) VALUES (:oid, 29000, 'transferencia', 'acreditado')"
+                ), {"oid": _oid1})
+            except Exception:
+                pass
+            # Orden 2 — VK-Home: bandejas
+            _r2 = conn.execute(text("""
+                INSERT INTO orders (client_id, status, date, notas, canal_origen)
+                VALUES ('vkhome_cliente', 'Entregado', '2026-05-02',
+                        'HIST_AGUSTINA_ULTIMO | Bandejas: Oval S/M/L + Redonda M', 'WhatsApp')
+            """))
+            _oid2 = _r2.lastrowid
+            for _isku, _iqty, _iprecio in [
+                ("OE-BOV-S", 4, 3000),
+                ("OE-BOV-M", 4, 6000),
+                ("OE-BOV-L", 4, 9000),
+                ("OE-BRR-M", 4, 8000),
+            ]:
+                conn.execute(text("""
+                    INSERT INTO order_items (order_id, product_sku, cantidad, precio_unitario)
+                    VALUES (:oid, :sku, :qty, :precio)
+                """), {"oid": _oid2, "sku": _isku, "qty": _iqty, "precio": _iprecio})
+            try:
+                conn.execute(text(
+                    "INSERT INTO pagos (order_id, monto, metodo, estado) VALUES (:oid, 104000, 'transferencia', 'acreditado')"
+                ), {"oid": _oid2})
+            except Exception:
+                pass
 
         conn.commit()
 
