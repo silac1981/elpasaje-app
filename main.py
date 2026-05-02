@@ -141,35 +141,24 @@ if not st.session_state["auth"]:
     col1, col2, col3 = st.columns([1, 1.2, 1])
     with col2:
         st.markdown("""
-        <div style='background:white;border-radius:20px;padding:40px 40px 32px;box-shadow:0 20px 50px rgba(0,0,0,0.12);margin-top:60px;'>
-          <div style='text-align:center;padding-bottom:24px;'>
-
-            <!-- MONOGRAMA EP -->
-            <div style='position:relative;display:inline-block;margin-bottom:20px;'>
-              <div style='width:96px;height:96px;border-radius:50%;background:white;
-                          border:2px solid #1a1a2e;
-                          box-shadow:0 0 0 4px white,0 0 0 7px #C9A84C,0 0 0 10px white,0 0 0 13px #1a1a2e;
-                          display:flex;align-items:center;justify-content:center;'>
-                <span style='font-family:Cormorant Garamond,serif;font-size:2.8rem;font-weight:700;
-                             color:#1a1a2e;letter-spacing:-2px;line-height:1;'>EP</span>
-              </div>
-              <!-- Diamantes cardinales -->
-              <div style='position:absolute;top:-8px;left:50%;transform:translateX(-50%);color:#C9A84C;font-size:10px;line-height:1;'>◆</div>
-              <div style='position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);color:#C9A84C;font-size:10px;line-height:1;'>◆</div>
-              <div style='position:absolute;left:-9px;top:50%;transform:translateY(-50%);color:#C9A84C;font-size:10px;line-height:1;'>◆</div>
-              <div style='position:absolute;right:-9px;top:50%;transform:translateY(-50%);color:#C9A84C;font-size:10px;line-height:1;'>◆</div>
-            </div>
-
-            <div style='font-family:Cormorant Garamond,serif;font-size:1.45rem;font-weight:700;
-                        letter-spacing:6px;color:#1a1a2e;text-transform:uppercase;margin-top:4px;'>
-              El Pasaje
-            </div>
-            <div style='font-size:0.6rem;font-weight:600;letter-spacing:4px;color:#C9A84C;
-                        text-transform:uppercase;margin-top:4px;'>
-              3 D &nbsp;&nbsp; S T U D I O
-            </div>
-
-          </div>
+        <div style='text-align:center;background:white;border-radius:20px;padding:36px 40px 28px;box-shadow:0 20px 50px rgba(0,0,0,0.12);margin-top:60px;'>
+          <svg width="130" height="130" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg" style="display:block;margin:0 auto 16px;">
+            <circle cx="80" cy="80" r="74" fill="white"/>
+            <circle cx="80" cy="80" r="75" fill="none" stroke="#1a1a2e" stroke-width="3"/>
+            <circle cx="80" cy="80" r="67" fill="none" stroke="#C9A84C" stroke-width="2.5"/>
+            <circle cx="80" cy="80" r="59" fill="none" stroke="#1a1a2e" stroke-width="1.5"/>
+            <text x="80" y="97" font-family="Georgia,'Times New Roman',serif" font-size="42" font-weight="700" fill="#1a1a2e" text-anchor="middle" letter-spacing="-1">EP</text>
+            <polygon points="80,2 85,11 80,20 75,11"   fill="#C9A84C"/>
+            <polygon points="80,158 85,149 80,140 75,149" fill="#C9A84C"/>
+            <polygon points="158,80 149,85 140,80 149,75" fill="#C9A84C"/>
+            <polygon points="2,80 11,85 20,80 11,75"   fill="#C9A84C"/>
+            <circle cx="121" cy="39" r="3" fill="#C9A84C"/>
+            <circle cx="121" cy="121" r="3" fill="#C9A84C"/>
+            <circle cx="39"  cy="121" r="3" fill="#C9A84C"/>
+            <circle cx="39"  cy="39"  r="3" fill="#C9A84C"/>
+          </svg>
+          <div style='font-family:Cormorant Garamond,Georgia,serif;font-size:1.4rem;font-weight:700;letter-spacing:6px;color:#1a1a2e;text-transform:uppercase;'>El Pasaje</div>
+          <div style='font-size:0.6rem;font-weight:600;letter-spacing:4px;color:#C9A84C;text-transform:uppercase;margin-top:4px;'>3 D &nbsp; S T U D I O</div>
         </div>
         """, unsafe_allow_html=True)
         email = st.text_input("Email", placeholder="tu@elpasaje.com")
