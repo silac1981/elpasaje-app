@@ -28,7 +28,7 @@ TABLAS = [
             email                TEXT UNIQUE NOT NULL,
             password             TEXT NOT NULL,
             telefono             TEXT,
-            tipo                 TEXT DEFAULT 'familia',   -- 'familia'|'b2b'|'admin'|'produccion'|'cliente_externo'
+            tipo                 TEXT DEFAULT 'familia',   -- 'familia'|'b2b'|'admin'|'produccion'|'cliente_externo'|'socio_multi'
             sector               TEXT,                     -- área dentro de la empresa
             fecha_alta           TEXT DEFAULT CURRENT_DATE,
             activo               INTEGER DEFAULT 1,
@@ -43,6 +43,14 @@ TABLAS = [
             es_cliente_real      INTEGER DEFAULT 0,        -- 1 si realizó al menos una compra
             fecha_primer_contacto TEXT,
             linea_interes        TEXT                      -- línea o marca de interés principal
+        )
+    """),
+
+    ("tenant_lineas", """
+        CREATE TABLE tenant_lineas (
+            tenant_id  TEXT NOT NULL REFERENCES tenants(id),
+            linea_id   TEXT NOT NULL REFERENCES tenants(id),
+            PRIMARY KEY (tenant_id, linea_id)
         )
     """),
 
@@ -222,6 +230,16 @@ TENANTS_INICIALES = [
     ("oasis_del_estero", "Oasis del Estero",                   "oasisestero@elpasaje.com",  "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",  None, "b2b",         None,                      HOY,   1,      "B2B",         "Red Nando", "Medio",   "WhatsApp",      "Santiago del Estero", None, None,   1,               HOY,                   "Oasis del Estero"),
     ("pharma_delux",     "Pharma DeLux",                       "pharma@elpasaje.com",       "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",  None, "b2b",         None,                      HOY,   1,      "B2B",         "Directo",   "Alto",    "Email",         "Buenos Aires", "Farmacéutico", None,      1,               HOY,                   "Pharma DeLux"),
     ("fer_produccion",   "Fernando (Fer)",                     "fer@elpasaje.com",          "a29461d9796a45974014a214c0ece938a5f9dcd8799f26b26c34d3e8adf31c69",  None, "produccion",  "Fabricacion y Materiales",HOY,   1,      None,          None,        None,      "Presencial",    "Buenos Aires", None,       None,         1,               HOY,                   None),
+    # socio_multi: usuario con acceso a varias líneas via tenant_lineas
+    ("agustina",         "Agustina",                           "agustina@elpasaje.com",     "1baedd25059490937a8f7a52dbaf5a7c168bc49f5bac0d7bc48bd6b58a84a421",  None, "socio_multi", None,                      HOY,   1,      "B2B",         "Directo",   "Alto",    "WhatsApp",      "Buenos Aires", "Decoracion / Veterinaria", None, 1, HOY, "Oasis Animal + VK-Home"),
+    # vkhome_cliente: canal de deco de Agustina — sin login, solo referencia de línea
+    ("vkhome_cliente",   "VK-Home / Agustina",                 "vkhome@cliente.com",        "pendiente",                                                             None, "cliente_externo", None,                  HOY,   1,      "B2B",         "Directo",   "Alto",    "Presencial",    "Buenos Aires", "Decoracion", None, 1, HOY, "VK-Home"),
+]
+
+# Vínculos multi-línea: (tenant_id, linea_id)
+TENANT_LINEAS_INICIALES = [
+    ("agustina", "oasis_animal"),   # Agustina ve la línea Oasis Animal
+    ("agustina", "vkhome_cliente"), # Agustina ve la línea VK-Home
 ]
 
 MATERIALS_INICIALES = [
@@ -287,6 +305,13 @@ with engine.connect() as conn:
             row
         )))
         print(f"   ✅ {row[0]} — {row[1]}")
+    print()
+
+    print("🔗 Insertando vínculos multi-línea...")
+    for tenant_id, linea_id in TENANT_LINEAS_INICIALES:
+        conn.execute(text("INSERT INTO tenant_lineas (tenant_id, linea_id) VALUES (:tid, :lid)"),
+                     {"tid": tenant_id, "lid": linea_id})
+        print(f"   ✅ {tenant_id} → {linea_id}")
     print()
 
     print("🧵 Insertando materiales...")

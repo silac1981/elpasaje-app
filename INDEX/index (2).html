@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>El Pasaje 3D Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --night:   #07070f;
+  --deep:    #0d0d1a;
+  --surface: #12121f;
+  --lift:    #1a1a2e;
+  --border:  rgba(255,255,255,0.06);
+  --gold:    #C9A84C;
+  --gold2:   #e8d5a3;
+  --blue:    #4455ff;
+  --blue2:   #8899ff;
+  --white:   #f0efff;
+  --muted:   #555566;
+  --accent1: #F472B6;
+  --accent2: #34D399;
+  --accent3: #FF5F1F;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-snap-type:y mandatory}
+body{background:var(--night);color:var(--white);font-family:'Syne',sans-serif;overflow-x:hidden;cursor:none}
+
+/* ── Cursor ── */
+#cur{width:10px;height:10px;background:var(--gold);border-radius:50%;position:fixed;top:0;left:0;pointer-events:none;z-index:9999;mix-blend-mode:difference;transition:width .2s,height .2s}
+#cur2{width:36px;height:36px;border:1px solid rgba(201,168,76,.4);border-radius:50%;position:fixed;top:0;left:0;pointer-events:none;z-index:9998}
+
+/* ── Nav ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:20px 48px;display:flex;justify-content:space-between;align-items:center;background:linear-gradient(to bottom,rgba(7,7,15,.9),transparent)}
+.nav-logo{font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:300;letter-spacing:6px;text-transform:uppercase;color:var(--white)}
+.nav-logo span{color:var(--gold)}
+.nav-links{display:flex;gap:28px}
+.nav-links a{font-size:.65rem;letter-spacing:3px;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color .3s}
+.nav-links a:hover{color:var(--gold)}
+.nav-level{display:flex;gap:8px;align-items:center}
+.level-dot{width:6px;height:6px;border-radius:50%;background:var(--muted);transition:background .3s}
+.level-dot.active{background:var(--gold)}
+
+/* ── Sections ── */
+section{min-height:100vh;scroll-snap-align:start;position:relative;display:flex;flex-direction:column;justify-content:center;padding:100px 48px 60px;overflow:hidden}
+
+/* ── Hero ── */
+#hero{justify-content:center;align-items:flex-start}
+.hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse at 15% 60%,rgba(68,85,255,.1) 0%,transparent 55%),radial-gradient(ellipse at 85% 20%,rgba(201,168,76,.07) 0%,transparent 50%),var(--night)}
+.hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.02) 1px,transparent 1px);background-size:80px 80px}
+.hero-content{position:relative;z-index:1;max-width:800px}
+.hero-eyebrow{font-size:.65rem;letter-spacing:5px;text-transform:uppercase;color:var(--blue2);margin-bottom:24px;opacity:0;animation:fadeUp .8s .2s ease forwards}
+.hero-title{font-family:'Cormorant Garamond',serif;font-size:clamp(4rem,10vw,9rem);font-weight:300;line-height:.95;letter-spacing:-2px;opacity:0;animation:fadeUp .8s .4s ease forwards}
+.hero-title em{font-style:italic;color:var(--gold)}
+.hero-sub{font-size:.8rem;color:var(--muted);letter-spacing:2px;margin-top:32px;max-width:400px;line-height:1.8;opacity:0;animation:fadeUp .8s .6s ease forwards}
+.hero-scroll{position:absolute;bottom:40px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;font-size:.6rem;letter-spacing:3px;color:var(--muted);opacity:0;animation:fadeUp .8s 1s ease forwards}
+.hero-scroll::after{content:'';width:1px;height:48px;background:linear-gradient(to bottom,var(--gold),transparent);animation:line 2s infinite}
+@keyframes line{0%{transform:scaleY(0);transform-origin:top}50%{transform:scaleY(1);transform-origin:top}51%{transform:scaleY(1);transform-origin:bottom}100%{transform:scaleY(0);transform-origin:bottom}}
+
+/* ── Level badge ── */
+.level-badge{display:inline-flex;align-items:center;gap:8px;padding:5px 14px;border-radius:99px;font-size:.6rem;letter-spacing:3px;text-transform:uppercase;margin-bottom:20px}
+.badge-public{background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.25);color:var(--accent2)}
+.badge-pro{background:rgba(68,85,255,.1);border:1px solid rgba(68,85,255,.25);color:var(--blue2)}
+.badge-black{background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.25);color:var(--gold)}
+
+/* ── Section titles ── */
+.sec-eyebrow{font-size:.6rem;letter-spacing:5px;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+.sec-title{font-family:'Cormorant Garamond',serif;font-size:clamp(2.5rem,5vw,4.5rem);font-weight:300;line-height:1;letter-spacing:-1px;margin-bottom:8px}
+.sec-frase{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1rem;color:var(--gold2);margin-bottom:32px}
+
+/* ── Cards de línea ── */
+.lineas-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1px;background:var(--border)}
+.linea-card{background:var(--deep);padding:28px 24px;position:relative;overflow:hidden;transition:background .3s;cursor:none}
+.linea-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--lc,var(--gold));transform:scaleX(0);transform-origin:left;transition:transform .4s}
+.linea-card:hover{background:var(--surface)}
+.linea-card:hover::before{transform:scaleX(1)}
+.lc-emoji{font-size:1.5rem;margin-bottom:16px;display:block}
+.lc-name{font-family:'Cormorant Garamond',serif;font-size:1.2rem;margin-bottom:4px}
+.lc-frase{font-size:.72rem;color:var(--muted);line-height:1.6;margin-bottom:16px}
+.lc-tag{font-size:.6rem;letter-spacing:2px;text-transform:uppercase;color:var(--lc,var(--gold));padding:3px 8px;border:1px solid currentColor;border-radius:99px;opacity:.6;display:inline-block}
+.lc-sat{display:inline-flex;align-items:center;gap:6px;margin-top:8px;font-size:.6rem;letter-spacing:2px;text-transform:uppercase;text-decoration:none;border:1px solid rgba(255,255,255,.15);padding:5px 12px;transition:all .3s;opacity:.8}
+.lc-sat:hover{opacity:1;border-color:currentColor}
+.lc-wa{display:inline-flex;align-items:center;gap:6px;margin-top:8px;font-size:.65rem;letter-spacing:1px;color:var(--accent2);text-decoration:none;opacity:0;transition:opacity .3s}
+.linea-card:hover .lc-wa{opacity:1}
+
+/* ── Separador full-screen ── */
+.interlude{min-height:60vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:80px 48px;position:relative;scroll-snap-align:none}
+.interlude-line{width:60px;height:1px;background:var(--gold);margin:0 auto 24px}
+.interlude-text{font-family:'Cormorant Garamond',serif;font-size:clamp(1.8rem,4vw,3rem);font-weight:300;color:var(--muted);max-width:700px;line-height:1.4}
+.interlude-text em{color:var(--white);font-style:italic}
+
+/* ── Black label ── */
+#blacklabel{background:var(--deep)}
+.bl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:24px;margin-top:32px}
+.bl-card{background:var(--surface);border:1px solid rgba(201,168,76,.12);border-radius:4px;padding:32px;position:relative;overflow:hidden;transition:border-color .3s,transform .3s}
+.bl-card:hover{border-color:rgba(201,168,76,.3);transform:translateY(-4px)}
+.bl-card::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.bl-num{font-family:'Cormorant Garamond',serif;font-size:5rem;font-weight:300;color:transparent;-webkit-text-stroke:1px rgba(201,168,76,.08);position:absolute;top:10px;right:16px;line-height:1}
+.bl-name{font-family:'Cormorant Garamond',serif;font-size:1.6rem;color:var(--white);margin-bottom:4px}
+.bl-frase{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.85rem;color:var(--gold2);margin-bottom:16px}
+.bl-desc{font-size:.8rem;color:var(--muted);line-height:1.8}
+.bl-price{font-family:'Cormorant Garamond',serif;font-size:2rem;color:var(--gold);margin-top:20px}
+.bl-price span{font-size:.7rem;color:var(--muted);letter-spacing:2px}
+
+/* ── Access gate ── */
+.access-gate{background:var(--lift);border:1px solid rgba(201,168,76,.15);border-radius:4px;padding:40px;margin-top:32px;text-align:center;position:relative;overflow:hidden}
+.access-gate::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 10px,rgba(201,168,76,.015) 10px,rgba(201,168,76,.015) 11px)}
+.gate-title{font-family:'Cormorant Garamond',serif;font-size:1.8rem;margin-bottom:8px}
+.gate-sub{font-size:.78rem;color:var(--muted);margin-bottom:28px;line-height:1.7}
+.gate-form{display:flex;gap:12px;max-width:440px;margin:0 auto;flex-wrap:wrap}
+.gate-input{flex:1;min-width:200px;background:var(--deep);border:1px solid rgba(255,255,255,.08);color:var(--white);padding:12px 16px;font-family:'Syne',sans-serif;font-size:.8rem;border-radius:2px;outline:none;transition:border-color .3s}
+.gate-input:focus{border-color:rgba(201,168,76,.4)}
+.gate-input::placeholder{color:var(--muted)}
+.gate-btn{background:var(--gold);color:var(--night);border:none;padding:12px 24px;font-family:'Syne',sans-serif;font-size:.7rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;border-radius:2px;cursor:none;transition:background .2s}
+.gate-btn:hover{background:var(--gold2)}
+
+/* ── Quienes somos ── */
+#quienes{background:var(--deep)}
+.qs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1px;background:var(--border);margin-top:40px}
+.qs-card{background:var(--night);padding:28px 24px;border-top:2px solid var(--qc,var(--gold));transition:background .3s}
+.qs-card:hover{background:var(--surface)}
+.qs-rol{font-size:.6rem;letter-spacing:3px;text-transform:uppercase;color:var(--qc,var(--gold));margin-bottom:8px;display:block}
+.qs-nombre{font-family:'Cormorant Garamond',serif;font-size:1.3rem;margin-bottom:12px}
+.qs-bio{font-size:.75rem;color:var(--muted);line-height:1.85}
+.qs-bio strong{color:#aaa;font-weight:400}
+
+/* ── Alianzas ── */
+#alianzas{background:var(--surface)}
+.al-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-top:32px}
+.al-card{background:var(--lift);border:1px solid var(--border);border-radius:4px;padding:28px;transition:border-color .3s}
+.al-card:hover{border-color:rgba(201,168,76,.2)}
+.al-partner{font-size:.65rem;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:8px}
+.al-name{font-family:'Cormorant Garamond',serif;font-size:1.3rem;margin-bottom:12px}
+.al-desc{font-size:.78rem;color:var(--muted);line-height:1.8;margin-bottom:16px}
+.al-link{font-size:.65rem;letter-spacing:2px;text-transform:uppercase;color:var(--accent2);text-decoration:none}
+
+/* ── Servicio técnico ── */
+#service{background:var(--deep)}
+.sv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin-top:32px}
+.sv-card{background:var(--surface);border-top:2px solid var(--sc,var(--blue));padding:28px;border-radius:0 0 4px 4px;position:relative}
+.sv-nivel{font-size:.6rem;letter-spacing:3px;text-transform:uppercase;color:var(--sc,var(--blue2));margin-bottom:8px}
+.sv-name{font-family:'Cormorant Garamond',serif;font-size:1.3rem;margin-bottom:12px}
+.sv-items{list-style:none;font-size:.75rem;color:var(--muted);line-height:2.2}
+.sv-items li::before{content:'→ ';color:var(--sc,var(--blue2))}
+.sv-price{font-family:'Cormorant Garamond',serif;font-size:1.8rem;color:var(--white);margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
+.sv-price small{font-size:.7rem;color:var(--muted);font-family:'Syne',sans-serif;letter-spacing:1px}
+
+/* ── Impacto social ── */
+#impacto{background:var(--night)}
+.imp-fondos{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-top:32px}
+.imp-fondo{background:var(--surface);border-radius:4px;padding:24px;border-top:2px solid var(--fc,#F472B6)}
+.imp-nombre{font-family:'Cormorant Garamond',serif;font-size:1.1rem;margin-bottom:4px}
+.imp-meta{font-size:.7rem;color:var(--muted);margin-bottom:16px}
+.imp-bar{background:var(--lift);border-radius:99px;height:4px;overflow:hidden}
+.imp-fill{height:100%;border-radius:99px;background:var(--fc,#F472B6)}
+.imp-pct{font-size:.7rem;color:var(--muted);margin-top:6px}
+
+/* ── Contacto ── */
+#contacto{background:var(--deep)}
+.ct-form{max-width:600px;margin-top:40px}
+.ct-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.ct-input{background:var(--surface);border:1px solid var(--border);color:var(--white);padding:14px 18px;font-family:'Syne',sans-serif;font-size:.8rem;border-radius:2px;outline:none;width:100%;transition:border-color .3s}
+.ct-input:focus{border-color:rgba(201,168,76,.4)}
+.ct-input::placeholder{color:var(--muted)}
+.ct-select{background:var(--surface);border:1px solid var(--border);color:var(--white);padding:14px 18px;font-family:'Syne',sans-serif;font-size:.8rem;border-radius:2px;outline:none;width:100%;appearance:none}
+.ct-select option{background:var(--surface)}
+.ct-btn{background:var(--gold);color:var(--night);border:none;padding:16px 40px;font-family:'Syne',sans-serif;font-size:.7rem;font-weight:600;letter-spacing:3px;text-transform:uppercase;border-radius:2px;cursor:none;width:100%;margin-top:8px;transition:background .2s}
+.ct-btn:hover{background:var(--gold2)}
+
+/* ── Footer ── */
+footer{padding:60px 48px;border-top:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr 1fr;gap:40px}
+.ft-brand{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:300;letter-spacing:4px;color:var(--white)}
+.ft-brand span{color:var(--gold)}
+.ft-tag{font-size:.72rem;color:var(--muted);margin-top:8px;line-height:1.7}
+.ft-h{font-size:.6rem;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:12px}
+.ft-links a{display:block;font-size:.75rem;color:var(--muted);text-decoration:none;line-height:2.2;transition:color .3s}
+.ft-links a:hover{color:var(--white)}
+.ft-copy{text-align:center;padding:20px;font-size:.65rem;color:var(--muted);letter-spacing:2px;border-top:1px solid var(--border)}
+
+/* ── WhatsApp ── */
+.wa-float{position:fixed;bottom:28px;right:28px;width:52px;height:52px;background:#25D366;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:500;text-decoration:none;animation:waPulse 3s infinite;transition:transform .3s}
+.wa-float:hover{transform:scale(1.1)}
+.wa-float svg{width:26px;height:26px;fill:white}
+@keyframes waPulse{0%,100%{box-shadow:0 0 0 0 rgba(37,211,102,.4)}70%{box-shadow:0 0 0 12px rgba(37,211,102,0)}}
+
+/* ── Animaciones ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+.reveal{opacity:0;transform:translateY(30px);transition:opacity .7s ease,transform .7s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+
+/* ── Mobile ── */
+@media(max-width:768px){
+  nav{padding:16px 24px}
+  .nav-links{display:none}
+  section{padding:80px 24px 48px}
+  .ct-row{grid-template-columns:1fr}
+  footer{grid-template-columns:1fr;padding:40px 24px}
+}
+</style>
+</head>
+<body>
+
+<div id="cur"></div>
+<div id="cur2"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">El <span>Pasaje</span></div>
+  <div class="nav-links">
+    <a href="#nivel1">Público</a>
+    <a href="#nivel2">Profesional</a>
+    <a href="#blacklabel">Black Label</a>
+    <a href="#quienes">Equipo</a>
+    <a href="#contacto">Contacto</a>
+  </div>
+  <div class="nav-level">
+    <div class="level-dot active" id="d1"></div>
+    <div class="level-dot" id="d2"></div>
+    <div class="level-dot" id="d3"></div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-content">
+    <div class="hero-eyebrow">Buenos Aires · 2026 · Manufactura aditiva</div>
+    <h1 class="hero-title">El universo<br>de <em>El Pasaje.</em></h1>
+    <p class="hero-sub">Tres niveles de acceso. Doce líneas. Diez personas con un propósito. Descubrí el ecosistema completo.</p>
+  </div>
+  <div class="hero-scroll">Explorar</div>
+</section>
+
+<!-- INTERLUDE 1 -->
+<div class="interlude reveal">
+  <div>
+    <div class="interlude-line"></div>
+    <p class="interlude-text">No vendemos plástico.<br>Vendemos <em>objetos que significan algo.</em></p>
+  </div>
+</div>
+
+<!-- NIVEL 1: PÚBLICO -->
+<section id="nivel1">
+  <div class="reveal">
+    <div class="level-badge badge-public">● Nivel 1 · Público</div>
+    <div class="sec-eyebrow">El imán</div>
+    <h2 class="sec-title">Líneas de alta rotación</h2>
+    <p class="sec-frase">"Diseño accesible con identidad irreemplazable"</p>
+  </div>
+  <div class="lineas-grid reveal">
+
+    <div class="linea-card" style="--lc:#F9A8D4">
+      <span class="lc-emoji">🎀</span>
+      <div class="lc-name">Coquette</div>
+      <div class="lc-frase">Elegancia que se toca. Para la generación que sabe que los detalles son el todo.</div>
+      <span class="lc-tag">Olivia · 15 años</span>
+      <a href="coquette.html" style="display:inline-flex;align-items:center;gap:6px;margin-top:10px;font-size:.62rem;letter-spacing:2px;text-transform:uppercase;color:#F9A8D4;text-decoration:none;border:1px solid rgba(249,168,212,.3);padding:5px 12px;transition:all .3s">Ver línea completa →</a>
+      <a href="https://wa.me/541165497234?text=Hola! Me interesa la línea Coquette" class="lc-wa" target="_blank">Consultar →</a>
+    </div>
+
+    <div class="linea-card" style="--lc:#F472B6">
+      <span class="lc-emoji">🐾</span>
+      <div class="lc-name">Oasis Animal</div>
+      <div class="lc-frase">Amor que deja huella. 10% de cada venta financia el refugio de Agus y Fede.</div>
+      <span class="lc-tag">Solidario · Rescate</span>
+      <a href="https://wa.me/541165497234?text=Hola! Me interesa la línea Oasis Animal" class="lc-wa" target="_blank">Consultar →</a>
+    </div>
+
+    <div class="linea-card" style="--lc:#34D399">
+      <span class="lc-emoji">⚽</span>
+      <div class="lc-name">Sport</div>
+      <div class="lc-frase">Pasión hecha objeto. Coleccionismo deportivo y aeronáutico por Francisco.</div>
+      <span class="lc-tag">Francisco · 11 años</span>
+      <a href="https://wa.me/541165497234?text=Hola! Me interesa la línea Sport" class="lc-wa" target="_blank">Consultar →</a>
+    </div>
+
+    <div class="linea-card" style="--lc:#CD7F32">
+      <span class="lc-emoji">🌀</span>
+      <div class="lc-name">Ánima</div>
+      <div class="lc-frase">Objetos que respiran. Espacios que inspiran. Espiritualidad laica por Nely.</div>
+      <span class="lc-tag">Bronce · Geometría áurea</span>
+      <a href="https://wa.me/541165497234?text=Hola! Me interesa la línea Ánima" class="lc-wa" target="_blank">Consultar →</a>
+    </div>
+
+    <div class="linea-card" style="--lc:#A78BFA">
+      <span class="lc-emoji">🎵</span>
+      <div class="lc-name">Melómano</div>
+      <div class="lc-frase">Para los que escuchan diferente. Soportes de vinilo y accesorios de alta fidelidad por Fer.</div>
+      <span class="lc-tag">Fernando · Audio hi-fi</span>
+      <a href="https://wa.me/541165497234?text=Hola! Me interesa la línea Melómano" class="lc-wa" target="_blank">Consultar →</a>
+    </div>
+
+    <div class="linea-card" style="--lc:#4CAF50">
+      <span class="lc-emoji">🌿</span>
+      <div class="lc-name">Oasis del Estero</div>
+      <div class="lc-frase">Tecnología para el cultivo del futuro. Macetas innovadoras y piezas para hidroponía por Fede.</div>
+      <span class="lc-tag">Nordelta · Agro-Tech</span>
+      <a href="https://wa.me/541165497234?text=Hola! Me interesa la línea Oasis del Estero" class="lc-wa" target="_blank">Consultar →</a>
+    </div>
+
+  </div>
+</section>
+
+<!-- INTERLUDE 2 -->
+<div class="interlude reveal">
+  <div>
+    <div class="interlude-line"></div>
+    <p class="interlude-text">Algunos clientes buscan una solución.<br><em>Los mejores buscan una herramienta.</em></p>
+  </div>
+</div>
+
+<!-- NIVEL 2: PROFESIONAL -->
+<section id="nivel2">
+  <div class="reveal">
+    <div class="level-badge badge-pro">●● Nivel 2 · Profesional</div>
+    <div class="sec-eyebrow">La herramienta</div>
+    <h2 class="sec-title">Líneas técnicas y B2B</h2>
+    <p class="sec-frase">"Fabricamos lo que el mercado olvidó hacer"</p>
+  </div>
+  <div class="lineas-grid reveal">
+
+    <div class="linea-card" style="--lc:#FF5F1F">
+      <span class="lc-emoji">✈️</span>
+      <div class="lc-name">Aero-Tech</div>
+      <div class="lc-frase">Precisión de vuelo en tu escritorio. Para pilotos, mecánicos y personal de aviación. Personalización con código IATA y legajo.</div>
+      <span class="lc-tag">Nando · PETG Industrial</span>
+      <a href="https://wa.me/541165497234?text=Hola! Me interesa la línea Aero-Tech" class="lc-wa" target="_blank">Consultar →</a>
+    </div>
+
+    <div class="linea-card" style="--lc:#64748B">
+      <span class="lc-emoji">⚙️</span>
+      <div class="lc-name">Core Tech</div>
+      <div class="lc-frase">Ingeniería de componentes por Constantino. Si lo necesitás y no existe, lo fabricamos. Para talleres y escuelas técnicas.</div>
+      <span class="lc-tag">Constantino · 17 años</span>
+      <a href="https://wa.me/541165497234?text=Hola! Me interesa Core Tech" class="lc-wa" target="_blank">Consultar →</a>
+    </div>
+
+    <div class="linea-card" style="--lc:#FBBF24">
+      <span class="lc-emoji">💊</span>
+      <div class="lc-name">Pharma DeLux</div>
+      <div class="lc-frase">Regalos que dicen todo. Maquetas anatómicas y obsequios corporativos de alta gama para el universo médico.</div>
+      <span class="lc-tag">Lucas · Corporate gifts</span>
+      <a href="https://wa.me/541165497234?text=Hola! Me interesa Pharma DeLux" class="lc-wa" target="_blank">Consultar →</a>
+    </div>
+
+    <div class="linea-card" style="--lc:#94a3b8">
+      <span class="lc-emoji">🔧</span>
+      <div class="lc-name">Soluciones Cotidianas</div>
+      <div class="lc-frase">Lo que el mercado olvidó fabricar. Patas antivibrantes, repuestos del hogar, tapas, soportes. Si lo necesitás, lo hacemos.</div>
+      <span class="lc-tag">Bajo pedido · 48hs</span>
+      <a href="https://wa.me/541165497234?text=Hola! Necesito una pieza que no encuentro en el mercado" class="lc-wa" target="_blank">Consultar →</a>
+    </div>
+
+  </div>
+</section>
+
+<!-- BLACK LABEL -->
+<section id="blacklabel">
+  <div class="reveal">
+    <div class="level-badge badge-black">●●● Nivel 3 · Black Label</div>
+    <div class="sec-eyebrow">Acceso restringido</div>
+    <h2 class="sec-title">Alta precisión.<br><em style="color:var(--gold)">Alta magnitud.</em></h2>
+    <p class="sec-frase">"No para todos. Para los que saben lo que buscan."</p>
+  </div>
+
+  <div class="bl-grid reveal">
+
+    <div class="bl-card">
+      <div class="bl-num">01</div>
+      <div style="font-size:.6rem;letter-spacing:3px;color:var(--gold);text-transform:uppercase;margin-bottom:12px">Línea flagship</div>
+      <div class="bl-name">Magnitud 19 Elite</div>
+      <div class="bl-frase">"Donde la ingeniería se encuentra con la intuición"</div>
+      <div class="bl-desc">Herramientas de alto rendimiento para ejecutivos, deportistas mentales y neurodivergentes de alto potencial. El Organizador Kaizen. El Cubo Infinito. Objetos que regulan la mente.</div>
+      <div class="bl-price">$150.000<span> · Desde</span></div>
+    </div>
+
+    <div class="bl-card">
+      <div class="bl-num">02</div>
+      <div style="font-size:.6rem;letter-spacing:3px;color:var(--gold);text-transform:uppercase;margin-bottom:12px">Precisión extrema</div>
+      <div class="bl-name">Vuelo Certero</div>
+      <div class="bl-frase">"Donde la física se encuentra con el blanco"</div>
+      <div class="bl-desc">Arquería, balística y tiro deportivo. Estabilizadores, grips moldeados a tu mano, cajas de munición con cierre magnético. La diferencia entre el blanco y el margen se llama equipo.</div>
+      <div class="bl-price">A cotizar<span> · Personalizado</span></div>
+    </div>
+
+    <div class="bl-card">
+      <div class="bl-num">03</div>
+      <div style="font-size:.6rem;letter-spacing:3px;color:var(--gold);text-transform:uppercase;margin-bottom:12px">Kits exclusivos</div>
+      <div class="bl-name">Colecciones & Kits</div>
+      <div class="bl-frase">"Más que la suma de sus partes"</div>
+      <div class="bl-desc">Kits curados por Alejandra. Kit "Paz y Tiempo", Kit "Sommelier Challenge" con Vinoteca Lau, Kit "Vuelo de Honor" para aerolíneas. Para regalar con intención.</div>
+      <div class="bl-price">A cotizar<span> · Por composición</span></div>
+    </div>
+
+  </div>
+
+  <!-- Access gate -->
+  <div class="access-gate reveal">
+    <div style="font-size:.6rem;letter-spacing:4px;text-transform:uppercase;color:var(--gold);margin-bottom:16px">Acceso Black Label</div>
+    <div class="gate-title">Dejá tu contacto para recibir el catálogo completo</div>
+    <div class="gate-sub">Precios reales, disponibilidad, opciones de personalización y tiempo de entrega.<br>Respondemos en menos de 2 horas en días hábiles.</div>
+    <div class="gate-form">
+      <input class="gate-input" type="text" placeholder="Tu nombre" id="g-nombre">
+      <input class="gate-input" type="text" placeholder="WhatsApp o email" id="g-contacto">
+      <button class="gate-btn" onclick="solicitarAcceso()">Solicitar acceso</button>
+    </div>
+  </div>
+</section>
+
+<!-- IMPACTO SOCIAL -->
+<section id="impacto">
+  <div class="reveal">
+    <div class="sec-eyebrow">Propósito</div>
+    <h2 class="sec-title">Impacto real.<br><em style="color:var(--accent1)">En tiempo real.</em></h2>
+    <p class="sec-frase">"Cada compra tiene un destino"</p>
+  </div>
+  <div class="imp-fondos reveal">
+    <div class="imp-fondo" style="--fc:#F472B6">
+      <div style="font-size:1.5rem;margin-bottom:12px">🐾</div>
+      <div class="imp-nombre">Refugio Oasis Animal</div>
+      <div class="imp-meta">Meta mensual: $50.000 · Agus & Fede</div>
+      <div class="imp-bar"><div class="imp-fill" style="width:0%;--fc:#F472B6" id="b1"></div></div>
+      <div class="imp-pct" id="p1">Sin datos aún — ¡hacé la primera compra!</div>
+    </div>
+    <div class="imp-fondo" style="--fc:#818CF8">
+      <div style="font-size:1.5rem;margin-bottom:12px">🧠</div>
+      <div class="imp-nombre">Mentes Brillantes</div>
+      <div class="imp-meta">Meta mensual: $40.000 · Salud mental</div>
+      <div class="imp-bar"><div class="imp-fill" style="width:0%;--fc:#818CF8" id="b2"></div></div>
+      <div class="imp-pct" id="p2">Sin datos aún — ¡hacé la primera compra!</div>
+    </div>
+    <div class="imp-fondo" style="--fc:#FB7185">
+      <div style="font-size:1.5rem;margin-bottom:12px">❤️</div>
+      <div class="imp-nombre">Fondo General</div>
+      <div class="imp-meta">Meta mensual: $30.000 · Causas activas</div>
+      <div class="imp-bar"><div class="imp-fill" style="width:0%;--fc:#FB7185" id="b3"></div></div>
+      <div class="imp-pct" id="p3">Sin datos aún — ¡hacé la primera compra!</div>
+    </div>
+  </div>
+</section>
+
+<!-- QUIENES SOMOS -->
+<section id="quienes">
+  <div class="reveal">
+    <div class="sec-eyebrow">El equipo</div>
+    <h2 class="sec-title">Las personas<br><em style="color:var(--gold)">detrás del objeto.</em></h2>
+    <p class="sec-frase">"No somos una fábrica. Somos diez personas con un propósito."</p>
+  </div>
+  <div class="qs-grid reveal">
+    <div class="qs-card" style="--qc:#C9A84C"><span class="qs-rol">Dirección estratégica</span><div class="qs-nombre">Alejandra</div><div class="qs-bio">SAP, Kaizen, análisis de datos. <strong>El Pasaje es su traducción de orden, abundancia y propósito en un negocio real.</strong></div></div>
+    <div class="qs-card" style="--qc:#A78BFA"><span class="qs-rol">Operaciones & técnico</span><div class="qs-nombre">Fernando</div><div class="qs-bio">Técnico electrónico y melómano. <strong>Si Alejandra piensa el sistema, Fer lo imprime.</strong> Custodia cada máquina como sus vinilos.</div></div>
+    <div class="qs-card" style="--qc:#F9A8D4"><span class="qs-rol">Coquette · 15 años</span><div class="qs-nombre">Olivia</div><div class="qs-bio"><strong>Diseña para su generación con una sensibilidad que ningún adulto podría replicar.</strong> Ojo para el detalle que asusta.</div></div>
+    <div class="qs-card" style="--qc:#34D399"><span class="qs-rol">Sport · 11 años</span><div class="qs-nombre">Francisco</div><div class="qs-bio"><strong>Su línea Sport habla el idioma de los chicos que coleccionan con orgullo.</strong> Aviación, Huracán y arte en una sola mente.</div></div>
+    <div class="qs-card" style="--qc:#64748B"><span class="qs-rol">Core Tech · 17 años</span><div class="qs-nombre">Constantino</div><div class="qs-bio">Escuela técnica, precisión industrial. <strong>Si necesitás una pieza que no existe, él la diseña.</strong></div></div>
+    <div class="qs-card" style="--qc:#FF5F1F"><span class="qs-rol">Aero-Tech</span><div class="qs-nombre">Nando</div><div class="qs-bio">Aviación desde adentro. <strong>Diseña para sus compañeros, no para el mercado.</strong> Esa diferencia se nota en cada pieza.</div></div>
+    <div class="qs-card" style="--qc:#F472B6"><span class="qs-rol">Oasis Animal · Refugio</span><div class="qs-nombre">Agustina</div><div class="qs-bio"><strong>Comprar un Llavero Huellita no es solo comprar — es elegir un lado.</strong> Guardería, refugio y rescate.</div></div>
+    <div class="qs-card" style="--qc:#4CAF50"><span class="qs-rol">Oasis del Estero</span><div class="qs-nombre">Fede</div><div class="qs-bio">Hidroponia en Nordelta. <strong>Junto a Agustina representan la cara solidaria y técnica del ecosistema a la vez.</strong></div></div>
+    <div class="qs-card" style="--qc:#FBBF24"><span class="qs-rol">Pharma DeLux</span><div class="qs-nombre">Lucas</div><div class="qs-bio">Visitador médico. <strong>Convierte regalos institucionales genéricos en piezas de alta precisión que se recuerdan.</strong></div></div>
+    <div class="qs-card" style="--qc:#CD7F32"><span class="qs-rol">Línea Ánima</span><div class="qs-nombre">Nely</div><div class="qs-bio"><strong>Para quien busca un objeto que signifique algo de verdad.</strong> Geometría, proporciones áureas, materiales que reaccionan al tacto.</div></div>
+  </div>
+</section>
+
+<!-- ALIANZAS -->
+<section id="alianzas">
+  <div class="reveal">
+    <div class="sec-eyebrow">Ecosistema</div>
+    <h2 class="sec-title">Compañeros<br><em style="color:var(--gold)">de ruta.</em></h2>
+    <p class="sec-frase">"Alianzas que multiplican el valor de cada compra"</p>
+  </div>
+  <div class="al-grid reveal">
+    <div class="al-card">
+      <div class="al-partner">🍷 Vinoteca Lau</div>
+      <div class="al-name">Kit Sommelier Challenge</div>
+      <div class="al-desc">Tapón laberinto 3D en bronce + vino de autor seleccionado por Lau. Reutilizable. Solo quien lo resuelve merece el vino. 10% de descuento cruzado.</div>
+      <a href="https://wa.me/541165497234?text=Hola! Me interesa el Kit Sommelier Challenge" class="al-link" target="_blank">Consultar →</a>
+    </div>
+    <div class="al-card">
+      <div class="al-partner">📷 Mariana</div>
+      <div class="al-name">Kit Recuerdos Eternos</div>
+      <div class="al-desc">Sesión fotográfica por Mariana + Litofanía impresa por El Pasaje. Tu foto se convierte en una pieza 3D que con luz revela cada detalle. Ideal para retratos, bebés, mascotas.</div>
+      <a href="https://wa.me/541165497234?text=Hola! Me interesa el Kit Recuerdos Eternos con Mariana" class="al-link" target="_blank">Consultar →</a>
+    </div>
+    <div class="al-card">
+      <div class="al-partner">✈️ Vuelo de Honor</div>
+      <div class="al-name">Kit Corporativo Aerolínea</div>
+      <div class="al-desc">Para pilotos y directivos que se jubilan o cumplen años de servicio. Tapón con código IATA grabado + vino premium. El regalo que ninguna aerolínea ofrece todavía.</div>
+      <a href="https://wa.me/541165497234?text=Hola! Me interesa el Kit Vuelo de Honor" class="al-link" target="_blank">Consultar →</a>
+    </div>
+    <div class="al-card" style="border-style:dashed;opacity:.6">
+      <div class="al-partner">🤝 Alianzas abiertas</div>
+      <div class="al-name">Tu negocio aquí</div>
+      <div class="al-desc">Buscamos aliados con propósito. Si compartís la filosofía de El Pasaje — calidad, identidad, comunidad — hablemos.</div>
+      <a href="https://wa.me/541165497234?text=Hola! Me interesa ser aliado de El Pasaje" class="al-link" target="_blank">Proponer alianza →</a>
+    </div>
+  </div>
+</section>
+
+<!-- SERVICIO TÉCNICO -->
+<section id="service">
+  <div class="reveal">
+    <div class="sec-eyebrow">Fer · Técnico electrónico</div>
+    <h2 class="sec-title">Servicio técnico<br><em style="color:var(--blue2)">El Pasaje.</em></h2>
+    <p class="sec-frase">"Puesta a Punto y Optimización · Certificado incluido"</p>
+  </div>
+  <div class="sv-grid reveal">
+    <div class="sv-card" style="--sc:#22C55E">
+      <div class="sv-nivel">⚡ Express · Showroom</div>
+      <div class="sv-name">Puesta a Punto</div>
+      <ul class="sv-items">
+        <li>Limpieza de boquilla y extrusor</li>
+        <li>Tensión de correas y excéntricas</li>
+        <li>Nivelación de cama</li>
+        <li>Actualización de firmware</li>
+        <li>Test de impresión incluido</li>
+      </ul>
+      <div class="sv-price">$15.000 – $20.000<br><small>Traer máquina al showroom</small></div>
+    </div>
+    <div class="sv-card" style="--sc:#C9A84C">
+      <div class="sv-nivel">🏠 Rescate · A domicilio</div>
+      <div class="sv-name">Fer va a tu casa</div>
+      <ul class="sv-items">
+        <li>Todo lo del pack Express</li>
+        <li>Diagnóstico electrónico completo</li>
+        <li>Revisión de placa madre y drivers</li>
+        <li>Capacitación al dueño (10 min)</li>
+        <li>Certificado de calibración</li>
+      </ul>
+      <div class="sv-price">$25.000 / 1ª hora<br><small>+ $10.000 hora adicional + viáticos</small></div>
+    </div>
+    <div class="sv-card" style="--sc:#818CF8">
+      <div class="sv-nivel">📅 Preventivo · Bimestral</div>
+      <div class="sv-name">Plan de mantenimiento</div>
+      <ul class="sv-items">
+        <li>Visita cada 2 meses</li>
+        <li>Ideal para granjas de impresión</li>
+        <li>Lubricación y calibración total</li>
+        <li>Reporte escrito de estado</li>
+        <li>Prioridad ante urgencias</li>
+      </ul>
+      <div class="sv-price">A cotizar<br><small>Según cantidad de equipos</small></div>
+    </div>
+  </div>
+  <div style="margin-top:20px;padding:20px 28px;background:var(--surface);border-left:2px solid var(--gold);border-radius:0 4px 4px 0;font-size:.78rem;color:var(--muted);line-height:1.7" class="reveal">
+    📜 Cada reparación incluye un <strong style="color:var(--gold2)">Certificado de Calibración El Pasaje</strong> firmado por Fer. Marcas compatibles: Creality · Artillery · Bambu Lab · Prusa · Anycubic · Elegoo
+  </div>
+</section>
+
+<!-- CONTACTO -->
+<section id="contacto">
+  <div class="reveal">
+    <div class="sec-eyebrow">Contacto</div>
+    <h2 class="sec-title">Empezá tu<br><em style="color:var(--gold)">consulta.</em></h2>
+    <p class="sec-frase">"Respondemos por WhatsApp en menos de 2 horas"</p>
+  </div>
+  <div class="ct-form reveal">
+    <div class="ct-row">
+      <input class="ct-input" type="text" placeholder="Tu nombre" id="c-nombre">
+      <input class="ct-input" type="text" placeholder="WhatsApp o email" id="c-contacto">
+    </div>
+    <select class="ct-input ct-select" id="c-linea" style="margin-bottom:16px">
+      <option value="">¿Qué línea te interesa?</option>
+      <option>🎀 Coquette</option>
+      <option>🐾 Oasis Animal</option>
+      <option>⚽ Sport</option>
+      <option>🌀 Ánima</option>
+      <option>🎵 Melómano</option>
+      <option>🌿 Oasis del Estero</option>
+      <option>✈️ Aero-Tech</option>
+      <option>⚙️ Core Tech</option>
+      <option>💊 Pharma DeLux</option>
+      <option>🔧 Pieza del hogar / repuesto</option>
+      <option>🏛️ Magnitud 19 Elite</option>
+      <option>🎯 Vuelo Certero</option>
+      <option>🍷 Kit Sommelier Challenge</option>
+      <option>📷 Kit Recuerdos Eternos</option>
+      <option>🔧 Servicio técnico</option>
+      <option>🤝 Alianza comercial</option>
+    </select>
+    <textarea class="ct-input" rows="3" placeholder="Contanos qué necesitás..." id="c-msg" style="margin-bottom:8px;resize:vertical"></textarea>
+    <button class="ct-btn" onclick="enviar()">Enviar por WhatsApp →</button>
+    <p style="font-size:.65rem;color:var(--muted);text-align:center;margin-top:12px">Al hacer clic se abre WhatsApp con tu mensaje pre-armado.</p>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<div style="border-top:1px solid var(--border)">
+  <footer>
+    <div>
+      <div class="ft-brand">El <span>Pasaje</span></div>
+      <div class="ft-tag">Manufactura aditiva de alta precisión.<br>Buenos Aires · 2026<br>Cada objeto tiene una historia.</div>
+    </div>
+    <div>
+      <div class="ft-h">Líneas</div>
+      <div class="ft-links">
+        <a href="#nivel1">🎀 Coquette · ⚽ Sport · 🌀 Ánima</a>
+        <a href="#nivel1">🐾 Oasis Animal · 🌿 Oasis del Estero</a>
+        <a href="#nivel1">🎵 Melómano</a>
+        <a href="#nivel2">✈️ Aero-Tech · ⚙️ Core Tech</a>
+        <a href="#nivel2">💊 Pharma DeLux · 🔧 Soluciones</a>
+        <a href="#blacklabel">🏛️ Magnitud 19 · 🎯 Vuelo Certero</a>
+      </div>
+    </div>
+    <div>
+      <div class="ft-h">Contacto</div>
+      <div class="ft-links">
+        <a href="https://wa.me/541165497234" target="_blank">📱 WhatsApp</a>
+        <a href="#service">🔧 Servicio Técnico</a>
+        <a href="#alianzas">🤝 Alianzas</a>
+        <a href="#impacto">🌱 Impacto Social</a>
+        <a href="#quienes">👥 Nuestro Equipo</a>
+      </div>
+    </div>
+  </footer>
+  <div class="ft-copy">© 2026 El Pasaje 3D Studio · La Piedad Tech & Design · Buenos Aires</div>
+</div>
+
+<!-- WhatsApp flotante -->
+<a href="https://wa.me/541165497234?text=Hola El Pasaje! Vi el catálogo y quiero consultar" class="wa-float" target="_blank">
+  <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+</a>
+
+<script>
+// Cursor
+const cur=document.getElementById('cur'),cur2=document.getElementById('cur2');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{
+  mx=e.clientX;my=e.clientY;
+  cur.style.transform=`translate(${mx-5}px,${my-5}px)`;
+});
+function animRing(){
+  rx+=(mx-rx)*.1;ry+=(my-ry)*.1;
+  cur2.style.transform=`translate(${rx-18}px,${ry-18}px)`;
+  requestAnimationFrame(animRing);
+}
+animRing();
+document.querySelectorAll('a,button,.linea-card,.bl-card,.sv-card').forEach(el=>{
+  el.addEventListener('mouseenter',()=>{cur.style.width='18px';cur.style.height='18px'});
+  el.addEventListener('mouseleave',()=>{cur.style.width='10px';cur.style.height='10px'});
+});
+
+// Scroll reveal
+const obs=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible')});
+},{threshold:.1});
+document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+
+// Level dots
+const sections={d1:['hero','nivel1'],d2:['nivel2'],d3:['blacklabel']};
+const sObs=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(!e.isIntersecting)return;
+    const id=e.target.id;
+    ['d1','d2','d3'].forEach(d=>document.getElementById(d).classList.remove('active'));
+    if(['hero','nivel1'].includes(id))document.getElementById('d1').classList.add('active');
+    else if(id==='nivel2')document.getElementById('d2').classList.add('active');
+    else if(id==='blacklabel')document.getElementById('d3').classList.add('active');
+  });
+},{threshold:.3});
+['hero','nivel1','nivel2','blacklabel'].forEach(id=>{
+  const el=document.getElementById(id);
+  if(el)sObs.observe(el);
+});
+
+// Stagger linea cards
+document.querySelectorAll('.linea-card,.bl-card,.qs-card,.sv-card,.al-card').forEach((c,i)=>{
+  c.style.transitionDelay=`${(i%6)*0.07}s`;
+});
+
+// WA form
+function enviar(){
+  const n=document.getElementById('c-nombre').value||'Sin nombre';
+  const c=document.getElementById('c-contacto').value||'Sin contacto';
+  const l=document.getElementById('c-linea').value||'No especificada';
+  const m=document.getElementById('c-msg').value||'Sin mensaje';
+  const txt=`Hola El Pasaje! 👋%0A%0A*Nombre:* ${n}%0A*Contacto:* ${c}%0A*Línea:* ${l}%0A%0A*Consulta:* ${m}`;
+  window.open(`https://wa.me/541165497234?text=${txt}`,'_blank');
+}
+function solicitarAcceso(){
+  const n=document.getElementById('g-nombre').value||'Sin nombre';
+  const c=document.getElementById('g-contacto').value||'Sin contacto';
+  const txt=`Hola! Solicito acceso Black Label.%0ANombre: ${n}%0AContacto: ${c}`;
+  window.open(`https://wa.me/541165497234?text=${txt}`,'_blank');
+}
+</script>
+
+<!-- ══════════════════════════════════════
+     ASISTENTE IA FLOTANTE
+══════════════════════════════════════ -->
+<div id="ai-bubble" style="
+  position:fixed;bottom:90px;right:28px;z-index:600;
+  width:52px;height:52px;
+  background:linear-gradient(135deg,#4455ff,#8844ff);
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  cursor:none;transition:transform .3s;
+  box-shadow:0 4px 20px rgba(68,85,255,.4);
+  animation:aiPulse 3s infinite;
+" onclick="toggleChat()" title="Asistente El Pasaje">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+    <path d="M12 2a10 10 0 0 1 10 10c0 5.52-4.48 10-10 10a9.96 9.96 0 0 1-5.19-1.45L2 22l1.45-4.81A9.96 9.96 0 0 1 2 12 10 10 0 0 1 12 2z"/>
+    <path d="M8 10h8M8 14h5"/>
+  </svg>
+</div>
+<div style="position:fixed;bottom:90px;right:88px;z-index:599;
+  background:var(--surface,#12121f);border:1px solid rgba(68,85,255,.3);
+  border-radius:8px;padding:6px 12px;font-size:.65rem;letter-spacing:1px;
+  color:#8899ff;white-space:nowrap;pointer-events:none;
+  opacity:1;transition:opacity .3s;" id="ai-hint">
+  IA · Consultá aquí
+</div>
+
+<div id="ai-chat" style="
+  position:fixed;bottom:90px;right:28px;z-index:700;
+  width:380px;max-height:580px;
+  background:#0d0d1a;border:1px solid rgba(68,85,255,.25);
+  border-radius:12px;display:none;flex-direction:column;
+  box-shadow:0 20px 60px rgba(0,0,0,.6);
+  font-family:'Syne',sans-serif;
+">
+  <!-- Header -->
+  <div style="padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.06);
+    display:flex;align-items:center;justify-content:space-between;
+    background:linear-gradient(135deg,rgba(68,85,255,.15),rgba(136,68,255,.1));
+    border-radius:12px 12px 0 0;">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div style="width:32px;height:32px;border-radius:50%;
+        background:linear-gradient(135deg,#4455ff,#8844ff);
+        display:flex;align-items:center;justify-content:center;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+          <path d="M12 2a10 10 0 0 1 10 10c0 5.52-4.48 10-10 10a9.96 9.96 0 0 1-5.19-1.45L2 22l1.45-4.81A9.96 9.96 0 0 1 2 12 10 10 0 0 1 12 2z"/>
+        </svg>
+      </div>
+      <div>
+        <div style="font-size:.8rem;font-weight:600;color:#f0efff;">Asistente El Pasaje</div>
+        <div style="font-size:.6rem;color:#4455ff;letter-spacing:1px;">● EN LÍNEA · IA ACTIVA</div>
+      </div>
+    </div>
+    <button onclick="toggleChat()" style="background:none;border:none;color:#555;cursor:none;font-size:1.2rem;padding:4px;">✕</button>
+  </div>
+
+  <!-- Messages -->
+  <div id="ai-messages" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;max-height:380px;">
+    <div class="msg-bot" style="background:rgba(68,85,255,.1);border:1px solid rgba(68,85,255,.15);
+      border-radius:4px 12px 12px 12px;padding:12px 14px;font-size:.78rem;color:#c8c8ff;line-height:1.6;">
+      Hola! Soy el asistente de <b style="color:#C9A84C">El Pasaje 3D Studio</b>. 👋<br><br>
+      Puedo cotizarte al instante, recomendarte la línea correcta o contarte sobre cualquier producto. ¿Por dónde empezamos?
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;">
+        <button onclick="preguntaRapida('Quiero cotizar un pedido')" style="background:rgba(68,85,255,.2);border:1px solid rgba(68,85,255,.3);color:#8899ff;padding:4px 10px;border-radius:99px;font-size:.65rem;cursor:pointer;font-family:'Syne',sans-serif;">💰 Cotizar</button>
+        <button onclick="preguntaRapida('¿Qué línea me recomendás para un regalo?')" style="background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.2);color:#C9A84C;padding:4px 10px;border-radius:99px;font-size:.65rem;cursor:pointer;font-family:'Syne',sans-serif;">🎁 Regalos</button>
+        <button onclick="preguntaRapida('¿Qué es el Servicio Técnico?')" style="background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.2);color:#34D399;padding:4px 10px;border-radius:99px;font-size:.65rem;cursor:pointer;font-family:'Syne',sans-serif;">🔧 Servicio</button>
+        <button onclick="preguntaRapida('¿Cuáles son los productos solidarios?')" style="background:rgba(244,114,182,.1);border:1px solid rgba(244,114,182,.2);color:#F472B6;padding:4px 10px;border-radius:99px;font-size:.65rem;cursor:pointer;font-family:'Syne',sans-serif;">🐾 Solidario</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Input -->
+  <div style="padding:12px 16px;border-top:1px solid rgba(255,255,255,.06);">
+    <div style="display:flex;gap:8px;align-items:center;">
+      <input id="ai-input" type="text"
+        placeholder="Escribí tu consulta..."
+        style="flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+        color:#f0efff;padding:10px 14px;border-radius:4px;font-family:'Syne',sans-serif;
+        font-size:.78rem;outline:none;"
+        onkeydown="if(event.key==='Enter')enviarIA()">
+      <button onclick="enviarIA()" style="
+        background:linear-gradient(135deg,#4455ff,#8844ff);
+        border:none;color:white;padding:10px 16px;border-radius:4px;
+        font-family:'Syne',sans-serif;font-size:.7rem;cursor:pointer;
+        font-weight:600;letter-spacing:1px;white-space:nowrap;">
+        Enviar
+      </button>
+    </div>
+    <div style="font-size:.6rem;color:#333;text-align:center;margin-top:6px;">
+      Potenciado por IA · El Pasaje 3D Studio
+    </div>
+  </div>
+</div>
+
+<style>
+@keyframes aiPulse{0%,100%{box-shadow:0 4px 20px rgba(68,85,255,.4)}70%{box-shadow:0 4px 30px rgba(68,85,255,.7),0 0 0 8px rgba(68,85,255,.08)}}
+#ai-messages::-webkit-scrollbar{width:4px}
+#ai-messages::-webkit-scrollbar-track{background:transparent}
+#ai-messages::-webkit-scrollbar-thumb{background:rgba(68,85,255,.3);border-radius:99px}
+</style>
+
+<script>
+const SYSTEM_PROMPT = `Sos el asistente oficial de El Pasaje 3D Studio, un ecosistema de manufactura aditiva (impresión 3D) con base en Buenos Aires. Tu nombre es "Asistente El Pasaje".
+
+INFORMACIÓN DEL NEGOCIO:
+- Tenemos 2 impresoras: Creality K2 Plus y Artillery Genius Pro
+- Materiales: PLUMARMOL ($2500/kg) y PLANEGRO MATE ($2200/kg)
+- Regla de precio: precio venta = costo material × 3 (mínimo)
+- Factor de merma: 10% adicional en cada pieza
+- WA de contacto: +54 11 6549 7234
+
+LÍNEAS Y PRODUCTOS:
+🎀 Coquette (Olivia, 15 años): Moño Textil $1500, Monedero Silk $2800, Llavero Peonía $1200. Estética rosa, eventos sociales.
+🐾 Oasis Animal (Agustina & Fede): Llavero Huellita $800 (SOLIDARIO - 10% va al refugio). Rescate de animales.
+⚽ Sport (Francisco, 11 años): Parche Flexible $1800. Deportivo y aeronáutico.
+🌀 Ánima (Nely): Cuenco de Intenciones, Árbol de Expansión, Lámpara Eclipse. A cotizar. Espiritualidad laica.
+🎵 Melómano (Fernando): Soporte Vinilo LP $3500. Audio hi-fi.
+🌿 Oasis del Estero (Fede): Macetas hidropónicas, sistema esquejes. Nordelta. A cotizar.
+✈️ Aero-Tech (Nando): Lapicero Turbina Jet, Shadow Box herramientas, Tags IATA. A cotizar. Personalizable con legajo.
+⚙️ Core Tech (Constantino, 17 años): Piezas técnicas, repuestos industriales. A cotizar.
+💊 Pharma DeLux (Lucas): Regalos corporativos médicos, maquetas anatómicas. A cotizar.
+🔧 Soluciones Cotidianas: Patas antivibrantes lavarropas, repuestos del hogar. A cotizar. 48hs.
+🏛️ Magnitud 19 Elite: Organizador Kaizen $150000, Cubo Infinito $55900, Organizador Elite $180000. Premium.
+🎯 Vuelo Certero: Arquería y tiro deportivo. Estabilizadores, grips custom, cajas munición. A cotizar.
+
+KITS:
+🍷 Kit Sommelier Challenge (con Vinoteca Lau): Tapón laberinto 3D + vino. A cotizar.
+📷 Kit Recuerdos Eternos (con Mariana fotógrafa): Sesión + Litofanía 3D. A cotizar.
+✈️ Kit Vuelo de Honor: Corporativo aerolínea + vino. A cotizar.
+
+SERVICIO TÉCNICO (Fer):
+- Pack Express (showroom): $15000-$20000
+- Rescate a domicilio: $25000/1ª hora + $10000 hora adicional + viáticos  
+- Plan Preventivo bimestral: A cotizar
+- Incluye Certificado de Calibración
+- Marcas: Creality, Artillery, Bambu Lab, Prusa, Anycubic, Elegoo
+
+CÓMO COTIZAR:
+Si el cliente pregunta por un pedido con cantidad y producto, calculá:
+1. Buscá el peso aproximado de la pieza (si no lo sabés, pedílo)
+2. Costo material = (peso_gr × 1.10 × costo_kg) / 1000
+3. Precio sugerido = costo_material × 3
+4. Tiempo estimado: piezas pequeñas 2-4hs, medianas 4-8hs, grandes 8-16hs
+
+REGLAS DE RESPUESTA:
+- Respondé siempre en español rioplatense (vos, che, etc.)
+- Sé conciso y directo — máximo 3-4 párrafos cortos
+- Si no podés cotizar exactamente, dá un rango y explicá qué necesitás para precisar
+- Siempre terminá ofreciendo contacto por WhatsApp para cerrar: +54 11 6549 7234
+- Transmitís confianza, calidez y profesionalismo
+- Usá emojis con moderación
+- Si preguntan por algo que no sabés, decí que lo van a confirmar por WA`;
+
+let chatHistory = [];
+let chatOpen = false;
+
+function toggleChat(){
+  chatOpen = !chatOpen;
+  const chat = document.getElementById('ai-chat');
+  const hint = document.getElementById('ai-hint');
+  chat.style.display = chatOpen ? 'flex' : 'none';
+  hint.style.opacity = chatOpen ? '0' : '1';
+  if(chatOpen) document.getElementById('ai-input').focus();
+}
+
+function preguntaRapida(texto){
+  document.getElementById('ai-input').value = texto;
+  enviarIA();
+}
+
+function addMsg(text, isBot){
+  const msgs = document.getElementById('ai-messages');
+  const div = document.createElement('div');
+  div.style.cssText = isBot
+    ? 'background:rgba(68,85,255,.1);border:1px solid rgba(68,85,255,.15);border-radius:4px 12px 12px 12px;padding:12px 14px;font-size:.78rem;color:#c8c8ff;line-height:1.6;'
+    : 'background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.12);border-radius:12px 4px 12px 12px;padding:12px 14px;font-size:.78rem;color:#e8d5a3;line-height:1.6;align-self:flex-end;';
+  div.innerHTML = text.replace(/\n/g,'<br>');
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  return div;
+}
+
+function addTyping(){
+  const msgs = document.getElementById('ai-messages');
+  const div = document.createElement('div');
+  div.id = 'typing';
+  div.style.cssText = 'background:rgba(68,85,255,.1);border:1px solid rgba(68,85,255,.15);border-radius:4px 12px 12px 12px;padding:12px 14px;font-size:.78rem;color:#555;';
+  div.innerHTML = '● ● ●';
+  div.style.animation = 'none';
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+async function enviarIA(){
+  const input = document.getElementById('ai-input');
+  const texto = input.value.trim();
+  if(!texto) return;
+  input.value = '';
+
+  addMsg(texto, false);
+  chatHistory.push({role:'user', content: texto});
+  addTyping();
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: SYSTEM_PROMPT,
+        messages: chatHistory
+      })
+    });
+
+    const data = await response.json();
+    const typing = document.getElementById('typing');
+    if(typing) typing.remove();
+
+    const respuesta = data.content?.[0]?.text || 'Disculpá, hubo un problema. Escribinos al WA: +54 11 6549 7234';
+    chatHistory.push({role:'assistant', content: respuesta});
+    addMsg(respuesta, true);
+
+  } catch(err){
+    const typing = document.getElementById('typing');
+    if(typing) typing.remove();
+    addMsg('Hubo un problema de conexión. Escribinos directamente al WhatsApp: +54 11 6549 7234 🙏', true);
+  }
+}
+</script>
+
+</body>
+</html>
