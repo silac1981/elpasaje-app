@@ -364,6 +364,16 @@ details summary{color:#E6EDF3!important;padding:8px 12px!important}
 [data-testid="stChatMessageContent"] p{color:#E6EDF3!important}
 .stRadio label{color:#8B949E!important}
 [data-testid="stFileUploaderDropzone"]{background:#161B22!important;border-color:#30363D!important}
+/* ── Overrides del tema global light que chocan con el fondo oscuro ── */
+.stMarkdown p,.stMarkdown span{color:#C9D1D9!important}
+.stMarkdown strong,.stMarkdown b{color:#F0F6FC!important}
+.stNumberInput label,.stTextInput label,.stSelectbox label,.stTextArea label,.stFileUploader label,.stCheckbox label{color:#8B949E!important;font-weight:500!important}
+.stExpander summary p{color:#E6EDF3!important;font-weight:600!important}
+.stExpander details{background:#161B22!important}
+.stCaption p,.stCaption span{color:#6B7280!important}
+[data-testid="stAlert"] p,[data-testid="stAlert"] div,[data-testid="stAlert"] span{color:#C9D1D9!important}
+[data-testid="stAlert"]{background:#1a2332!important;border-color:#30363D!important}
+.stDataFrame,[data-testid="stDataFrame"]{background:#161B22!important}
 </style>""", unsafe_allow_html=True)
     st.markdown(f"<div style='background:#161B22;border-radius:16px;padding:22px 28px;border:1px solid #21262D;border-left:4px solid #3FB950;margin-bottom:8px;'><div style='font-size:0.65rem;font-weight:700;letter-spacing:3px;color:#3FB950;text-transform:uppercase;'>EL PASAJE 3D STUDIO · PRODUCCION</div><div style='font-size:1.7rem;font-weight:800;color:#F0F6FC;margin-top:6px;'>🖨️ Centro de Fabricacion</div><div style='font-size:0.78rem;color:#8B949E;margin-top:6px;'>Fernando · {datetime.now().strftime('%A %d/%m/%Y')} · {datetime.now().strftime('%H:%M')}</div></div>", unsafe_allow_html=True)
     _EC = {"Pendiente":{"color":"#F59E0B","emoji":"⏳"},"En Proceso":{"color":"#3B82F6","emoji":"🖨️"},"Listo":{"color":"#22C55E","emoji":"✅"},"Cancelado":{"color":"#EF4444","emoji":"❌"}}
