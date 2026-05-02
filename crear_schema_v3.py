@@ -225,7 +225,7 @@ TENANTS_INICIALES = [
     ("francisco_sport",  "Francisco",                          "fsport@elpasaje.com",       "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",  None, "familia",       None,                               HOY, 1, "B2C", "Familia",   "Alto", "Presencial",   "Buenos Aires",        "Deportes",                 None, 1, HOY, "Francisco Sport"),
     ("constantino_tech", "Constantino",                        "coretech@elpasaje.com",     "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",  None, "familia",       None,                               HOY, 1, "B2C", "Familia",   "Alto", "Presencial",   "Buenos Aires",        "Tecnología",               None, 1, HOY, "Core Tech"),
     ("aviation",         "Fernando Gomez Aguilera (Nando)",    "aviation@elpasaje.com",     "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",  None, "b2b",           "Mantenimiento AA",                 HOY, 1, "B2B", "Red Nando", "Alto", "WhatsApp",     "Buenos Aires",        "Aeronáutico",              None, 1, HOY, "Aviation Pro"),
-    ("oasis_animal",     "Oasis Animal",                       "oasisanimal@elpasaje.com",  "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",  None, "b2b",           None,                               HOY, 1, "B2B", "Red Nando", "Alto", "WhatsApp",     "Buenos Aires",        "Veterinario",              None, 1, HOY, "Oasis Animal"),
+    ("oasis_animal",     "Oasis Animal",                       "oasisanimal@elpasaje.com",  "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",  None, "socio_multi",   None,                               HOY, 1, "B2B", "Red Nando", "Alto", "WhatsApp",     "Buenos Aires",        "Veterinario",              None, 1, HOY, "Oasis Animal + VK-Home"),
     ("oasis_del_estero", "Oasis del Estero",                   "oasisestero@elpasaje.com",  "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",  None, "b2b",           None,                               HOY, 1, "B2B", "Red Nando", "Medio","WhatsApp",     "Santiago del Estero", None,                       None, 1, HOY, "Oasis del Estero"),
     ("pharma_delux",     "Pharma DeLux",                       "pharma@elpasaje.com",       "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",  None, "b2b",           None,                               HOY, 1, "B2B", "Directo",   "Alto", "Email",        "Buenos Aires",        "Farmacéutico",             None, 1, HOY, "Pharma DeLux"),
     ("fer_produccion",   "Fernando (Fer)",                     "fer@elpasaje.com",          "a29461d9796a45974014a214c0ece938a5f9dcd8799f26b26c34d3e8adf31c69",  None, "produccion",    "Fabricacion y Materiales",         HOY, 1, None,  None,        None,   "Presencial",   "Buenos Aires",        None,                       None, 1, HOY, None),
@@ -234,8 +234,10 @@ TENANTS_INICIALES = [
 ]
 
 TENANT_LINEAS_INICIALES = [
-    ("agustina", "oasis_animal"),
-    ("agustina", "vkhome_cliente"),
+    ("agustina",     "oasis_animal"),
+    ("agustina",     "vkhome_cliente"),
+    ("oasis_animal", "oasis_animal"),
+    ("oasis_animal", "vkhome_cliente"),
 ]
 
 MATERIALS_INICIALES = [
@@ -427,6 +429,15 @@ def init_schema():
         conn.execute(text(
             "UPDATE tenants SET password=:h WHERE id='vkhome_cliente' AND password='pendiente'"
         ), {"h": "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3"})
+
+        # ── oasis_animal pasa a socio_multi para ver también VK-Home ──
+        conn.execute(text("UPDATE tenants SET tipo='socio_multi' WHERE id='oasis_animal'"))
+        conn.execute(text(
+            "INSERT OR IGNORE INTO tenant_lineas (tenant_id, linea_id) VALUES ('oasis_animal', 'oasis_animal')"
+        ))
+        conn.execute(text(
+            "INSERT OR IGNORE INTO tenant_lineas (tenant_id, linea_id) VALUES ('oasis_animal', 'vkhome_cliente')"
+        ))
 
         conn.commit()
 
