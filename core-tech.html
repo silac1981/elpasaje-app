@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Core Tech · El Pasaje Industrial</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --negro:#0D1117;
+  --profundo:#111820;
+  --carbono:#161D26;
+  --acero:#1C2A38;
+  --grafito:#243040;
+  --gris:#4A5A6A;
+  --gris2:#6A7A8A;
+  --gris3:#9AAABB;
+  --claro:#C8D8E8;
+  --blanco:#F0F5FA;
+  --azul:#007FFF;
+  --azul2:#2A9FFF;
+  --azul3:#0055CC;
+  --azulbg:rgba(0,127,255,.08);
+  --cyan:#00D4FF;
+  --brd:rgba(0,127,255,.2);
+  --brd2:rgba(0,127,255,.08);
+  --verde:#059669;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--negro);color:var(--blanco);font-family:'Space Grotesk',sans-serif;font-weight:300;overflow-x:hidden;cursor:none}
+#cur{width:8px;height:8px;background:var(--azul);border-radius:50%;position:fixed;top:0;left:0;pointer-events:none;z-index:9999;transition:width .15s,height .15s}
+#cur2{width:28px;height:28px;border:1px solid rgba(0,127,255,.35);border-radius:0;position:fixed;top:0;left:0;pointer-events:none;z-index:9998;transition:transform .08s}
+
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:400;padding:0 64px;height:56px;display:flex;justify-content:space-between;align-items:center;background:rgba(13,17,23,.97);backdrop-filter:blur(16px);border-bottom:1px solid var(--brd)}
+.nav-logo{font-family:'Space Grotesk',sans-serif;font-size:.8rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--blanco);display:flex;align-items:center;gap:10px}
+.nav-logo .dot{width:8px;height:8px;background:var(--azul);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+.nav-logo em{font-style:normal;color:var(--azul)}
+.nav-back{font-size:.52rem;font-weight:500;letter-spacing:3px;text-transform:uppercase;color:var(--gris2);text-decoration:none;transition:color .25s;font-family:'JetBrains Mono',monospace}
+.nav-back:hover{color:var(--azul)}
+
+/* ── TABS ── */
+.tab-bar{position:sticky;top:56px;z-index:300;background:rgba(17,24,32,.98);display:flex;justify-content:center;border-bottom:1px solid var(--brd)}
+.tab-btn{padding:0 24px;height:46px;font-family:'Space Grotesk',sans-serif;font-size:.56rem;font-weight:500;letter-spacing:3px;text-transform:uppercase;color:var(--gris);background:none;border:none;cursor:pointer;transition:all .25s;position:relative}
+.tab-btn::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--azul);transform:scaleX(0);transition:transform .25s}
+.tab-btn.active{color:var(--azul)}
+.tab-btn.active::after{transform:scaleX(1)}
+.tab-btn:hover{color:var(--claro)}
+
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+/* ── HERO ── */
+.hero{min-height:90vh;background:var(--negro);position:relative;overflow:hidden;display:flex;align-items:center;padding:100px 100px 80px}
+/* Grid técnico de fondo */
+.hero::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(0,127,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(0,127,255,.04) 1px,transparent 1px);background-size:48px 48px}
+.hero::after{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--azul)}
+/* Línea horizontal técnica */
+.hero-hline{position:absolute;top:50%;left:0;right:0;height:1px;background:linear-gradient(to right,var(--azul),transparent);opacity:.12;pointer-events:none}
+.hero-left{position:relative;z-index:2;max-width:640px}
+.h-breadcrumb{font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--gris2);margin-bottom:20px;display:flex;align-items:center;gap:8px}
+.h-breadcrumb span{color:var(--azul)}
+.h-title{font-family:'Space Grotesk',sans-serif;font-size:clamp(2.8rem,5vw,5.5rem);font-weight:700;line-height:.9;color:var(--blanco);margin-bottom:8px;letter-spacing:-2px}
+.h-title span{color:var(--azul)}
+.h-subtitle{font-family:'JetBrains Mono',monospace;font-size:clamp(.8rem,1.5vw,1.1rem);font-weight:300;color:var(--gris2);text-transform:uppercase;letter-spacing:4px;margin-bottom:28px}
+.h-div{width:48px;height:2px;background:var(--azul);margin-bottom:22px}
+.h-sub{font-size:.9rem;font-weight:300;color:var(--gris3);line-height:1.8;max-width:480px;margin-bottom:40px}
+.h-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(0,127,255,.15);margin-bottom:36px}
+.hst{background:rgba(0,127,255,.04);padding:18px 14px;text-align:center;border:1px solid var(--brd2)}
+.hst-n{font-family:'JetBrains Mono',monospace;font-size:1.8rem;font-weight:400;color:var(--azul);line-height:1}
+.hst-l{font-size:.48rem;font-weight:500;letter-spacing:3px;text-transform:uppercase;color:var(--gris);margin-top:6px;line-height:1.4}
+.h-ctas{display:flex;gap:12px;flex-wrap:wrap}
+.h-cta{display:inline-flex;align-items:center;gap:10px;padding:12px 32px;background:var(--azul);color:var(--negro);font-size:.6rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;text-decoration:none;transition:all .25s;cursor:pointer;border:none;font-family:'Space Grotesk',sans-serif}
+.h-cta:hover{background:var(--azul2)}
+.h-cta-sec{display:inline-flex;align-items:center;gap:10px;padding:12px 28px;border:1px solid var(--brd);color:var(--azul);font-size:.6rem;font-weight:500;letter-spacing:3px;text-transform:uppercase;cursor:pointer;background:none;transition:all .25s;font-family:'Space Grotesk',sans-serif}
+.h-cta-sec:hover{background:var(--azulbg)}
+/* Deco técnica hero */
+.hero-deco{position:absolute;right:5%;top:50%;transform:translateY(-50%);z-index:1;opacity:.04;font-size:22rem;line-height:1;user-select:none;filter:blur(1px)}
+
+/* ── STRIP ── */
+.strip{background:var(--azul);padding:10px 64px;display:flex;align-items:center;justify-content:center;gap:44px}
+.ss-item{display:flex;align-items:center;gap:8px;font-family:'JetBrains Mono',monospace;font-size:.54rem;font-weight:400;letter-spacing:2px;text-transform:uppercase;color:rgba(0,0,0,.8)}
+.ss-dot{width:4px;height:4px;background:rgba(0,0,0,.4);flex-shrink:0}
+
+/* ── SECCIONES ── */
+.sec{padding:72px 100px;background:var(--profundo)}
+.sec-alt{background:var(--carbono)}
+.sec-light{background:var(--blanco);color:var(--negro)}
+.sec-light .sec-ttl{color:var(--negro)}
+.sec-light .sec-body{color:var(--gris)}
+.eyebrow{font-family:'JetBrains Mono',monospace;font-size:.54rem;font-weight:400;letter-spacing:5px;text-transform:uppercase;color:var(--azul);margin-bottom:14px;display:flex;align-items:center;gap:12px}
+.eyebrow::before{content:'//';color:var(--azul);opacity:.5;font-size:.6rem}
+.sec-ttl{font-family:'Space Grotesk',sans-serif;font-size:clamp(2rem,3.5vw,3rem);font-weight:700;color:var(--blanco);margin-bottom:16px;letter-spacing:-1px;line-height:.95}
+.sec-ttl span{color:var(--azul)}
+.sec-body{font-size:.88rem;font-weight:300;color:var(--gris3);line-height:1.85;margin-bottom:24px}
+
+/* ── CARDS ── */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--brd)}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--brd)}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--brd)}
+
+.pcard{background:var(--carbono);padding:28px 24px;cursor:none;transition:all .3s;position:relative;border-top:2px solid transparent}
+.pcard:hover{background:var(--acero);border-top-color:var(--azul)}
+.pcard-badge{display:inline-flex;align-items:center;padding:2px 10px;margin-bottom:14px;font-family:'JetBrains Mono',monospace;font-size:.48rem;font-weight:400;letter-spacing:2px;text-transform:uppercase}
+.badge-edu{background:rgba(0,127,255,.12);color:var(--azul);border:1px solid var(--brd2)}
+.badge-lab{background:rgba(0,212,255,.08);color:var(--cyan);border:1px solid rgba(0,212,255,.2)}
+.badge-rep{background:rgba(255,165,0,.08);color:#FFA500;border:1px solid rgba(255,165,0,.2)}
+.badge-b2b{background:rgba(255,255,255,.05);color:var(--gris3);border:1px solid rgba(255,255,255,.1)}
+.badge-new{background:var(--azul);color:var(--negro);font-weight:700}
+.pcard-icon{font-size:1.6rem;display:block;margin-bottom:12px;opacity:.6}
+.pcard-name{font-family:'Space Grotesk',sans-serif;font-size:1rem;font-weight:600;color:var(--blanco);margin-bottom:8px;transition:color .3s;letter-spacing:-.3px}
+.pcard:hover .pcard-name{color:var(--azul)}
+.pcard-desc{font-size:.82rem;font-weight:300;color:var(--gris3);line-height:1.65;margin-bottom:14px}
+.pcard-price{font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:400;color:var(--azul)}
+.pcard-cta{display:inline-flex;align-items:center;gap:6px;margin-top:10px;font-family:'JetBrains Mono',monospace;font-size:.5rem;font-weight:400;letter-spacing:2px;text-transform:uppercase;color:var(--gris2);text-decoration:none;transition:color .2s}
+.pcard:hover .pcard-cta{color:var(--azul)}
+
+/* ── ESTRELLA ── */
+.star-wrap{display:grid;grid-template-columns:1.2fr 1fr;gap:1px;margin-bottom:40px;background:var(--brd);border-top:3px solid var(--azul)}
+.star-left{padding:48px;background:var(--carbono)}
+.star-kicker{font-family:'JetBrains Mono',monospace;font-size:.5rem;font-weight:400;letter-spacing:4px;text-transform:uppercase;color:var(--azul);margin-bottom:16px;display:block}
+.star-ttl{font-family:'Space Grotesk',sans-serif;font-size:2.4rem;font-weight:700;color:var(--blanco);line-height:.9;margin-bottom:16px;letter-spacing:-1px}
+.star-ttl span{color:var(--azul)}
+.star-body{font-size:.88rem;font-weight:300;color:var(--gris3);line-height:1.8;margin-bottom:22px}
+.ben-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;margin-bottom:22px;background:var(--brd)}
+.ben{background:var(--acero);padding:14px 16px;border-left:2px solid var(--azul)}
+.ben-t{font-family:'JetBrains Mono',monospace;font-size:.5rem;font-weight:500;letter-spacing:2px;text-transform:uppercase;color:var(--azul);margin-bottom:4px}
+.ben-d{font-size:.78rem;font-weight:300;color:var(--gris3);line-height:1.5}
+.star-cta{display:inline-flex;align-items:center;gap:10px;padding:12px 28px;background:var(--azul);color:var(--negro);font-size:.6rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;text-decoration:none;cursor:none;transition:all .25s;font-family:'Space Grotesk',sans-serif}
+.star-cta:hover{background:var(--azul2)}
+.star-nota{font-family:'JetBrains Mono',monospace;font-size:.62rem;font-weight:300;color:var(--gris);margin-top:8px}
+.star-right{background:var(--acero);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;position:relative;overflow:hidden}
+.star-right::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(0,127,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(0,127,255,.05) 1px,transparent 1px);background-size:24px 24px}
+.star-img-icon{font-size:4rem;opacity:.2;display:block;margin-bottom:14px;text-align:center;position:relative;z-index:1}
+.star-img-name{font-family:'Space Grotesk',sans-serif;font-size:1rem;font-weight:600;color:var(--blanco);text-align:center;margin-bottom:6px;position:relative;z-index:1;letter-spacing:-.3px}
+.star-img-sub{font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--gris2);text-align:center;margin-bottom:20px;position:relative;z-index:1}
+.price-row{display:grid;grid-template-columns:1fr 1fr;gap:1px;width:100%;background:var(--brd);position:relative;z-index:1}
+.pr-item{background:var(--carbono);padding:14px;text-align:center;border-top:2px solid var(--brd)}
+.pr-n{font-family:'JetBrains Mono',monospace;font-size:1.1rem;font-weight:400;color:var(--azul)}
+.pr-l{font-family:'JetBrains Mono',monospace;font-size:.44rem;font-weight:300;letter-spacing:2px;text-transform:uppercase;color:var(--gris);margin-top:4px}
+
+/* ── IA ── */
+.ia-wrap{background:var(--acero);border:1px solid var(--brd);border-top:2px solid var(--azul);padding:44px 52px;display:grid;grid-template-columns:1fr 1fr;gap:52px;align-items:center;margin-top:40px}
+.ia-chip{display:inline-flex;align-items:center;gap:8px;background:var(--azulbg);border:1px solid var(--brd);padding:4px 12px;font-family:'JetBrains Mono',monospace;font-size:.48rem;font-weight:400;letter-spacing:2px;text-transform:uppercase;color:var(--azul);margin-bottom:14px}
+.ia-chip::before{content:'';width:6px;height:6px;background:var(--azul);border-radius:50%;animation:bl 2s infinite}
+@keyframes bl{0%,100%{opacity:1}50%{opacity:.2}}
+.ia-ttl{font-family:'Space Grotesk',sans-serif;font-size:1.4rem;font-weight:600;color:var(--blanco);margin-bottom:6px;letter-spacing:-.5px}
+.ia-sub{font-size:.84rem;font-weight:300;color:var(--gris3);line-height:1.8}
+.ia-fn-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px}
+.ia-fn{background:var(--carbono);border:1px solid var(--brd2);border-left:2px solid var(--gris);padding:10px 12px;cursor:pointer;transition:all .25s;font-family:'JetBrains Mono',monospace;font-size:.6rem;font-weight:300;color:var(--gris3);text-align:left}
+.ia-fn:hover,.ia-fn.active-fn{background:var(--azulbg);border-color:var(--brd);border-left-color:var(--azul);color:var(--azul)}
+.ia-inp{width:100%;background:var(--carbono);border:1px solid var(--brd2);color:var(--blanco);padding:10px 14px;font-family:'JetBrains Mono',monospace;font-size:.78rem;outline:none;transition:border-color .25s;margin-bottom:12px}
+.ia-inp:focus{border-color:var(--azul)}
+.ia-inp::placeholder{color:var(--gris);font-style:normal}
+.ia-btn{background:var(--azul);border:none;color:var(--negro);padding:11px;font-family:'Space Grotesk',sans-serif;font-size:.6rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;cursor:pointer;transition:all .25s;width:100%}
+.ia-btn:hover{background:var(--azul2)}
+.ia-resp{margin-top:12px;padding:14px 16px;background:var(--azulbg);border-left:2px solid var(--azul);font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--gris3);line-height:1.8;display:none}
+
+/* ── REPUESTO FORM ── */
+.rep-box{background:var(--acero);border:1px solid var(--brd);border-top:3px solid var(--azul);padding:40px;margin-bottom:24px}
+.rep-ttl{font-family:'Space Grotesk',sans-serif;font-size:1.3rem;font-weight:600;color:var(--blanco);margin-bottom:8px;letter-spacing:-.3px}
+.rep-sub{font-size:.84rem;font-weight:300;color:var(--gris3);line-height:1.7;margin-bottom:24px}
+.rep-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px}
+.rep-field{display:flex;flex-direction:column;gap:6px}
+.rep-label{font-family:'JetBrains Mono',monospace;font-size:.5rem;font-weight:400;letter-spacing:3px;text-transform:uppercase;color:var(--gris2)}
+.rep-input{background:var(--carbono);border:1px solid var(--brd2);color:var(--blanco);padding:10px 14px;font-family:'JetBrains Mono',monospace;font-size:.78rem;outline:none;transition:border-color .25s}
+.rep-input:focus{border-color:var(--azul)}
+.rep-input::placeholder{color:var(--gris)}
+
+/* ── DONACIÓN ── */
+.don-wrap{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:start}
+.don-thermo{background:var(--acero);border:1px solid var(--brd2);border-left:2px solid var(--verde);padding:18px 22px;margin-bottom:12px}
+.don-lbl{font-family:'JetBrains Mono',monospace;font-size:.48rem;font-weight:400;letter-spacing:3px;text-transform:uppercase;color:var(--verde);margin-bottom:12px;display:block}
+.don-bar-bg{background:var(--carbono);height:4px;overflow:hidden;margin-bottom:8px}
+.don-bar{height:100%;background:var(--verde);transition:width 2.2s ease}
+.don-row{display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:.6rem;font-weight:300;color:var(--gris)}
+.don-row span{color:var(--verde)}
+.fondo-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;margin-top:20px;background:var(--brd)}
+.fondo-item{background:var(--acero);padding:16px;cursor:none;transition:all .3s}
+.fondo-item:hover{background:var(--grafito);border-top:2px solid var(--azul)}
+.fondo-emoji{font-size:1.2rem;display:block;margin-bottom:6px}
+.fondo-name{font-family:'Space Grotesk',sans-serif;font-size:.9rem;font-weight:600;color:var(--blanco);margin-bottom:4px}
+.fondo-desc{font-size:.7rem;font-weight:300;color:var(--gris3);line-height:1.4}
+.don-pct{font-family:'JetBrains Mono',monospace;font-size:4rem;font-weight:300;color:var(--verde);display:block;line-height:1}
+.don-info{font-size:.86rem;font-weight:300;color:var(--gris3);line-height:1.85}
+
+/* ── SINERGIA ── */
+.sin-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;margin-top:28px;background:var(--brd)}
+.scard{background:var(--acero);padding:28px 22px;text-decoration:none;color:inherit;display:block;transition:all .3s;cursor:none;border-top:2px solid transparent}
+.scard:hover{background:var(--grafito);border-top-color:var(--azul)}
+.scard:hover .sc-name{color:var(--azul)}
+.sc-tag{font-family:'JetBrains Mono',monospace;font-size:.44rem;font-weight:300;letter-spacing:3px;text-transform:uppercase;color:var(--gris2);margin-bottom:8px;display:block}
+.sc-name{font-family:'Space Grotesk',sans-serif;font-size:1rem;font-weight:600;color:var(--blanco);margin-bottom:8px;transition:color .3s;letter-spacing:-.3px}
+.sc-why{font-size:.8rem;font-weight:300;color:var(--gris3);line-height:1.6}
+
+/* ── CIERRE ── */
+.cierre{background:var(--negro);padding:80px;text-align:center;border-top:1px solid var(--brd)}
+.c-line{width:48px;height:2px;background:var(--azul);margin:0 auto 44px}
+.c-quote{font-family:'Space Grotesk',sans-serif;font-size:clamp(2rem,4vw,3.5rem);font-weight:700;color:var(--blanco);max-width:720px;margin:0 auto;line-height:.95;letter-spacing:-1px}
+.c-quote span{color:var(--azul)}
+.c-firma{font-family:'JetBrains Mono',monospace;margin-top:16px;font-size:.52rem;font-weight:300;letter-spacing:4px;text-transform:uppercase;color:var(--gris)}
+.c-ctas{margin-top:40px;display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap}
+.c-cta{display:inline-flex;align-items:center;gap:10px;padding:13px 48px;background:var(--azul);color:var(--negro);font-size:.6rem;font-weight:700;letter-spacing:4px;text-transform:uppercase;text-decoration:none;transition:background .25s;cursor:none;font-family:'Space Grotesk',sans-serif}
+.c-cta:hover{background:var(--azul2)}
+.c-back{font-family:'JetBrains Mono',monospace;font-size:.5rem;font-weight:300;letter-spacing:3px;text-transform:uppercase;color:var(--gris);text-decoration:none;transition:color .2s}
+.c-back:hover{color:var(--azul)}
+
+footer{padding:16px 64px;background:rgba(0,0,0,.5);border-top:1px solid var(--brd);display:flex;justify-content:space-between;align-items:center}
+.fl{font-family:'JetBrains Mono',monospace;font-size:.62rem;font-weight:300;letter-spacing:3px;color:var(--gris)}
+.fl em{color:var(--azul);font-style:normal}
+.fr{font-family:'JetBrains Mono',monospace;font-size:.42rem;font-weight:300;letter-spacing:2px;text-transform:uppercase;color:var(--gris)}
+
+.reveal{opacity:0;transform:translateY(14px);transition:opacity .85s ease,transform .85s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+.wa-float{position:fixed;bottom:28px;right:28px;width:52px;height:52px;background:#25D366;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:500;text-decoration:none;animation:waPulse 3s infinite;cursor:none}
+.wa-float svg{width:26px;height:26px;fill:white}
+@keyframes waPulse{0%,100%{box-shadow:0 0 0 0 rgba(37,211,102,.4)}70%{box-shadow:0 0 0 12px rgba(37,211,102,0)}}
+#back-banner{position:fixed;top:64px;left:20px;z-index:250;opacity:0;transform:translateX(-10px);transition:opacity .35s,transform .35s;pointer-events:none}
+#back-banner a{display:flex;align-items:center;gap:8px;background:rgba(13,17,23,.95);backdrop-filter:blur(8px);border:1px solid var(--brd);padding:8px 14px;font-family:'JetBrains Mono',monospace;font-size:.5rem;font-weight:300;letter-spacing:2px;text-transform:uppercase;color:var(--azul);text-decoration:none}
+
+@media(max-width:960px){
+  .hero{padding:100px 28px 60px}
+  .hero-deco{display:none}
+  .sec{padding:52px 28px}
+  .star-wrap,.don-wrap,.ia-wrap,.grid-2,.rep-grid{grid-template-columns:1fr}
+  .sin-grid,.grid-4{grid-template-columns:1fr 1fr}
+  nav{padding:0 20px}
+  footer{flex-direction:column;gap:8px;text-align:center;padding:14px 20px}
+  .tab-btn{padding:0 12px;font-size:.5rem}
+}
+@media(max-width:600px){.sin-grid,.grid-4,.grid-3,.ben-grid,.fondo-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="cur"></div><div id="cur2"></div>
+
+<nav>
+  <div class="nav-logo"><span class="dot"></span>&nbsp;<em>Core Tech</em> · El Pasaje Industrial</div>
+  <a href="index.html" class="nav-back">← el-pasaje/</a>
+</nav>
+
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('inicio',this)">⚙️ Inicio</button>
+  <button class="tab-btn" onclick="switchTab('escuelas',this)">🏫 Escuelas Técnicas</button>
+  <button class="tab-btn" onclick="switchTab('laboratorio',this)">🔬 Laboratorio</button>
+  <button class="tab-btn" onclick="switchTab('repuestos',this)">🔩 Repuestos</button>
+  <button class="tab-btn" onclick="switchTab('b2b',this)">📐 B2B</button>
+</div>
+
+
+<!-- ═══════════════ INICIO ═══════════════ -->
+<div id="tab-inicio" class="tab-panel active">
+
+<div class="hero">
+  <div class="hero-hline"></div>
+  <div class="hero-left reveal">
+    <div class="h-breadcrumb">el-pasaje / <span>core-tech</span> / inicio</div>
+    <h1 class="h-title">INGENIERÍA<br>DESDE EL<br><span>NÚCLEO.</span></h1>
+    <div class="h-subtitle">Core Tech · El Pasaje Industrial</div>
+    <div class="h-div"></div>
+    <p class="h-sub">Soluciones de impresión 3D para escuelas técnicas, laboratorios de ingeniería y PyMEs industriales. Si lo necesitás y no existe, lo fabricamos. Sin excusas. Sin demoras.</p>
+    <div class="h-stats">
+      <div class="hst"><div class="hst-n" id="cnt-ct">0</div><div class="hst-l">Soluciones<br>disponibles</div></div>
+      <div class="hst"><div class="hst-n">B2B</div><div class="hst-l">Nivel<br>Industrial</div></div>
+      <div class="hst"><div class="hst-n">∞</div><div class="hst-l">Repuestos<br>a medida</div></div>
+    </div>
+    <div class="h-ctas">
+      <button class="h-cta" onclick="switchTab('repuestos',document.querySelectorAll('.tab-btn')[3])">Repuestos a medida →</button>
+      <button class="h-cta-sec" onclick="switchTab('b2b',document.querySelectorAll('.tab-btn')[4])">Cotizar B2B</button>
+    </div>
+  </div>
+  <div class="hero-deco">⚙️</div>
+</div>
+
+<div class="strip">
+  <div class="ss-item"><span class="ss-dot"></span>Si no existe, lo fabricamos</div>
+  <div class="ss-item"><span class="ss-dot"></span>PETG · ABS · PLA técnico</div>
+  <div class="ss-item"><span class="ss-dot"></span>Precisión de laboratorio · Entrega en CABA/GBA</div>
+</div>
+
+<!-- Manifiesto -->
+<div class="sec reveal">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:start">
+    <div>
+      <div class="eyebrow">El diferencial</div>
+      <h2 class="sec-ttl">Lo que el mercado<br><span>olvidó hacer.</span></h2>
+      <p class="sec-body">Hay piezas que se rompen y no se consiguen más. Hay repuestos descatalogados que paralizan una máquina entera. Hay escuelas técnicas que no pueden enseñar el interior de un mecanismo porque ningún fabricante lo ofrece seccionado.</p>
+      <p class="sec-body" style="margin-bottom:20px">Core Tech existe para eso. No vendemos catálogos fijos. Diseñamos y fabricamos lo que el contexto requiere, con los materiales correctos y la precisión que cada aplicación exige.</p>
+      <a href="https://wa.me/541165497234?text=Hola! Necesito una solución técnica de Core Tech" class="star-cta" target="_blank">Describir el problema →</a>
+    </div>
+    <div>
+      <div class="eyebrow">Tres dominios</div>
+      <h2 class="sec-ttl">¿Cuál es<br>tu <span>contexto?</span></h2>
+      <div style="display:grid;grid-template-columns:1fr;gap:1px;background:var(--brd)">
+        <div onclick="switchTab('escuelas',document.querySelectorAll('.tab-btn')[1])" style="background:var(--acero);padding:18px 22px;border-left:3px solid var(--azul);cursor:pointer;transition:all .25s" onmouseenter="this.style.background='var(--grafito)'" onmouseleave="this.style.background='var(--acero)'">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:.52rem;letter-spacing:3px;text-transform:uppercase;color:var(--azul);margin-bottom:6px">🏫 Escuelas Técnicas</div>
+          <div style="font-size:.82rem;color:var(--gris3)">Módulos didácticos, piezas seccionadas y organizadores para talleres y laboratorios escolares.</div>
+        </div>
+        <div onclick="switchTab('laboratorio',document.querySelectorAll('.tab-btn')[2])" style="background:var(--acero);padding:18px 22px;border-left:3px solid var(--cyan);cursor:pointer;transition:all .25s" onmouseenter="this.style.background='var(--grafito)'" onmouseleave="this.style.background='var(--acero)'">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:.52rem;letter-spacing:3px;text-transform:uppercase;color:var(--cyan);margin-bottom:6px">🔬 Laboratorio / Microelectrónica</div>
+          <div style="font-size:.82rem;color:var(--gris3)">Gabinetes Arduino/Raspberry Pi, soportes de medición y organizadores anti-estáticos.</div>
+        </div>
+        <div onclick="switchTab('repuestos',document.querySelectorAll('.tab-btn')[3])" style="background:var(--acero);padding:18px 22px;border-left:3px solid #FFA500;cursor:pointer;transition:all .25s" onmouseenter="this.style.background='var(--grafito)'" onmouseleave="this.style.background='var(--acero)'">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:.52rem;letter-spacing:3px;text-transform:uppercase;color:#FFA500;margin-bottom:6px">🔩 Repuestos Descatalogados</div>
+          <div style="font-size:.82rem;color:var(--gris3)">La pieza que ya no se fabrica. La que para tu máquina. La que no encontrás en ningún lado.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /inicio -->
+
+
+<!-- ═══════════════ ESCUELAS TÉCNICAS ═══════════════ -->
+<div id="tab-escuelas" class="tab-panel">
+<div class="sec reveal">
+  <div class="eyebrow">Escuelas Técnicas · EdTech</div>
+  <h2 class="sec-ttl">Enseñar requiere<br><span>las piezas correctas.</span></h2>
+  <p class="sec-body">Las escuelas técnicas enseñan con lo que tienen. Muchas veces eso significa teoría sin práctica, porque los modelos didácticos son caros o directamente no existen. Core Tech los fabrica.</p>
+
+  <!-- Estrella: Módulos Didácticos -->
+  <div class="star-wrap">
+    <div class="star-left">
+      <span class="star-kicker">★ PRODUCTO ESTRELLA · ESCUELAS TÉCNICAS</span>
+      <h3 class="star-ttl">Módulos<br><span>Didácticos 3D</span></h3>
+      <p class="star-body">Piezas seccionadas que muestran el interior de mecanismos reales. Engranajes cortados en diagonal que exponen los dientes. Poleas con el eje visible. Válvulas abiertas en corte transversal. Lo que el libro muestra en 2D, el módulo lo pone en las manos del alumno.</p>
+      <div class="ben-grid">
+        <div class="ben"><div class="ben-t">Corte real</div><div class="ben-d">El mecanismo abierto, sin simplificar la geometría.</div></div>
+        <div class="ben"><div class="ben-t">PLA técnico</div><div class="ben-d">Resistente al uso diario en taller escolar.</div></div>
+        <div class="ben"><div class="ben-t">A pedido</div><div class="ben-d">Cualquier mecanismo del programa curricular.</div></div>
+        <div class="ben"><div class="ben-t">Sets</div><div class="ben-d">Un módulo o set completo para toda la clase.</div></div>
+      </div>
+      <a href="https://wa.me/541165497234?text=Hola! Me interesan los Módulos Didácticos 3D de Core Tech para mi escuela" class="star-cta" target="_blank">Cotizar para mi escuela →</a>
+      <div class="star-nota">// Mínimo 1 unidad · Sets para clase disponibles · Envío CABA/GBA</div>
+    </div>
+    <div class="star-right">
+      <span class="star-img-icon">⚙️</span>
+      <div class="star-img-name">Módulos Didácticos 3D</div>
+      <div class="star-img-sub">Mecanismos seccionados · PLA técnico · A pedido</div>
+      <div class="price-row">
+        <div class="pr-item"><div class="pr-n">Cotizar</div><div class="pr-l">Unidad</div></div>
+        <div class="pr-item"><div class="pr-n">-20%</div><div class="pr-l">Set clase</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="eyebrow" style="margin-top:40px">Más soluciones · Escuelas</div>
+  <h3 style="font-family:'Space Grotesk',sans-serif;font-size:1.6rem;font-weight:600;color:var(--blanco);margin-bottom:20px;letter-spacing:-.5px">El taller técnico que <span style="color:var(--azul)">merece tu escuela.</span></h3>
+  <div class="grid-2" style="gap:1px;background:var(--brd)">
+    <div class="pcard">
+      <div class="pcard-badge badge-edu">Escuelas</div>
+      <span class="pcard-icon">📦</span>
+      <div class="pcard-name">Organizadores de Taller</div>
+      <div class="pcard-desc">Sistemas modulares para organizar herramientas, calibres e insumos del taller escolar. Con etiquetas grabadas y slots específicos por herramienta. El taller que enseña con el orden también.</div>
+      <div class="pcard-price">Cotizar</div>
+      <a href="https://wa.me/541165497234?text=Hola! Me interesan los Organizadores de Taller de Core Tech" class="pcard-cta" target="_blank">Cotizar →</a>
+    </div>
+    <div class="pcard">
+      <div class="pcard-badge badge-edu">Escuelas · Maker</div>
+      <span class="pcard-icon">🔬</span>
+      <div class="pcard-name">Kits de Prototipado Escolar</div>
+      <div class="pcard-desc">Piezas estructurales para proyectos de robótica, mecatrónica o electrónica. Para el laboratorio maker que tiene ideas pero no las piezas para materializarlas.</div>
+      <div class="pcard-price">Cotizar</div>
+      <a href="https://wa.me/541165497234?text=Hola! Me interesan los Kits de Prototipado de Core Tech" class="pcard-cta" target="_blank">Cotizar →</a>
+    </div>
+    <div class="pcard">
+      <div class="pcard-badge badge-edu">Escuelas</div>
+      <span class="pcard-icon">📐</span>
+      <div class="pcard-name">Soportes para Instrumentos de Medición</div>
+      <div class="pcard-desc">Bases y soportes para calibres, micrómetros, vernier y demás instrumentos de precisión del laboratorio. Para que los instrumentos no estén tirados en una caja.</div>
+      <div class="pcard-price">Desde $2.400</div>
+      <a href="https://wa.me/541165497234?text=Hola! Me interesan los Soportes de Medición de Core Tech" class="pcard-cta" target="_blank">Pedir →</a>
+    </div>
+    <div class="pcard">
+      <div class="pcard-badge badge-new">Novedad</div>
+      <span class="pcard-icon">🏗️</span>
+      <div class="pcard-name">Maquetas de Ingeniería Civil</div>
+      <div class="pcard-desc">Modelos de estructuras, puentes, cerchas y fundaciones para materias de construcción e ingeniería. La diferencia entre ver un plano y tener la estructura en la mano.</div>
+      <div class="pcard-price">Cotizar</div>
+      <a href="https://wa.me/541165497234?text=Hola! Me interesan las Maquetas de Ingeniería de Core Tech" class="pcard-cta" target="_blank">Cotizar →</a>
+    </div>
+  </div>
+</div>
+
+<!-- IA Escuelas -->
+<div class="sec sec-alt reveal" style="padding-top:0">
+  <div class="ia-wrap">
+    <div>
+      <div class="ia-chip">// Technical Advisor · IA</div>
+      <h3 class="ia-ttl">¿Qué necesita tu escuela?</h3>
+      <p class="ia-sub">Describime la materia, el mecanismo o el problema técnico y el sistema te dice qué pieza de Core Tech resuelve el punto ciego didáctico.</p>
+    </div>
+    <div>
+      <div class="ia-fn-grid">
+        <div class="ia-fn" onclick="setFn(this,'Soy docente de mecánica y necesito modelos para enseñar transmisión de movimiento')">⚙️ Docente mecánica</div>
+        <div class="ia-fn" onclick="setFn(this,'Tengo un laboratorio de electrónica y necesito organizar herramientas e insumos')">🔬 Lab electrónica</div>
+        <div class="ia-fn" onclick="setFn(this,'Quiero montar un espacio maker con impresión 3D en mi escuela técnica')">🏫 Espacio maker</div>
+        <div class="ia-fn" onclick="setFn(this,'Necesito repuestos para una máquina del taller que se rompió')">🔩 Repuesto urgente</div>
+      </div>
+      <input class="ia-inp" id="ia-esc" placeholder="// Describí el problema técnico…" />
+      <button class="ia-btn" onclick="callIA('ia-esc','r-esc')">CONSULTAR →</button>
+      <div class="ia-resp" id="r-esc"></div>
+    </div>
+  </div>
+</div>
+</div><!-- /escuelas -->
+
+
+<!-- ═══════════════ LABORATORIO ═══════════════ -->
+<div id="tab-laboratorio" class="tab-panel">
+<div class="sec reveal">
+  <div class="eyebrow">Laboratorio · Microelectrónica</div>
+  <h2 class="sec-ttl">El gabinete que<br><span>tu placa merece.</span></h2>
+  <p class="sec-body">Arduino en una caja de cartón. Raspberry Pi sin disipación. Componentes electrónicos mezclados en una bolsa. Core Tech resuelve los problemas de organización y protección que todo laboratorio de microelectrónica enfrenta.</p>
+
+  <!-- Estrella: Gabinetes Arduino -->
+  <div class="star-wrap">
+    <div class="star-left">
+      <span class="star-kicker">★ PRODUCTO ESTRELLA · LABORATORIO</span>
+      <h3 class="star-ttl">Gabinetes<br><span>Microelectrónica</span></h3>
+      <p class="star-body">Carcasas a medida para Arduino Uno, Mega, Nano, Raspberry Pi 3/4/5 y ESP32. Con ventilación optimizada, slots para pantallas, acceso a pines y montaje en rack o pared. El mismo hardware, con la protección que una aplicación seria requiere.</p>
+      <div class="ben-grid">
+        <div class="ben"><div class="ben-t">Ventilación</div><div class="ben-d">Geometría de apertura calculada para flujo de aire.</div></div>
+        <div class="ben"><div class="ben-t">Acceso total</div><div class="ben-d">Todos los pines, puertos y conectores accesibles.</div></div>
+        <div class="ben"><div class="ben-t">PETG</div><div class="ben-d">Resistente al calor generado por las placas.</div></div>
+        <div class="ben"><div class="ben-t">A medida</div><div class="ben-d">Cualquier placa o combinación de placas.</div></div>
+      </div>
+      <a href="https://wa.me/541165497234?text=Hola! Necesito un gabinete a medida de Core Tech para mi placa" class="star-cta" target="_blank">Pedir mi gabinete →</a>
+      <div class="star-nota">// Especificá la placa y el uso — cotizamos en 24hs</div>
+    </div>
+    <div class="star-right">
+      <span class="star-img-icon">🔬</span>
+      <div class="star-img-name">Gabinetes Microelectrónica</div>
+      <div class="star-img-sub">Arduino · Raspberry Pi · ESP32 · A medida</div>
+      <div class="price-row">
+        <div class="pr-item"><div class="pr-n">$3.800</div><div class="pr-l">Estándar</div></div>
+        <div class="pr-item"><div class="pr-n">Cotizar</div><div class="pr-l">A medida</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="eyebrow" style="margin-top:40px">Más soluciones · Laboratorio</div>
+  <h3 style="font-family:'Space Grotesk',sans-serif;font-size:1.6rem;font-weight:600;color:var(--blanco);margin-bottom:20px;letter-spacing:-.5px">El laboratorio <span style="color:var(--azul)">que trabaja en serio.</span></h3>
+  <div class="grid-2" style="gap:1px;background:var(--brd)">
+    <div class="pcard">
+      <div class="pcard-badge badge-lab">Laboratorio</div>
+      <span class="pcard-icon">🗃️</span>
+      <div class="pcard-name">Organizadores Anti-Estáticos</div>
+      <div class="pcard-desc">Sistemas de almacenamiento para componentes electrónicos pequeños — resistencias, capacitores, IC, LEDs. Con slots individuales, etiquetas y material anti-ESD. El componente en su lugar, siempre.</div>
+      <div class="pcard-price">Desde $4.200</div>
+      <a href="https://wa.me/541165497234?text=Hola! Me interesan los Organizadores Anti-Estáticos de Core Tech" class="pcard-cta" target="_blank">Pedir →</a>
+    </div>
+    <div class="pcard">
+      <div class="pcard-badge badge-lab">Laboratorio</div>
+      <span class="pcard-icon">📐</span>
+      <div class="pcard-name">Soporte Multi-Herramienta</div>
+      <div class="pcard-desc">Base para tercera mano, pinzas de laboratorio, destornilladores y multímetro. El banco de trabajo organizado que no se consigue en ferreterías porque nadie piensa en el técnico de electrónica.</div>
+      <div class="pcard-price">$5.500</div>
+      <a href="https://wa.me/541165497234?text=Hola! Me interesa el Soporte Multi-Herramienta de Core Tech" class="pcard-cta" target="_blank">Pedir →</a>
+    </div>
+    <div class="pcard">
+      <div class="pcard-badge badge-lab">Laboratorio · Maker</div>
+      <span class="pcard-icon">🔌</span>
+      <div class="pcard-name">Panel de Distribución</div>
+      <div class="pcard-desc">Organizador de cables, adaptadores y fuentes de alimentación para el banco de trabajo. Clip por clip, fuente en su lugar, sin el nido de cables que termina en un cortocircuito.</div>
+      <div class="pcard-price">$3.800</div>
+      <a href="https://wa.me/541165497234?text=Hola! Me interesa el Panel de Distribución de Core Tech" class="pcard-cta" target="_blank">Pedir →</a>
+    </div>
+    <div class="pcard">
+      <div class="pcard-badge badge-new">Novedad</div>
+      <span class="pcard-icon">🖥️</span>
+      <div class="pcard-name">Rack Modular Lab</div>
+      <div class="pcard-desc">Sistema de rack personalizable para organizar múltiples placas, fuentes y osciloscopios de escritorio. La solución de integración que convierte un escritorio caótico en un laboratorio real.</div>
+      <div class="pcard-price">Cotizar</div>
+      <a href="https://wa.me/541165497234?text=Hola! Quiero cotizar el Rack Modular Lab de Core Tech" class="pcard-cta" target="_blank">Cotizar →</a>
+    </div>
+  </div>
+</div>
+
+<!-- IA Laboratorio -->
+<div class="sec sec-alt reveal" style="padding-top:0">
+  <div class="ia-wrap">
+    <div>
+      <div class="ia-chip">// Technical Advisor · IA</div>
+      <h3 class="ia-ttl">¿Qué necesita tu laboratorio?</h3>
+      <p class="ia-sub">Describime el setup — qué placas usás, qué problema tenés con el orden o la protección — y te recomiendo la solución exacta.</p>
+    </div>
+    <div>
+      <div class="ia-fn-grid">
+        <div class="ia-fn" onclick="setFn(this,'Tengo un Arduino Uno sin carcasa y necesito protegerlo para uso en producción')">Arduino sin carcasa</div>
+        <div class="ia-fn" onclick="setFn(this,'Tengo componentes electrónicos sueltos y necesito organizarlos')">Componentes sueltos</div>
+        <div class="ia-fn" onclick="setFn(this,'Tengo un banco de trabajo de electrónica muy desordenado')">Banco de trabajo</div>
+        <div class="ia-fn" onclick="setFn(this,'Necesito un gabinete especial para una combinación de placas que no es estándar')">Setup no estándar</div>
+      </div>
+      <input class="ia-inp" id="ia-lab" placeholder="// Describí tu setup o problema…" />
+      <button class="ia-btn" onclick="callIA('ia-lab','r-lab')">CONSULTAR →</button>
+      <div class="ia-resp" id="r-lab"></div>
+    </div>
+  </div>
+</div>
+</div><!-- /laboratorio -->
+
+
+<!-- ═══════════════ REPUESTOS ═══════════════ -->
+<div id="tab-repuestos" class="tab-panel">
+<div class="sec reveal">
+  <div class="eyebrow">Repuestos · Lo que no existe</div>
+  <h2 class="sec-ttl">La pieza que<br><span>para tu máquina.</span></h2>
+  <p class="sec-body">El fabricante la descatalogó. El importador no la trae. El distribuidor ya no la tiene. La máquina lleva semanas parada esperando una pieza de plástico que nadie fabrica. Core Tech puede hacerla en 48-72 horas.</p>
+
+  <!-- Bloque principal repuestos -->
+  <div style="background:var(--acero);border:1px solid var(--brd);border-top:3px solid #FFA500;padding:40px;margin-bottom:32px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center">
+      <div>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:.52rem;letter-spacing:4px;text-transform:uppercase;color:#FFA500;display:block;margin-bottom:14px">// El diferencial de Core Tech</span>
+        <h3 style="font-family:'Space Grotesk',sans-serif;font-size:1.8rem;font-weight:700;color:var(--blanco);margin-bottom:14px;letter-spacing:-.5px">Prototipado de repuestos <span style="color:#FFA500">descatalogados</span></h3>
+        <p style="font-size:.86rem;font-weight:300;color:var(--gris3);line-height:1.8;margin-bottom:20px">Si tenés la pieza rota o un plano técnico, podemos recrearla en 3D y fabricarla con el material adecuado. No es una solución para siempre — es la que necesitás ahora para volver a producir.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--brd);margin-bottom:20px">
+          <div style="background:var(--carbono);padding:14px 16px;border-left:2px solid #FFA500"><div style="font-family:'JetBrains Mono',monospace;font-size:.48rem;letter-spacing:2px;text-transform:uppercase;color:#FFA500;margin-bottom:4px">Tiempo</div><div style="font-size:.82rem;color:var(--gris3)">48-72hs desde el modelo o la pieza original</div></div>
+          <div style="background:var(--carbono);padding:14px 16px;border-left:2px solid var(--brd2)"><div style="font-family:'JetBrains Mono',monospace;font-size:.48rem;letter-spacing:2px;text-transform:uppercase;color:var(--gris2);margin-bottom:4px">Material</div><div style="font-size:.82rem;color:var(--gris3)">PETG, ABS, Nylon o PLA según requerimiento</div></div>
+          <div style="background:var(--carbono);padding:14px 16px;border-left:2px solid var(--brd2)"><div style="font-family:'JetBrains Mono',monospace;font-size:.48rem;letter-spacing:2px;text-transform:uppercase;color:var(--gris2);margin-bottom:4px">Proceso</div><div style="font-size:.82rem;color:var(--gris3)">Foto o pieza → modelo 3D → aprobación → fabricación</div></div>
+          <div style="background:var(--carbono);padding:14px 16px;border-left:2px solid var(--azul)"><div style="font-family:'JetBrains Mono',monospace;font-size:.48rem;letter-spacing:2px;text-transform:uppercase;color:var(--azul);margin-bottom:4px">Precio</div><div style="font-size:.82rem;color:var(--gris3)">Cotización en menos de 24hs con foto de la pieza</div></div>
+        </div>
+        <a href="https://wa.me/541165497234?text=Hola! Necesito un repuesto descatalogado, te mando la foto de la pieza" class="star-cta" target="_blank" style="background:#FFA500">Enviar foto de la pieza →</a>
+      </div>
+      <div style="text-align:center;position:relative">
+        <div style="font-size:6rem;opacity:.15;margin-bottom:16px">🔩</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--gris2);line-height:2">
+          <div>→ Foto de la pieza rota</div>
+          <div style="color:var(--azul)">→ Modelado 3D en 24hs</div>
+          <div>→ Aprobación del cliente</div>
+          <div style="color:var(--azul)">→ Fabricación en 48-72hs</div>
+          <div>→ Entrega en CABA/GBA</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="eyebrow">Otros productos · Repuestos y estructura</div>
+  <div class="grid-2" style="gap:1px;background:var(--brd)">
+    <div class="pcard">
+      <div class="pcard-badge badge-rep">Repuestos</div>
+      <span class="pcard-icon">🔧</span>
+      <div class="pcard-name">Brackets y Soportes Estructurales</div>
+      <div class="pcard-desc">Piezas de unión, soportes angulares y brackets personalizados para estructuras metálicas, mobiliario industrial o sistemas de montaje. A medida según el plano o la necesidad.</div>
+      <div class="pcard-price">Cotizar</div>
+      <a href="https://wa.me/541165497234?text=Hola! Necesito brackets o soportes estructurales de Core Tech" class="pcard-cta" target="_blank">Cotizar →</a>
+    </div>
+    <div class="pcard">
+      <div class="pcard-badge badge-rep">Repuestos · Mecánica</div>
+      <span class="pcard-icon">⚙️</span>
+      <div class="pcard-name">Engranajes y Poleas a Medida</div>
+      <div class="pcard-desc">Engranajes rectos, helicoidales y poleas con las dimensiones exactas que la transmisión requiere. Para equipos donde el repuesto original no se consigue o el costo de importación no es viable.</div>
+      <div class="pcard-price">Cotizar</div>
+      <a href="https://wa.me/541165497234?text=Hola! Necesito engranajes o poleas a medida de Core Tech" class="pcard-cta" target="_blank">Cotizar →</a>
+    </div>
+    <div class="pcard">
+      <div class="pcard-badge badge-rep">Repuestos · Tapas</div>
+      <span class="pcard-icon">🔒</span>
+      <div class="pcard-name">Tapas y Carcasas de Equipos</div>
+      <div class="pcard-desc">La tapa rota que ya no se fabrica. El panel de acceso que se perdió. La cubierta del conector que no tiene importador. Si tiene forma definida, la reproducimos.</div>
+      <div class="pcard-price">Cotizar</div>
+      <a href="https://wa.me/541165497234?text=Hola! Necesito una tapa o carcasa de repuesto de Core Tech" class="pcard-cta" target="_blank">Cotizar →</a>
+    </div>
+    <div class="pcard">
+      <div class="pcard-badge badge-rep">Industrial</div>
+      <span class="pcard-icon">🏭</span>
+      <div class="pcard-name">Piezas Industriales Custom</div>
+      <div class="pcard-desc">Para PyMEs con maquinaria específica y repuestos sin stock. Mandanos el plano técnico, la pieza rota o las medidas y fabricamos en el material que la aplicación requiere.</div>
+      <div class="pcard-price">Cotizar</div>
+      <a href="https://wa.me/541165497234?text=Hola! Necesito una pieza industrial custom de Core Tech" class="pcard-cta" target="_blank">Cotizar →</a>
+    </div>
+  </div>
+</div>
+
+<!-- IA Repuestos -->
+<div class="sec sec-alt reveal" style="padding-top:0">
+  <div class="ia-wrap">
+    <div>
+      <div class="ia-chip">// Technical Advisor · IA</div>
+      <h3 class="ia-ttl">¿Qué pieza necesitás?</h3>
+      <p class="ia-sub">Describime la pieza, la máquina o el equipo y te digo si podemos fabricarla, en qué material y en qué tiempo aproximado.</p>
+    </div>
+    <div>
+      <div class="ia-fn-grid">
+        <div class="ia-fn" onclick="setFn(this,'Tengo una pieza de plástico rota de una máquina industrial y necesito reemplazarla')">Pieza rota industrial</div>
+        <div class="ia-fn" onclick="setFn(this,'Necesito un engranaje de reemplazo con módulo específico')">Engranaje a medida</div>
+        <div class="ia-fn" onclick="setFn(this,'La tapa del equipo se rompió y no la consigo más')">Tapa descatalogada</div>
+        <div class="ia-fn" onclick="setFn(this,'Tengo el plano técnico de la pieza, ¿podés fabricarla?')">Tengo el plano</div>
+      </div>
+      <input class="ia-inp" id="ia-rep" placeholder="// Describí la pieza o pegá las medidas…" />
+      <button class="ia-btn" onclick="callIA('ia-rep','r-rep')">CONSULTAR →</button>
+      <div class="ia-resp" id="r-rep"></div>
+    </div>
+  </div>
+</div>
+</div><!-- /repuestos -->
+
+
+<!-- ═══════════════ B2B ═══════════════ -->
+<div id="tab-b2b" class="tab-panel">
+<div class="sec reveal">
+  <div class="eyebrow">B2B · Soluciones a escala</div>
+  <h2 class="sec-ttl">Para empresas que<br><span>necesitan precisión.</span></h2>
+  <p class="sec-body">Core Tech trabaja con escuelas técnicas, laboratorios de ingeniería y PyMEs industriales que necesitan volumen, repetibilidad y soporte técnico real. No somos un negocio de redes sociales — somos el proveedor que entiende el problema antes de cotizar.</p>
+
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--brd);margin-bottom:40px">
+    <div style="background:var(--acero);padding:28px;border-top:2px solid var(--azul)">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:2.5rem;font-weight:300;color:var(--azul);margin-bottom:8px">72hs</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:.5rem;letter-spacing:3px;text-transform:uppercase;color:var(--gris);margin-bottom:6px">Entrega estándar</div>
+      <div style="font-size:.8rem;color:var(--gris3)">Desde la aprobación del modelo hasta la entrega en CABA/GBA</div>
+    </div>
+    <div style="background:var(--acero);padding:28px;border-top:2px solid var(--azul2)">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:2.5rem;font-weight:300;color:var(--azul2);margin-bottom:8px">24hs</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:.5rem;letter-spacing:3px;text-transform:uppercase;color:var(--gris);margin-bottom:6px">Cotización</div>
+      <div style="font-size:.8rem;color:var(--gris3)">Con foto o plano técnico — precio y tiempo de entrega en menos de 24hs</div>
+    </div>
+    <div style="background:var(--acero);padding:28px;border-top:2px solid var(--gris2)">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:2.5rem;font-weight:300;color:var(--gris2);margin-bottom:8px">∞</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:.5rem;letter-spacing:3px;text-transform:uppercase;color:var(--gris);margin-bottom:6px">Repetibilidad</div>
+      <div style="font-size:.8rem;color:var(--gris3)">Una vez modelada la pieza, podemos reproducirla cuantas veces necesites</div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--brd);margin-bottom:40px">
+    <div style="background:var(--carbono);padding:28px 32px;border-left:3px solid var(--azul)">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:.52rem;letter-spacing:3px;text-transform:uppercase;color:var(--azul);margin-bottom:10px">Para quién</div>
+      <div style="font-size:.84rem;font-weight:300;color:var(--gris3);line-height:1.75">Escuelas técnicas · Institutos de ingeniería · Laboratorios de I+D · PyMEs con maquinaria específica · Talleres industriales · Fabricantes de prototipos</div>
+    </div>
+    <div style="background:var(--carbono);padding:28px 32px;border-left:3px solid var(--gris2)">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:.52rem;letter-spacing:3px;text-transform:uppercase;color:var(--gris2);margin-bottom:10px">Lo que ofrecemos</div>
+      <div style="font-size:.84rem;font-weight:300;color:var(--gris3);line-height:1.75">Modelado desde foto o plano · PETG / ABS / Nylon según aplicación · Repetibilidad garantizada · Facturación · Soporte técnico post-entrega</div>
+    </div>
+  </div>
+
+  <!-- IA B2B -->
+  <div class="ia-wrap" style="margin-top:0">
+    <div>
+      <div class="ia-chip">// Technical Advisor · B2B</div>
+      <h3 class="ia-ttl">¿Cuál es tu problema técnico?</h3>
+      <p class="ia-sub">Describime el contexto — industria, cantidad, material requerido — y el sistema te arma una pre-cotización para que Constantino la confirme.</p>
+    </div>
+    <div>
+      <div class="ia-fn-grid">
+        <div class="ia-fn" onclick="setFn(this,'Tengo una escuela técnica y necesito módulos didácticos para todo el año')">Escuela técnica · Anual</div>
+        <div class="ia-fn" onclick="setFn(this,'Tengo una PyME y necesito repuestos a medida para mi maquinaria')">PyME · Repuestos</div>
+        <div class="ia-fn" onclick="setFn(this,'Necesito un prototipo funcional de una pieza nueva para testear')">Prototipado</div>
+        <div class="ia-fn" onclick="setFn(this,'¿Qué materiales usan y cuáles son las tolerancias de fabricación?')">Especificaciones técnicas</div>
+      </div>
+      <input class="ia-inp" id="ia-b2b" placeholder="// Describí el requerimiento técnico…" />
+      <button class="ia-btn" onclick="callIA('ia-b2b','r-b2b')">CONSULTAR →</button>
+      <div class="ia-resp" id="r-b2b"></div>
+    </div>
+  </div>
+
+  <!-- Sinergia interna -->
+  <div class="eyebrow" style="margin-top:56px">Ecosistema · El Pasaje</div>
+  <h2 class="sec-ttl">Core Tech es el motor<br><span>detrás de escena.</span></h2>
+  <div class="sin-grid">
+    <a href="index.html" class="scard"><span class="sc-tag">// el-pasaje / hub</span><div class="sc-name">El Pasaje 3D Studio</div><div class="sc-why">El estudio familiar. Fer en producción. Core Tech como el ingeniero técnico que sostiene al ecosistema.</div></a>
+    <a href="aero-tech.html" class="scard"><span class="sc-tag">// sinergia / aero-tech</span><div class="sc-name">Aero-Tech</div><div class="sc-why">Core Tech fabrica las piezas técnicas que Nando diseña. La aviación y la ingeniería industrial bajo el mismo techo.</div></a>
+    <a href="oasis-estero.html" class="scard"><span class="sc-tag">// sinergia / oasis-estero</span><div class="sc-name">Oasis del Estero</div><div class="sc-why">Core Tech desarrolla la infraestructura técnica de las macetas inteligentes de hidroponía de Fede.</div></a>
+    <a href="pharma-delux.html" class="scard"><span class="sc-tag">// sinergia / pharma</span><div class="sc-name">Pharma DeLux</div><div class="sc-why">Las estructuras y soportes de laboratorio de Pharma DeLux se fabrican con la precisión técnica de Core Tech.</div></a>
+  </div>
+</div>
+
+<!-- Cierre -->
+<div class="cierre">
+  <div class="c-line"></div>
+  <div style="font-family:'JetBrains Mono',monospace;font-size:.52rem;letter-spacing:4px;text-transform:uppercase;color:var(--azul);margin-bottom:18px;opacity:.7">// core-tech · el-pasaje-industrial</div>
+  <div class="c-quote">Si lo necesitás<br>y no existe,<br><span>lo fabricamos.</span></div>
+  <div class="c-firma">// autoridad técnica · precisión de laboratorio · ingeniería desde el núcleo</div>
+  <div class="c-ctas">
+    <a href="https://wa.me/541165497234?text=Hola! Tengo un problema técnico para Core Tech" class="c-cta" target="_blank">Describir el problema →</a>
+    <a href="index.html" class="c-back">// ← el-pasaje/</a>
+  </div>
+</div>
+
+</div><!-- /b2b -->
+
+<footer>
+  <div class="fl">⚙️ &nbsp;<em>Core Tech</em> · El Pasaje Industrial</div>
+  <div class="fr">// Ingeniería desde el núcleo</div>
+</footer>
+
+<a href="https://wa.me/541165497234?text=Hola! Tengo un problema técnico para Core Tech de El Pasaje" target="_blank" class="wa-float">
+  <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+</a>
+
+<div id="back-banner"><a href="index.html">// ← el-pasaje</a></div>
+
+<script>
+const cur=document.getElementById("cur"),cur2=document.getElementById("cur2");
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener("mousemove",e=>{
+  mx=e.clientX;my=e.clientY;
+  cur.style.transform=`translate(${mx-4}px,${my-4}px)`;
+});
+(function loop(){
+  rx+=(mx-rx)*.12;ry+=(my-ry)*.12;
+  cur2.style.transform=`translate(${rx-14}px,${ry-14}px)`;
+  requestAnimationFrame(loop);
+})();
+document.querySelectorAll("a,button,.pcard,.scard,.fondo-item,.ia-fn,.b2b-item").forEach(el=>{
+  el.addEventListener("mouseenter",()=>{cur.style.width="14px";cur.style.height="14px"});
+  el.addEventListener("mouseleave",()=>{cur.style.width="8px";cur.style.height="8px"});
+});
+
+const obs=new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting)x.target.classList.add("visible")})},{threshold:.05});
+document.querySelectorAll(".reveal").forEach(el=>obs.observe(el));
+
+setTimeout(()=>{
+  let v=0;const t=setInterval(()=>{
+    v=Math.min(v+1,12);const el=document.getElementById("cnt-ct");
+    if(el)el.textContent=v;if(v>=12)clearInterval(t);
+  },80);
+},400);
+
+window.addEventListener("scroll",()=>{
+  const b=document.getElementById("back-banner");
+  if(window.scrollY>300){b.style.opacity="1";b.style.transform="translateX(0)";b.style.pointerEvents="auto"}
+  else{b.style.opacity="0";b.style.transform="translateX(-10px)";b.style.pointerEvents="none"}
+});
+
+function switchTab(id,btn){
+  document.querySelectorAll(".tab-panel").forEach(p=>p.classList.remove("active"));
+  document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
+  document.getElementById("tab-"+id).classList.add("active");
+  if(btn)btn.classList.add("active");
+  window.scrollTo({top:0,behavior:"smooth"});
+  document.querySelectorAll("#tab-"+id+" .reveal").forEach(el=>{if(!el.classList.contains("visible"))obs.observe(el)});
+}
+
+function setFn(el,texto){
+  el.closest(".ia-fn-grid").querySelectorAll(".ia-fn").forEach(f=>f.classList.remove("active-fn"));
+  el.classList.add("active-fn");
+  const inp=el.closest(".ia-wrap").querySelector(".ia-inp");
+  if(inp){inp.value=texto;inp.focus()}
+}
+
+const SYS=`Sos el Technical Advisor de Core Tech, la línea de ingeniería industrial y soluciones técnicas 3D de El Pasaje 3D Studio. El diferencial absoluto de Core Tech es: si la pieza no existe en el mercado, la fabricamos.
+
+DOMINIO 1 — ESCUELAS TÉCNICAS:
+- Módulos Didácticos 3D: cotizar — mecanismos seccionados (engranajes, poleas, válvulas) para enseñanza práctica
+- Organizadores de Taller: cotizar — sistemas para herramientas e insumos escolares
+- Kits de Prototipado Escolar: cotizar — piezas para robótica y mecatrónica
+- Soportes para Instrumentos de Medición: desde $2.400 — bases para calibres, micrómetros
+- Maquetas de Ingeniería Civil: cotizar — estructuras, puentes, cerchas
+
+DOMINIO 2 — LABORATORIO / MICROELECTRÓNICA:
+- Gabinetes Microelectrónica: $3.800 estándar / cotizar a medida — Arduino Uno/Mega/Nano, Raspberry Pi 3/4/5, ESP32
+- Organizadores Anti-Estáticos: desde $4.200 — componentes electrónicos, anti-ESD
+- Soporte Multi-Herramienta: $5.500 — tercera mano, pinzas, multímetro
+- Panel de Distribución: $3.800 — cables, adaptadores, fuentes
+- Rack Modular Lab: cotizar — integración de múltiples placas y equipos
+
+DOMINIO 3 — REPUESTOS DESCATALOGADOS:
+- Prototipado de repuestos descatalogados: cotizar — foto/plano → modelo → fabricación en 48-72hs
+- Brackets y Soportes Estructurales: cotizar
+- Engranajes y Poleas a Medida: cotizar — módulo y dimensiones exactas
+- Tapas y Carcasas de Equipos: cotizar
+- Piezas Industriales Custom: cotizar — PyMEs con maquinaria específica
+
+PROCESO REPUESTOS: foto o plano → cotización en 24hs → aprobación → fabricación 48-72hs → entrega CABA/GBA
+MATERIALES: PETG (resistencia térmica/química), ABS (resistencia impactos), Nylon (flexibilidad/desgaste), PLA técnico (precisión dimensional)
+
+Sinergias: Core Tech fabrica para Aero-Tech, infraestructura de Oasis del Estero y estructuras de Pharma DeLux.
+
+Tono: técnico, directo, al grano. Máximo 3 oraciones. Siempre indicá el material recomendado y el proceso de cotización.
+Contacto WA: +54 11 6549-7234.`;
+
+const FB_def=[
+  "Para una pieza descatalogada, el proceso es directo: foto o plano → cotización en 24hs → fabricación en 48-72hs. Mandanos la imagen por WhatsApp con las medidas críticas y te decimos si podemos hacerla y en qué material.",
+  "Para escuelas técnicas, los Módulos Didácticos 3D son el producto con mayor impacto: ver el interior de un engranaje real en la mano cambia completamente cómo el alumno entiende la transmisión de movimiento. Cotizamos por unidad o set de clase.",
+  "Para gabinetes Arduino o Raspberry Pi, el estándar en PETG parte desde $3.800 — pero si tu placa tiene una configuración no estándar o necesitás integrar pantalla, relay o múltiples módulos, cotizamos a medida en menos de 24hs."
+];
+
+async function callIA(inputId,respId){
+  const inp=document.getElementById(inputId),resp=document.getElementById(respId);
+  if(!inp||!resp)return;
+  const t=inp.value.trim();if(!t){inp.focus();return}
+  resp.style.display="block";resp.textContent="// procesando…";
+  try{
+    const r=await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:220,system:SYS,messages:[{role:"user",content:t}]})
+    });
+    const d=await r.json();resp.textContent=d.content?.[0]?.text||"// Contactanos por WA con el detalle técnico."
+  }catch(e){resp.textContent=FB_def[Math.floor(Math.random()*FB_def.length)]}
+}
+</script>
+</body>
+</html>

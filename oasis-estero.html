@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Oasis del Estero · El Pasaje 3D Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Raleway:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --leaf:  #2D5A27;
+  --sage:  #5A8A54;
+  --mint:  #A8C5A0;
+  --pale:  #DDE8D8;
+  --paper: #EEF4E8;
+  --stone: #3A5035;
+  --dark:  #1A2818;
+  --water: #4A90A4;
+  --gold:  #B8975A;
+  --brd:   rgba(45,90,39,.35);
+  --brd2:  rgba(45,90,39,.18);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--paper);color:var(--dark);font-family:'Raleway',sans-serif;font-weight:300;overflow-x:hidden;cursor:none}
+
+/* Grain texture */
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:1000;opacity:.5}
+
+#cur{width:8px;height:8px;background:var(--leaf);border-radius:50%;position:fixed;top:0;left:0;pointer-events:none;z-index:9999;transition:width .2s,height .2s}
+#cur2{width:30px;height:30px;border:1px solid rgba(45,90,39,.3);border-radius:50%;position:fixed;top:0;left:0;pointer-events:none;z-index:9998}
+
+/* Nav */
+nav{position:fixed;top:0;left:0;right:0;z-index:300;padding:18px 56px;display:flex;justify-content:space-between;align-items:center;background:rgba(250,252,248,.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--brd)}
+.nav-logo{font-family:'Cormorant Garamond',serif;font-size:.85rem;font-weight:300;letter-spacing:6px;text-transform:uppercase;color:var(--dark)}
+.nav-logo em{font-style:italic;color:var(--leaf)}
+.nav-pills{display:flex;gap:4px}
+.nav-pill{font-size:.52rem;letter-spacing:3px;text-transform:uppercase;color:var(--stone);padding:6px 14px;cursor:none;transition:all .3s;border-bottom:1px solid transparent;font-family:'Raleway',sans-serif}
+.nav-pill:hover,.nav-pill.active{color:var(--leaf);border-bottom-color:var(--leaf)}
+.nav-back{font-size:.52rem;letter-spacing:3px;text-transform:uppercase;color:var(--stone);text-decoration:none;display:flex;align-items:center;gap:6px;transition:color .3s}
+.nav-back::before{content:'←';color:var(--leaf)}
+.nav-back:hover{color:var(--leaf)}
+
+/* HERO */
+#screen-hero{height:100vh;position:relative;overflow:hidden;display:flex;align-items:center}
+.hero-img-side{width:45%;height:100%;position:relative;overflow:hidden;flex-shrink:0}
+.hero-img-side img{width:100%;height:100%;object-fit:cover;filter:saturate(1.1) brightness(.92)}
+.hero-img-overlay{position:absolute;inset:0;background:linear-gradient(to right,transparent 60%,var(--paper) 100%)}
+.hero-content{flex:1;padding:100px 64px 60px 56px;position:relative}
+/* Grid pattern subtle */
+.hero-content::before{content:'';position:absolute;inset:0;background-image:linear-gradient(var(--brd2) .5px,transparent .5px),linear-gradient(90deg,var(--brd2) .5px,transparent .5px);background-size:40px 40px;pointer-events:none;opacity:.5}
+.hero-eye{font-size:.55rem;letter-spacing:6px;text-transform:uppercase;color:var(--leaf);margin-bottom:20px;display:flex;align-items:center;gap:12px;font-weight:600;position:relative;z-index:1}
+.hero-eye::before{content:'';width:18px;height:1px;background:var(--leaf)}
+.hero-title{font-family:'Cormorant Garamond',serif;font-size:clamp(3rem,5vw,5rem);font-weight:300;line-height:.95;letter-spacing:-1px;color:var(--dark);position:relative;z-index:1}
+.hero-title em{font-style:italic;color:var(--leaf);display:block}
+.hero-div{width:40px;height:1px;background:linear-gradient(to right,var(--leaf),transparent);margin:24px 0;position:relative;z-index:1}
+.hero-sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1rem;color:var(--stone);line-height:1.85;max-width:380px;position:relative;z-index:1}
+.hero-tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px;position:relative;z-index:1}
+.htag{padding:4px 12px;border:1px solid var(--brd);color:var(--stone);font-size:.6rem;letter-spacing:2px;text-transform:uppercase;border-radius:99px}
+.hero-cta{display:inline-flex;align-items:center;gap:10px;margin-top:28px;padding:12px 30px;background:var(--leaf);color:var(--paper);font-size:.6rem;font-weight:500;letter-spacing:4px;text-transform:uppercase;text-decoration:none;transition:all .3s;cursor:none;position:relative;z-index:1}
+.hero-cta::after{content:'→';transition:transform .3s}
+.hero-cta:hover{background:var(--dark)}
+.hero-cta:hover::after{transform:translateX(4px)}
+
+.sep{height:1px;background:linear-gradient(to right,transparent,var(--brd),transparent)}
+.sep-leaf{height:1px;background:linear-gradient(to right,transparent,var(--leaf),transparent)}
+
+/* MENU */
+#screen-menu{background:#C0D4B5;padding:64px 80px}
+.eye{font-size:.54rem;letter-spacing:6px;text-transform:uppercase;color:var(--leaf);margin-bottom:10px;display:flex;align-items:center;gap:12px;font-weight:600}
+.eye::before{content:'';width:18px;height:1px;background:var(--leaf)}
+.menu-ttl{font-family:'Cormorant Garamond',serif;font-size:clamp(1.8rem,3vw,2.8rem);font-weight:300;color:var(--dark);margin-bottom:36px}
+.menu-ttl em{font-style:italic;color:var(--leaf)}
+.menu-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--brd)}
+.mcard{background:#C8D9C0;padding:28px 22px;cursor:none;transition:all .35s;position:relative;overflow:hidden;display:flex;flex-direction:column;border-top:3px solid transparent;box-shadow:0 2px 10px rgba(45,90,39,.1)}
+.mcard:hover,.mcard.sel{background:#2D5A27;border-top-color:#A8C500;transform:translateY(-5px);box-shadow:0 12px 28px rgba(45,90,39,.25)}
+.mc-n{font-family:'Cormorant Garamond',serif;font-size:2.5rem;font-weight:300;color:transparent;-webkit-text-stroke:1px rgba(45,90,39,.4);line-height:1;margin-bottom:12px;transition:all .35s}
+.mc-sym{font-size:1.2rem;margin-bottom:10px;display:block;color:var(--leaf)}
+.mc-ttl{font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:600;color:var(--dark);margin-bottom:6px;transition:color .35s}
+.mc-desc{font-size:.9rem;color:#1A3015;line-height:1.65;margin-bottom:14px;flex:1}
+.mc-arr{font-size:.58rem;letter-spacing:3px;color:var(--leaf);display:flex;align-items:center;gap:8px;border-top:1px solid var(--brd2);padding-top:12px;transition:gap .3s}
+.mcard:hover .mc-arr{gap:14px}
+
+/* SECCIONES */
+.csec{display:none;opacity:0;transform:translateY(12px);transition:opacity .5s ease,transform .5s ease}
+.csec.active{display:block;opacity:1;transform:translateY(0)}
+
+/* MACETAS */
+#s-macetas{background:var(--paper);padding:64px 80px}
+.sec-head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:48px;padding-bottom:20px;border-bottom:1px solid var(--brd)}
+.sec-ttl{font-family:'Cormorant Garamond',serif;font-size:clamp(2rem,3.5vw,3rem);font-weight:300;color:var(--dark)}
+.sec-ttl em{font-style:italic;color:var(--leaf)}
+.sec-note{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.82rem;color:var(--stone);text-align:right;max-width:220px;line-height:1.7}
+.prod-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--brd)}
+.pcard{background:#D4E4CC;overflow:hidden;cursor:none;transition:all .3s;position:relative;border:1px solid rgba(45,90,39,.2)}
+.pcard:hover{background:#C0D4B5;transform:translateY(-4px);box-shadow:0 10px 28px rgba(45,90,39,.18)}
+.pcard::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(to right,transparent,var(--leaf),transparent);opacity:0;transition:opacity .4s;z-index:3}
+.pcard:hover::before{opacity:1}
+.pimg{aspect-ratio:4/5;overflow:hidden;position:relative;background:var(--pale);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px}
+.pimg-sym{font-family:'Cormorant Garamond',serif;font-size:4rem;font-weight:300;color:transparent;-webkit-text-stroke:1px rgba(45,90,39,.15);line-height:1}
+.pcard:hover .pimg-sym{-webkit-text-stroke-color:rgba(45,90,39,.3)}
+.pbadge{position:absolute;top:14px;left:14px;background:rgba(250,252,248,.9);backdrop-filter:blur(6px);border:1px solid var(--brd);padding:4px 12px;font-size:.5rem;letter-spacing:3px;text-transform:uppercase;color:var(--leaf)}
+.poverlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(26,40,24,.7) 0%,transparent 55%);opacity:0;transition:opacity .35s;display:flex;align-items:flex-end;padding:20px}
+.pcard:hover .poverlay{opacity:1}
+.pbtn{width:100%;background:transparent;border:1px solid rgba(250,252,248,.6);color:var(--paper);padding:10px;font-family:'Raleway',sans-serif;font-size:.58rem;font-weight:400;letter-spacing:4px;text-transform:uppercase;cursor:pointer;transition:all .3s}
+.pbtn:hover{background:var(--leaf);border-color:var(--leaf)}
+.pinfo{padding:18px 20px 22px;border-top:1px solid var(--brd)}
+.pname{font-family:'Cormorant Garamond',serif;font-size:1.15rem;font-weight:700;color:#0D2010;margin-bottom:6px}
+.pdesc{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.98rem;color:#1A3015;line-height:1.75;margin-bottom:12px}
+.pfoot{display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid var(--brd)}
+.pprice{font-family:'Cormorant Garamond',serif;font-size:1.35rem;font-weight:700;color:#1A4A14}
+.psku{font-size:.5rem;letter-spacing:3px;text-transform:uppercase;color:var(--mint)}
+
+/* IA BOX */
+.ia-box{background:var(--pale);border:1px solid var(--brd);border-left:2px solid var(--leaf);padding:40px 48px;margin-top:48px;display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center}
+.ib-ttl{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:300;color:var(--dark);margin-bottom:6px}
+.ib-sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.02rem;color:#1A3015;line-height:1.8}
+.ia-chip{display:inline-flex;align-items:center;gap:8px;background:rgba(45,90,39,.06);border:1px solid var(--brd);padding:5px 14px;border-radius:99px;font-size:.5rem;letter-spacing:3px;text-transform:uppercase;color:var(--leaf);margin-bottom:14px;width:fit-content}
+.ia-chip::before{content:'●';color:var(--leaf);animation:bl 2s infinite}
+@keyframes bl{0%,100%{opacity:1}50%{opacity:.2}}
+.ia-fn-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.ia-fn{background:rgba(45,90,39,.04);border:1px solid var(--brd2);padding:10px;cursor:pointer;transition:all .3s;font-size:.65rem;color:var(--stone);letter-spacing:1px;text-align:center;border-radius:2px}
+.ia-fn:hover,.ia-fn.active-fn{background:rgba(45,90,39,.1);border-color:var(--leaf);color:var(--leaf)}
+.ia-fn-sym{display:block;font-size:.85rem;color:var(--leaf);margin-bottom:4px}
+.ia-inp{width:100%;background:transparent;border:none;border-bottom:1px solid var(--brd);color:var(--dark);padding:11px 0;font-family:'Raleway',sans-serif;font-size:.8rem;font-weight:300;outline:none;transition:border-color .3s;margin-bottom:12px}
+.ia-inp:focus{border-bottom-color:var(--leaf)}
+.ia-inp::placeholder{color:rgba(90,138,84,.4);font-style:italic}
+.ia-btn{background:transparent;border:1px solid var(--leaf);color:var(--leaf);padding:11px 24px;font-family:'Raleway',sans-serif;font-size:.58rem;font-weight:500;letter-spacing:4px;text-transform:uppercase;cursor:pointer;transition:all .3s;width:100%}
+.ia-btn:hover{background:var(--leaf);color:var(--paper)}
+.ia-resp{margin-top:12px;padding:14px 16px;background:rgba(45,90,39,.05);border-left:1px solid var(--leaf);font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.85rem;color:var(--dark);line-height:1.8;display:none}
+
+/* ESQUEJES */
+#s-esquejes{background:var(--pale);padding:64px 80px}
+.esq-grid{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center}
+.esq-img{position:relative;overflow:hidden}
+.esq-img-placeholder{aspect-ratio:4/5;background:linear-gradient(160deg,var(--pale) 0%,rgba(168,197,160,.3) 100%);display:flex;align-items:center;justify-content:center;position:relative}
+.esq-img-placeholder::before{content:'';position:absolute;inset:16px;border:1px solid var(--brd)}
+.esq-sym{font-family:'Cormorant Garamond',serif;font-size:6rem;font-weight:300;color:transparent;-webkit-text-stroke:1px rgba(45,90,39,.12)}
+.esq-caption{position:absolute;bottom:20px;left:20px;right:20px;background:rgba(250,252,248,.9);backdrop-filter:blur(4px);padding:10px 16px;border-left:2px solid var(--leaf)}
+.esq-caption-text{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.78rem;color:var(--stone)}
+.esq-items{display:flex;flex-direction:column;gap:12px;margin-top:28px}
+.esq-item{background:#C8D9C0;border:1px solid rgba(45,90,39,.3);border-left:3px solid var(--leaf);padding:18px 20px;transition:all .3s;cursor:none}
+.esq-item:hover{background:#2D5A27;transform:translateX(4px);box-shadow:4px 4px 16px rgba(45,90,39,.2)}
+.esq-item-name{font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-weight:700;color:#0D2010;margin-bottom:4px;transition:color .3s}
+.esq-item-desc{font-size:.9rem;color:#1A3015;line-height:1.6}
+.esq-item-price{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:700;color:#1A4A14;margin-top:8px;transition:color .3s}
+
+/* PROYECTOS */
+#s-proyectos{background:var(--dark);padding:64px 80px;position:relative;overflow:hidden}
+#s-proyectos::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.02) .5px,transparent .5px),linear-gradient(90deg,rgba(255,255,255,.02) .5px,transparent .5px);background-size:40px 40px}
+.proy-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(45,90,39,.15);margin-top:32px}
+.proy-card{background:rgba(45,90,39,.15);padding:28px;transition:all .3s;cursor:none;border-top:2px solid transparent;border:1px solid rgba(45,90,39,.2)}
+.proy-card:hover{background:rgba(45,90,39,.35);border-top-color:#A8C500;transform:translateY(-4px);box-shadow:0 8px 22px rgba(0,0,0,.25)}
+.proy-sym{font-size:1.2rem;color:var(--mint);margin-bottom:14px;display:block}
+.proy-name{font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:700;color:#FFFFFF;margin-bottom:8px}
+.proy-desc{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.92rem;color:rgba(250,252,248,.82);line-height:1.7}
+.proy-tag{display:inline-block;margin-top:10px;font-size:.5rem;letter-spacing:3px;text-transform:uppercase;color:var(--mint);border:1px solid rgba(168,197,160,.25);padding:3px 10px;border-radius:99px}
+
+/* SINERGIA */
+#s-sinergia{background:var(--paper);padding:64px 80px}
+.sin-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--brd);margin-top:32px}
+.scard{background:#C8D9C0;padding:26px 20px;text-decoration:none;color:inherit;display:block;transition:all .3s;cursor:none;position:relative;overflow:hidden;border:1px solid rgba(45,90,39,.2)}
+.scard::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:var(--sc,var(--leaf));transform:scaleX(0);transform-origin:left;transition:transform .4s}
+.scard:hover{background:#2D5A27;transform:translateY(-4px);box-shadow:0 8px 24px rgba(45,90,39,.22)}
+.scard:hover::after{transform:scaleX(1)}
+.sc-sym{font-size:1.1rem;color:var(--sc,var(--leaf));margin-bottom:10px;display:block}
+.sc-tag{font-size:.5rem;letter-spacing:4px;text-transform:uppercase;color:var(--sc,var(--leaf));margin-bottom:5px}
+.sc-name{font-family:'Cormorant Garamond',serif;font-size:1rem;font-weight:700;color:#0D2010;margin-bottom:8px;transition:color .3s}
+.sc-why{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.9rem;color:#1A3015;line-height:1.68}
+.sc-arr{position:absolute;bottom:12px;right:14px;font-size:.6rem;color:var(--sc,var(--leaf));opacity:0;transition:opacity .3s,transform .3s;transform:translateX(-4px)}
+.scard:hover .sc-arr{opacity:1;transform:translateX(0)}
+
+/* PROCESO */
+#proceso{background:var(--pale);padding:56px 80px;border-top:1px solid var(--brd);border-bottom:1px solid var(--brd)}
+.proc-steps{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;align-items:center;gap:0;margin-top:32px}
+.pstep{padding:28px 24px;background:#EEF4E8;border:1px solid rgba(45,90,39,.25);position:relative;transition:all .3s}
+.pstep::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(to right,var(--leaf),transparent)}
+.ps-n{font-family:'Cormorant Garamond',serif;font-size:2.2rem;font-weight:300;color:transparent;-webkit-text-stroke:1px rgba(45,90,39,.2);line-height:1;margin-bottom:10px}
+.ps-t{font-family:'Cormorant Garamond',serif;font-size:.95rem;font-weight:400;color:var(--dark);margin-bottom:6px}
+.ps-d{font-size:.92rem;color:#1A3015;line-height:1.75}
+.ps-tags{margin-top:10px;display:flex;gap:6px;flex-wrap:wrap}
+.ps-tag{font-size:.5rem;letter-spacing:2px;text-transform:uppercase;color:var(--leaf);background:rgba(45,90,39,.07);padding:3px 8px;border-radius:2px}
+.proc-arr{padding:0 16px;text-align:center;color:rgba(45,90,39,.3);font-size:.9rem}
+.proc-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--brd);margin-top:1px}
+.pstat{background:var(--paper);padding:18px;text-align:center}
+.pstat-n{font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:300;color:var(--leaf)}
+.pstat-l{font-size:.5rem;letter-spacing:3px;text-transform:uppercase;color:var(--stone)}
+
+/* HISTORIA */
+.historia{display:grid;grid-template-columns:1fr 1fr;min-height:65vh}
+.hleft{background:#C8D9C0;padding:80px 64px;display:flex;flex-direction:column;justify-content:center;border-right:1px solid var(--brd)}
+.hright{background:#DDE8D8;padding:80px 64px;display:flex;flex-direction:column;justify-content:center}
+.h-ttl{font-family:'Cormorant Garamond',serif;font-size:clamp(2rem,3vw,3rem);font-weight:300;line-height:1.05;color:var(--dark);margin-bottom:24px}
+.h-ttl em{font-style:italic;color:var(--leaf)}
+.h-body{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.08rem;color:#1A3015;line-height:2;margin-bottom:32px}
+.h-slogan{padding-top:24px;border-top:1px solid var(--brd)}
+.h-sq{font-size:2.5rem;color:var(--leaf);font-family:'Cormorant Garamond',serif;line-height:.8;margin-bottom:8px;display:block;opacity:.6}
+.h-st{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.05rem;color:var(--dark);line-height:1.5}
+.h-ia-ttl{font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:300;color:var(--dark);margin-bottom:6px}
+.h-ia-sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.85rem;color:var(--stone);line-height:1.8;margin-bottom:24px}
+
+/* CIERRE */
+.cierre{background:var(--leaf);padding:90px 80px;text-align:center;position:relative;overflow:hidden}
+.cierre::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.03) .5px,transparent .5px),linear-gradient(90deg,rgba(255,255,255,.03) .5px,transparent .5px);background-size:40px 40px}
+.c-line{width:48px;height:1px;background:linear-gradient(to right,transparent,rgba(250,252,248,.5),transparent);margin:0 auto 36px}
+.c-quote{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:clamp(1.8rem,3.5vw,3rem);font-weight:300;color:var(--paper);line-height:1.3;max-width:680px;margin:0 auto;position:relative;z-index:1}
+.c-quote em{font-style:normal;color:rgba(250,252,248,.65)}
+.c-firma{margin-top:20px;font-size:.52rem;letter-spacing:6px;text-transform:uppercase;color:rgba(250,252,248,.4);position:relative;z-index:1}
+.c-wrap{margin-top:40px;display:flex;flex-direction:column;align-items:center;gap:12px;position:relative;z-index:1}
+.c-cta{display:inline-flex;align-items:center;gap:12px;padding:13px 44px;border:1px solid rgba(250,252,248,.4);color:var(--paper);font-size:.58rem;letter-spacing:5px;text-transform:uppercase;text-decoration:none;transition:all .3s;cursor:none}
+.c-cta::before{content:'🌿';font-size:.85rem}
+.c-cta::after{content:'→';transition:transform .3s}
+.c-cta:hover{background:rgba(250,252,248,.15)}
+.c-cta:hover::after{transform:translateX(4px)}
+.c-back{font-size:.5rem;letter-spacing:4px;text-transform:uppercase;color:rgba(250,252,248,.25);text-decoration:none;transition:color .3s}
+.c-back:hover{color:var(--paper)}
+
+footer{padding:20px 80px;background:var(--dark);border-top:1px solid rgba(45,90,39,.2);display:flex;justify-content:space-between;align-items:center}
+.fl{font-family:'Cormorant Garamond',serif;font-size:.82rem;letter-spacing:5px;color:rgba(250,252,248,.2);font-weight:300}
+.fl em{color:var(--mint);font-style:normal}
+.fr{font-size:.46rem;letter-spacing:3px;color:rgba(250,252,248,.1);text-transform:uppercase}
+
+
+/* ── Cualidades Oasis ── */
+.cual-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(45,90,39,.15);margin:40px 0}
+.cual-item{background:#DDE8D8;padding:22px 20px;display:flex;align-items:flex-start;gap:14px;transition:background .3s}
+.cual-item:hover{background:#C8D9C0}
+.cual-icon{width:32px;height:32px;flex-shrink:0;position:relative}
+.cual-icon svg{width:100%;height:100%;stroke:var(--leaf);fill:none;stroke-width:1.2}
+.cual-ttl{font-family:'Cormorant Garamond',serif;font-size:.92rem;font-weight:600;color:#0D2010;margin-bottom:3px}
+.cual-desc{font-size:.78rem;color:#2A4025;line-height:1.6}
+
+.wa-float{position:fixed;bottom:28px;right:28px;width:50px;height:50px;background:#25D366;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:500;text-decoration:none;animation:waPulse 3s infinite;transition:transform .3s;cursor:none}
+.wa-float:hover{transform:scale(1.1)}
+.wa-float svg{width:25px;height:25px;fill:white}
+@keyframes waPulse{0%,100%{box-shadow:0 0 0 0 rgba(37,211,102,.4)}70%{box-shadow:0 0 0 12px rgba(37,211,102,0)}}
+
+.reveal{opacity:0;transform:translateY(18px);transition:opacity .85s ease,transform .85s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+
+@media(max-width:960px){
+  #screen-hero{flex-direction:column;height:auto;padding-top:70px}
+  .hero-img-side{width:100%;height:50vw}
+  .hero-content{padding:48px 28px}
+  #screen-menu,.historia{grid-template-columns:1fr}
+  #screen-menu{padding:60px 28px}
+  .hleft,.hright{padding:56px 28px}
+  #s-macetas,#s-esquejes,#s-proyectos,#s-sinergia,#proceso{padding:56px 28px}
+  .esq-grid,.prod-grid{grid-template-columns:1fr}
+  .sin-grid,.proy-grid{grid-template-columns:1fr 1fr}
+  .ia-box{grid-template-columns:1fr;padding:28px}
+  .proc-steps{grid-template-columns:1fr;gap:1px}
+  .proc-arr{display:none}
+  nav{padding:14px 20px}
+  .nav-pills{display:none}
+  footer{padding:18px 24px;flex-direction:column;gap:8px}
+  .sec-head{flex-direction:column;align-items:flex-start;gap:10px}
+  .sec-note{text-align:left}
+  .cierre{padding:70px 28px}
+}
+@media(max-width:600px){.sin-grid,.proy-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="cur"></div>
+<div id="cur2"></div>
+
+<nav>
+  <div class="nav-logo"><em>Oasis del Estero</em> · El Pasaje</div>
+  <div class="nav-pills">
+    <div class="nav-pill active" onclick="showSec('macetas')">Macetas</div>
+    <div class="nav-pill" onclick="showSec('esquejes')">Esquejes</div>
+    <div class="nav-pill" onclick="showSec('proyectos')">Proyectos</div>
+    <div class="nav-pill" onclick="showSec('sinergia')">Alianzas</div>
+  </div>
+  <a href="index.html" class="nav-back">El Pasaje</a>
+</nav>
+
+<!-- HERO -->
+<section id="screen-hero">
+  <div class="hero-img-side">
+    <img src="https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800&h=1000&fit=crop&auto=format&q=85" alt="Plantas">
+    <div class="hero-img-overlay"></div>
+  </div>
+  <div class="hero-content reveal">
+    <div class="hero-eye">Oasis del Estero · Por Fede · El Pasaje</div>
+    <h1 class="hero-title">
+      Tecnología para el<br>
+      <em>cultivo del futuro.</em>
+    </h1>
+    <div class="hero-div"></div>
+    <svg style="width:28px;height:28px;stroke:var(--leaf);fill:none;stroke-width:1.2;margin-bottom:12px;opacity:.7" viewBox="0 0 24 24"><path d="M12 22V12M12 12C12 7 8 4 4 4s0 8 8 8M12 12c0-5 4-8 8-8s0 8-8 8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <p class="hero-sub">Macetas innovadoras, soportes para esquejes y accesorios de cultivo diseñados en 3D. Para quien quiere traer naturaleza inteligente a su espacio.</p>
+    <div class="hero-tags">
+      <span class="htag">🌿 Minimalista</span>
+      <span class="htag">💧 Esquejes</span>
+      <span class="htag">🏠 Hogar</span>
+      <span class="htag">✦ Personalizable</span>
+    </div>
+    <a href="https://wa.me/541165497234?text=Hola! Me interesa la línea Oasis del Estero 🌿" class="hero-cta" target="_blank">Ver colección</a>
+  </div>
+</section>
+<div class="sep-leaf"></div>
+
+<!-- MENÚ -->
+<section id="screen-menu">
+  <div class="reveal" style="margin-bottom:36px">
+    <div class="eye">El universo Oasis</div>
+    <div class="menu-ttl">Cuatro mundos <em>verdes</em></div>
+  </div>
+  <div class="menu-grid reveal" style="transition-delay:.15s">
+    <div class="mcard" onclick="showSec('macetas')">
+      <div class="mc-n">01</div>
+      <span class="mc-sym">🪴</span>
+      <div class="mc-ttl">Macetas</div>
+      <div class="mc-desc">Diseños únicos impresos en 3D. Minimalistas, funcionales y hermosas.</div>
+      <div class="mc-arr">Ver →</div>
+    </div>
+    <div class="mcard" onclick="showSec('esquejes')">
+      <div class="mc-n">02</div>
+      <span class="mc-sym">🌱</span>
+      <div class="mc-ttl">Esquejes</div>
+      <div class="mc-desc">Soportes de propagación y accesorios para reproducir tus plantas favoritas.</div>
+      <div class="mc-arr">Ver →</div>
+    </div>
+    <div class="mcard" onclick="showSec('proyectos')">
+      <div class="mc-n">03</div>
+      <span class="mc-sym">💧</span>
+      <div class="mc-ttl">Proyectos</div>
+      <div class="mc-desc">Sistemas de auto-riego, huerta urbana modular y soluciones técnicas a medida.</div>
+      <div class="mc-arr">Ver →</div>
+    </div>
+    <div class="mcard" onclick="showSec('sinergia')">
+      <div class="mc-n">04</div>
+      <span class="mc-sym">✦</span>
+      <div class="mc-ttl">Alianzas</div>
+      <div class="mc-desc">Ánima, Coquette, Oasis Animal y más. El verde que conecta todas las líneas.</div>
+      <div class="mc-arr">Ver →</div>
+    </div>
+  </div>
+</section>
+<div class="sep-leaf"></div>
+
+<!-- MACETAS -->
+<section id="s-macetas" class="csec active">
+  <div style="background:#DDE8D8;padding:64px 80px">
+    <div class="sec-head reveal">
+      <div>
+        <div class="eye" style="margin-bottom:8px">La colección</div>
+        <h2 class="sec-ttl">Macetas que <em>respiran</em></h2>
+      </div>
+      <div class="sec-note">Diseñadas en 3D. Funcionales y estéticas. Personalizables en forma, tamaño y color.</div>
+    </div>
+    <div class="prod-grid">
+      <div class="pcard reveal">
+        <div class="pimg">
+          <div class="pimg-sym">M1</div>
+          <div style="font-size:.5rem;letter-spacing:3px;text-transform:uppercase;color:rgba(45,90,39,.3)">MODULAR</div>
+        </div>
+        <div class="pbadge">● Disponible</div>
+        <div class="poverlay"><button class="pbtn" onclick="window.open('https://wa.me/541165497234?text=Hola! Quiero la Maceta Modular de Oasis del Estero 🌿','_blank')">Consultar →</button></div>
+        <div class="pinfo">
+          <div class="pname">Maceta Modular</div>
+          <div class="pdesc">Diseño geométrico minimalista con sistema de drenaje integrado. Apilable. Para interior o exterior.</div>
+          <div class="pfoot"><div class="pprice">$1.200</div><div class="psku">OE-MAC-01</div></div>
+        </div>
+      </div>
+      <div class="pcard reveal" style="transition-delay:.12s">
+        <div class="pimg">
+          <div class="pimg-sym">HB</div>
+          <div style="font-size:.5rem;letter-spacing:3px;text-transform:uppercase;color:rgba(45,90,39,.3)">COLGANTE</div>
+        </div>
+        <div class="pbadge">★ Más pedida</div>
+        <div class="poverlay"><button class="pbtn" onclick="window.open('https://wa.me/541165497234?text=Hola! Quiero la Maceta Colgante de Oasis del Estero 🌿','_blank')">Consultar →</button></div>
+        <div class="pinfo">
+          <div class="pname">Maceta Colgante</div>
+          <div class="pdesc">Con sistema de sujeción integrado. Para balcón, ventana o pared. No necesita herramientas para instalar.</div>
+          <div class="pfoot"><div class="pprice">$1.500</div><div class="psku">OE-MAC-02</div></div>
+        </div>
+      </div>
+      <div class="pcard reveal" style="transition-delay:.24s">
+        <div class="pimg">
+          <div class="pimg-sym">ID</div>
+          <div style="font-size:.5rem;letter-spacing:3px;text-transform:uppercase;color:rgba(45,90,39,.3)">IDENTIFICADOR</div>
+        </div>
+        <div class="poverlay"><button class="pbtn" onclick="window.open('https://wa.me/541165497234?text=Hola! Quiero los Identificadores de Plantas de Oasis del Estero 🌿','_blank')">Consultar →</button></div>
+        <div class="pinfo">
+          <div class="pname">Identificadores</div>
+          <div class="pdesc">Estacas con el nombre de tu planta en tipografía elegante. Un detalle de autor para quien tiene muchas macetas.</div>
+          <div class="pfoot"><div class="pprice">$400</div><div class="psku">OE-ID-01</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- IA Macetas -->
+    <div class="ia-box reveal">
+      <div>
+        <div class="eye" style="margin-bottom:8px">Asistente Verde</div>
+        <div class="ib-ttl">¿Qué espacio tenés?</div>
+        <p class="ib-sub">La IA te recomienda la maceta ideal según tu espacio, tus plantas y tu estilo. Sin complicaciones.</p>
+        <div class="ia-fn-grid" style="margin-top:16px">
+          <div class="ia-fn" onclick="setFn(this,'mac','Tengo un balcón pequeño y quiero plantas aromáticas')">
+            <span class="ia-fn-sym">🌿</span>Balcón
+          </div>
+          <div class="ia-fn" onclick="setFn(this,'mac','Quiero plantas de interior en mi escritorio')">
+            <span class="ia-fn-sym">🖥</span>Interior
+          </div>
+          <div class="ia-fn" onclick="setFn(this,'mac','¿Cuánto sale personalizar una maceta con mi nombre?')">
+            <span class="ia-fn-sym">✦</span>Personalizar
+          </div>
+          <div class="ia-fn" onclick="setFn(this,'mac','¿Qué maceta combina mejor con la línea Coquette?')">
+            <span class="ia-fn-sym">🎀</span>Kit regalo
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="ia-chip">IA activa · Asistente Verde</div>
+        <input class="ia-inp" type="text" id="ia-mac" placeholder="Ej: tengo un departamento pequeño y muchas plantas suculentas...">
+        <button class="ia-btn" onclick="callIA('mac')">Recomendar maceta →</button>
+        <div class="ia-resp" id="r-mac"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ESQUEJES -->
+<section id="s-esquejes" class="csec">
+  <div style="background:#C8D9C0;padding:64px 80px">
+    <div class="esq-grid">
+      <div class="reveal">
+        <div class="eye" style="margin-bottom:12px">Propagación</div>
+        <h2 style="font-family:'Cormorant Garamond',serif;font-size:clamp(2rem,3.5vw,3rem);font-weight:300;color:var(--dark);line-height:1.05;margin-bottom:20px">
+          Reproducí tus<br><em style="font-style:italic;color:var(--leaf)">plantas favoritas.</em>
+        </h2>
+        <p style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1rem;color:var(--stone);line-height:1.9;margin-bottom:32px">
+          Los soportes de propagación de Fede convierten el proceso de reproducción de plantas en algo decorativo. Tubos de ensayo con bases 3D minimalistas — tan lindos en la mesada como funcionales.
+        </p>
+        <div class="esq-items">
+          <div class="esq-item">
+            <div class="esq-item-name">Soporte de Propagación Simple</div>
+            <div class="esq-item-desc">Base 3D para 1 tubo de ensayo. Para el esqueje que estás enraizando en agua. Minimalista, elegante.</div>
+            <div class="esq-item-price">$800</div>
+          </div>
+          <div class="esq-item">
+            <div class="esq-item-name">Rack de Propagación x4</div>
+            <div class="esq-item-desc">Base para 4 tubos. Ideal para tener varios esquejes en proceso al mismo tiempo. Muy decorativo.</div>
+            <div class="esq-item-price">$2.200</div>
+          </div>
+          <div class="esq-item">
+            <div class="esq-item-name">Kit Huerta de Balcón</div>
+            <div class="esq-item-desc">Piezas 3D que se enganchan en cualquier baranda o ventana para tener aromáticas sin ocupar espacio.</div>
+            <div class="esq-item-price">$2.800</div>
+          </div>
+        </div>
+        <a href="https://wa.me/541165497234?text=Hola! Quiero los soportes de esquejes de Oasis del Estero 🌱" target="_blank"
+           style="display:inline-flex;align-items:center;gap:10px;margin-top:24px;padding:12px 28px;background:var(--leaf);color:var(--paper);font-size:.6rem;letter-spacing:4px;text-transform:uppercase;text-decoration:none;cursor:none;transition:background .3s">
+          Consultar →
+        </a>
+      </div>
+      <div class="reveal" style="transition-delay:.2s">
+        <div class="esq-img-placeholder">
+          <div class="esq-sym">🌱</div>
+          <div class="esq-caption">
+            <div class="esq-caption-text">Soportes de propagación · Diseño Oasis del Estero</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- IA Esquejes -->
+    <div class="ia-box reveal" style="margin-top:48px">
+      <div>
+        <div class="eye" style="margin-bottom:8px">Asistente Verde</div>
+        <div class="ib-ttl">¿Qué planta querés reproducir?</div>
+        <p class="ib-sub">Contanos tu planta y la IA te dice qué soporte usar y cómo hacer el esqueje paso a paso.</p>
+      </div>
+      <div>
+        <div class="ia-chip">IA activa</div>
+        <input class="ia-inp" type="text" id="ia-esq" placeholder="Ej: quiero reproducir mi pothos y necesito algo lindo para el escritorio...">
+        <button class="ia-btn" onclick="callIA('esq')">Recomendar soporte →</button>
+        <div class="ia-resp" id="r-esq"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROYECTOS -->
+<section id="s-proyectos" class="csec">
+  <div style="background:var(--dark);padding:64px 80px;position:relative;overflow:hidden">
+    <div style="position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.02) .5px,transparent .5px),linear-gradient(90deg,rgba(255,255,255,.02) .5px,transparent .5px);background-size:40px 40px"></div>
+    <div class="reveal" style="position:relative;z-index:1;margin-bottom:40px">
+      <div class="eye" style="margin-bottom:10px;color:var(--mint)"><span style="width:18px;height:1px;background:var(--mint);display:inline-block;margin-right:12px"></span>Proyectos especiales</div>
+      <h2 style="font-family:'Cormorant Garamond',serif;font-size:clamp(1.8rem,3vw,3rem);font-weight:300;color:var(--paper);line-height:1;margin-bottom:12px">
+        Cuando el diseño<br><em style="font-style:italic;color:var(--mint)">se pone técnico.</em>
+      </h2>
+      <p style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.95rem;color:rgba(250,252,248,.5);line-height:1.85;max-width:560px">
+        Fede desarrolla soluciones a medida para sistemas de cultivo más ambiciosos. Piezas que en el mercado son genéricas, caras o imposibles de conseguir — diseñadas exactamente para tu sistema.
+      </p>
+    </div>
+    <div class="proy-grid reveal" style="position:relative;z-index:1">
+      <div class="proy-card">
+        <span class="proy-sym">💧</span>
+        <div class="proy-name">Auto-riego Estético</div>
+        <div class="proy-desc">Dispositivo 3D que dosifica el agua en la maceta. Ideal para quienes viajan o se olvidan de regar. Funcional y discreto.</div>
+        <span class="proy-tag">A cotizar</span>
+      </div>
+      <div class="proy-card">
+        <span class="proy-sym">🏗</span>
+        <div class="proy-name">Canastas de Cultivo</div>
+        <div class="proy-desc">Net pots con geometría optimizada para mejor oxigenación de raíces. Para sistemas hidropónicos pequeños en el hogar.</div>
+        <span class="proy-tag">A cotizar</span>
+      </div>
+      <div class="proy-card">
+        <span class="proy-sym">🔧</span>
+        <div class="proy-name">Piezas a Medida</div>
+        <div class="proy-desc">¿Tenés un sistema y necesitás una pieza que no existe? Fede la diseña. Conectores, soportes, carcasas — lo que necesites.</div>
+        <span class="proy-tag">Consultanos</span>
+      </div>
+    </div>
+
+    <!-- IA Proyectos -->
+    <div class="ia-box reveal" style="position:relative;z-index:1;margin-top:40px;background:rgba(255,255,255,.04);border-color:rgba(168,197,160,.2);border-left-color:var(--mint)">
+      <div>
+        <div class="eye" style="margin-bottom:8px;color:var(--mint)"><span style="width:18px;height:1px;background:var(--mint);display:inline-block;margin-right:12px"></span>Asistente Verde</div>
+        <div class="ib-ttl" style="color:var(--paper)">¿Qué sistema tenés?</div>
+        <p class="ib-sub" style="color:rgba(250,252,248,.55)">Describí tu proyecto de cultivo y Fede te dice qué pieza de El Pasaje puede optimizarlo.</p>
+      </div>
+      <div>
+        <div class="ia-chip" style="color:var(--mint);border-color:rgba(168,197,160,.2);background:rgba(168,197,160,.06)">IA activa · Proyectos</div>
+        <input class="ia-inp" type="text" id="ia-proy" style="color:var(--paper);border-bottom-color:rgba(168,197,160,.2)" placeholder="Ej: tengo una huerta pequeña en el balcón y quiero optimizar el riego...">
+        <button class="ia-btn" style="border-color:var(--mint);color:var(--mint)" onmouseover="this.style.background='var(--mint)';this.style.color='var(--dark)'" onmouseout="this.style.background='transparent';this.style.color='var(--mint)'" onclick="callIA('proy')">Consultar con Fede →</button>
+        <div class="ia-resp" id="r-proy" style="border-left-color:var(--mint);color:var(--mint)"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SINERGIA -->
+<section id="s-sinergia" class="csec">
+  <div style="background:#DDE8D8;padding:64px 80px">
+    <div class="reveal" style="margin-bottom:32px">
+      <div class="eye" style="margin-bottom:10px">El universo El Pasaje</div>
+      <h2 style="font-family:'Cormorant Garamond',serif;font-size:clamp(1.8rem,3vw,2.8rem);font-weight:300;color:var(--dark);margin-bottom:12px">
+        Oasis <em style="font-style:italic;color:var(--leaf)">dialoga</em> con estas líneas
+      </h2>
+      <p style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.95rem;color:var(--stone);line-height:1.8;max-width:560px">No son solo alianzas comerciales — son afinidades naturales. El verde que conecta el ecosistema.</p>
+    </div>
+    <div class="sin-grid reveal">
+      <a href="index.html#anima" class="scard" style="--sc:#8B6500">
+        <span class="sc-sym">◎</span>
+        <div class="sc-tag">Ánima · Nely</div>
+        <div class="sc-name">Plantas que sanan</div>
+        <div class="sc-why">Nely pone el concepto de bienestar. Fede pone la estructura 3D para tener hierbas aromáticas en el espacio de meditación. Kit de calma completo.</div>
+        <span class="sc-arr">→</span>
+      </a>
+      <a href="coquette.html" class="scard" style="--sc:#8B2A3A">
+        <span class="sc-sym">✦</span>
+        <div class="sc-tag">Coquette · Olivia</div>
+        <div class="sc-name">El jardín en tu escritorio</div>
+        <div class="sc-why">El regalo que crece: combiná la elegancia de un llavero Peonía con una planta que respira. Para regalar naturaleza y diseño en un solo gesto.</div>
+        <span class="sc-arr">→</span>
+      </a>
+      <a href="index.html#nivel1" class="scard" style="--sc:#F472B6">
+        <span class="sc-sym">🐾</span>
+        <div class="sc-tag">Oasis Animal · Agus</div>
+        <div class="sc-name">Vida y propósito</div>
+        <div class="sc-why">Fede y Agustina son pareja. Comparten el amor por la vida — él por las plantas, ella por los animales. Dos causas, una familia, el mismo corazón.</div>
+        <span class="sc-arr">→</span>
+      </a>
+      <a href="index.html#nivel2" class="scard" style="--sc:#64748B">
+        <span class="sc-sym">⚙</span>
+        <div class="sc-tag">Core Tech · Constantino</div>
+        <div class="sc-name">Ingeniería botánica</div>
+        <div class="sc-why">Constantino aporta la resistencia técnica. Fede el diseño de drenaje perfecto. Para quien necesita piezas que no existen en el mercado.</div>
+        <span class="sc-arr">→</span>
+      </a>
+    </div>
+
+    <!-- IA Sinergia -->
+    <div class="ia-box reveal">
+      <div>
+        <div class="eye" style="margin-bottom:8px">IA · Combinador</div>
+        <div class="ib-ttl">¿Para quién es el regalo?</div>
+        <p class="ib-sub">La IA combina Oasis del Estero con otras líneas y te arma el kit verde perfecto según la persona y la ocasión.</p>
+      </div>
+      <div>
+        <div class="ia-chip">IA activa</div>
+        <input class="ia-inp" type="text" id="ia-sin" placeholder="Ej: regalo para una amiga que ama las plantas y el bienestar...">
+        <button class="ia-btn" onclick="callIA('sin')">Armar kit verde →</button>
+        <div class="ia-resp" id="r-sin"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROCESO -->
+<div class="sep-leaf"></div>
+<section id="proceso" style="background:#C8D9C0;padding:56px 80px;border-bottom:1px solid rgba(45,90,39,.3)">
+  <div class="eye" style="margin-bottom:10px">El proceso</div>
+  <h2 style="font-family:'Cormorant Garamond',serif;font-size:clamp(1.5rem,2.5vw,2.2rem);font-weight:300;color:var(--dark);margin-bottom:32px">Así nace cada pieza <em style="font-style:italic;color:var(--leaf)">de Oasis</em></h2>
+  <div class="proc-steps reveal">
+    <div class="pstep"><div class="ps-n">01</div><div class="ps-t">Diseño</div><div class="ps-d">Fede diseña en Nordelta. Cada forma piensa en la planta primero. La estética viene después.</div><div class="ps-tags"><span class="ps-tag">CAD</span><span class="ps-tag">STL</span></div></div>
+    <div class="proc-arr">→</div>
+    <div class="pstep reveal" style="transition-delay:.15s"><div class="ps-n">02</div><div class="ps-t">Impresión</div><div class="ps-d">Fer imprime en El Pasaje La Piedad. PLUMARMOL para piezas decorativas, materiales técnicos para proyectos.</div><div class="ps-tags"><span class="ps-tag">PLUMARMOL</span><span class="ps-tag">48HS</span></div></div>
+    <div class="proc-arr">→</div>
+    <div class="pstep reveal" style="transition-delay:.3s"><div class="ps-n">03</div><div class="ps-t">Entrega</div><div class="ps-d">Control de calidad Alejandra. Embalado en el Pasaje La Piedad. A tu balcón, tu cuarto o tu jardín.</div><div class="ps-tags"><span class="ps-tag">KAIZEN</span><span class="ps-tag">1880</span></div></div>
+  </div>
+  <div class="proc-stats reveal">
+    <div class="pstat"><div class="pstat-n" id="cnt-p">0</div><div class="pstat-l">piezas producidas</div></div>
+    <div class="pstat"><div class="pstat-n" id="cnt-h">0</div><div class="pstat-l">horas de impresión</div></div>
+    <div class="pstat"><div class="pstat-n" style="color:var(--leaf)">🌿</div><div class="pstat-l">tecnología + naturaleza</div></div>
+  </div>
+</section>
+
+<!-- HISTORIA -->
+<div class="sep-leaf"></div>
+<section class="historia">
+  <div class="hleft reveal">
+    <div class="eye" style="margin-bottom:16px">La historia</div>
+    <h2 class="h-ttl">El oasis<br>que <em>diseñó</em> Fede.</h2>
+    <p class="h-body">Fede es de Buenos Aires y tiene una relación especial con el cultivo — cree que la tecnología puede hacer que cualquier persona, en cualquier espacio, pueda tener un pedacito de naturaleza inteligente. Junto a Agustina, forman la pareja más comprometida del ecosistema El Pasaje. Él pone la ingeniería verde. Ella pone el amor por los animales. Juntos, el propósito más claro.</p>
+    <!-- Cualidades -->
+    <div class="cual-grid">
+      <div class="cual-item">
+        <div class="cual-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/><path d="M12 2s-4 4-4 10c0 2.21.91 4.2 2.37 5.63" stroke-linecap="round"/><path d="M12 2s4 4 4 10c0 2.21-.91 4.2-2.37 5.63" stroke-linecap="round"/><path d="M2 12h20" stroke-linecap="round"/></svg>
+        </div>
+        <div><div class="cual-ttl">Drenaje inteligente</div><div class="cual-desc">Diseñado para que nunca más se pudra una raíz.</div></div>
+      </div>
+      <div class="cual-item">
+        <div class="cual-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 2l2 7h7l-5.5 4 2 7L12 16l-5.5 4 2-7L3 9h7z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div><div class="cual-ttl">Minimalismo botánico</div><div class="cual-desc">Forma y función en una sola pieza impresa.</div></div>
+      </div>
+      <div class="cual-item">
+        <div class="cual-icon">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke-linecap="round"/></svg>
+        </div>
+        <div><div class="cual-ttl">Personalizable</div><div class="cual-desc">Color, tamaño y forma. Exactamente lo que necesitás.</div></div>
+      </div>
+    </div>
+    <div class="h-slogan">
+      <span class="h-sq">"</span>
+      <div class="h-st">Un detalle verde que no requiere esfuerzo. Solo buen gusto.</div>
+    </div>
+  </div>
+  <div class="hright reveal" style="transition-delay:.2s">
+    <div class="ia-chip">IA activa · Asistente Verde</div>
+    <div class="h-ia-ttl">¿Qué planta o espacio tenés?</div>
+    <p class="h-ia-sub">Describí tu espacio, tus plantas o lo que estás buscando. La IA te recomienda la pieza exacta de Oasis del Estero.</p>
+    <input class="ia-inp" type="text" id="ia-hist" placeholder="Ej: quiero plantas en mi departamento pero se me mueren siempre...">
+    <button class="ia-btn" onclick="callIA('hist')">Consultar al Asistente →</button>
+    <div class="ia-resp" id="r-hist"></div>
+  </div>
+</section>
+
+<!-- CIERRE -->
+<section class="cierre">
+  <div class="c-line"></div>
+  <blockquote class="c-quote reveal">"Tecnología para el<br><em>cultivo del futuro.</em>"</blockquote>
+  <div class="c-firma reveal" style="transition-delay:.2s">Oasis del Estero · El Pasaje 3D Studio · Buenos Aires</div>
+  <div class="c-wrap reveal" style="transition-delay:.35s">
+    <a href="https://wa.me/541165497234?text=Hola! Vi Oasis del Estero y quiero consultar 🌿" class="c-cta" target="_blank">Quiero esta colección</a>
+    <a href="index.html" class="c-back">← Ver todas las líneas de El Pasaje</a>
+  </div>
+</section>
+
+<footer>
+  <div class="fl"><em>Oasis del Estero</em> · El Pasaje 3D Studio</div>
+  <div class="fr">© 2026 · Buenos Aires · Argentina</div>
+</footer>
+
+<a href="https://wa.me/541165497234?text=Hola! Vi Oasis del Estero 🌿" class="wa-float" target="_blank">
+  <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+</a>
+
+<div id="back-banner" style="position:fixed;top:70px;left:20px;z-index:250;opacity:0;transform:translateX(-10px);transition:opacity .4s,transform .4s;pointer-events:none">
+  <a href="index.html" style="display:flex;align-items:center;gap:8px;background:rgba(250,252,248,.95);backdrop-filter:blur(8px);border:1px solid var(--brd);padding:8px 16px;font-family:'Raleway',sans-serif;font-size:.52rem;letter-spacing:3px;text-transform:uppercase;color:var(--leaf);text-decoration:none">← El Pasaje</a>
+</div>
+
+<script>
+const cur=document.getElementById('cur'),cur2=document.getElementById('cur2');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cur.style.transform=`translate(${mx-4}px,${my-4}px)`});
+(function loop(){rx+=(mx-rx)*.1;ry+=(my-ry)*.1;cur2.style.transform=`translate(${rx-15}px,${ry-15}px)`;requestAnimationFrame(loop)})();
+document.querySelectorAll('a,button,.mcard,.pcard,.proy-card,.scard,.esq-item,.ia-fn').forEach(el=>{
+  el.addEventListener('mouseenter',()=>{cur.style.width='14px';cur.style.height='14px'});
+  el.addEventListener('mouseleave',()=>{cur.style.width='8px';cur.style.height='8px'});
+});
+const obs=new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting)x.target.classList.add('visible')})},{threshold:.06});
+document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+
+const SECS=['macetas','esquejes','proyectos','sinergia'];
+function showSec(id){
+  SECS.forEach(s=>{const el=document.getElementById('s-'+s);if(!el)return;el.classList.remove('active');setTimeout(()=>{if(!el.classList.contains('active'))el.style.display='none'},480)});
+  document.querySelectorAll('.nav-pill').forEach(n=>n.classList.remove('active'));
+  document.querySelectorAll('.mcard').forEach(c=>c.classList.remove('sel'));
+  const t=document.getElementById('s-'+id);
+  if(t){t.style.display='block';setTimeout(()=>t.classList.add('active'),10);t.scrollIntoView({behavior:'smooth',block:'start'})}
+  const idx=SECS.indexOf(id);
+  if(idx>=0){document.querySelectorAll('.nav-pill')[idx]?.classList.add('active');document.querySelectorAll('.mcard')[idx]?.classList.add('sel')}
+}
+
+const co=new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting&&x.target.id==='proceso'){
+  let v=0,h=0;const t=setInterval(()=>{v=Math.min(v+3,156);h=Math.min(h+20,980);document.getElementById('cnt-p').textContent=Math.floor(v);document.getElementById('cnt-h').textContent=Math.floor(h);if(v>=156)clearInterval(t)},28);co.disconnect();
+}})});
+const pr=document.getElementById('proceso');if(pr)co.observe(pr);
+
+window.addEventListener('scroll',function(){
+  const b=document.getElementById('back-banner');
+  if(window.scrollY>300){b.style.opacity='1';b.style.transform='translateX(0)';b.style.pointerEvents='auto'}
+  else{b.style.opacity='0';b.style.transform='translateX(-10px)';b.style.pointerEvents='none'}
+});
+
+function setFn(el,tipo,texto){
+  el.closest('.ia-fn-grid').querySelectorAll('.ia-fn').forEach(f=>f.classList.remove('active-fn'));
+  el.classList.add('active-fn');
+  const inp=document.getElementById('ia-'+tipo);
+  if(inp){inp.value=texto;inp.focus()}
+}
+
+const SYS=`Sos el asistente de Oasis del Estero, la línea de Fede dentro de El Pasaje 3D Studio, Buenos Aires. Fede es de Buenos Aires y diseña macetas innovadoras, soportes para esquejes y accesorios de cultivo impresos en 3D.
+
+Productos disponibles:
+- Maceta Modular ($1.200): geométrica minimalista, drenaje integrado, apilable
+- Maceta Colgante ($1.500): con sistema de sujeción integrado para balcón/ventana
+- Identificadores de Plantas ($400): estacas con nombre en tipografía elegante
+- Soporte Propagación Simple ($800): base 3D para 1 tubo de ensayo
+- Rack Propagación x4 ($2.200): para 4 esquejes simultáneos
+- Kit Huerta de Balcón ($2.800): se engancha en barandas/ventanas, aromáticas
+- Auto-riego Estético: a cotizar
+- Canastas de Cultivo: a cotizar
+- Piezas a medida: a cotizar
+
+Fede y Agustina (Oasis Animal) son pareja. Sinergias: con Ánima (Nely) para bienestar, con Coquette (Olivia) para regalo elegante, con Core Tech (Constantino) para proyectos técnicos.
+
+WA: +54 11 6549-7234. Entrega 48hs.
+
+Respondés en español rioplatense, tono cálido y natural, máximo 3 oraciones. Siempre mencionás un producto concreto. El espíritu es: naturaleza inteligente, sin complicaciones.`;
+
+const FB={
+  mac:['Para un balcón con aromáticas, el Kit Huerta de Balcón es perfecto — se engancha sin herramientas y no ocupa espacio.','Para interior con suculentas, la Maceta Modular apilable es la más pedida. En verde botánico queda impresionante.'],
+  esq:['Para reproducir pothos, el Rack de Propagación x4 te permite tener varios esquejes en proceso al mismo tiempo — muy decorativo en la mesada.','El Soporte Simple para 1 tubo es el más minimalista. Ideal para el escritorio.'],
+  proy:['Para optimizar el riego en balcón, el Auto-riego Estético es el próximo lanzamiento. Consultanos para reservar.','Si necesitás piezas específicas para tu sistema, Fede las diseña a medida. Contanos qué necesitás.'],
+  sin:['Para alguien que ama las plantas y el bienestar: Soporte de esquejes (Oasis) + Cuenco de Intenciones (Ánima). Kit de calma completo.','Kit regalo elegante: Maceta Modular verde (Oasis) + Llavero Peonía (Coquette). Naturaleza y diseño en un solo paquete.'],
+  hist:['Para quien se le mueren las plantas: el Auto-riego Estético soluciona eso. Y mientras tanto, las suculentas con la Maceta Modular son prácticamente indestructibles.']
+};
+
+async function callIA(tipo){
+  const ids={mac:'ia-mac',esq:'ia-esq',proy:'ia-proy',sin:'ia-sin',hist:'ia-hist'};
+  const rid={mac:'r-mac',esq:'r-esq',proy:'r-proy',sin:'r-sin',hist:'r-hist'};
+  const inp=document.getElementById(ids[tipo]);
+  const resp=document.getElementById(rid[tipo]);
+  if(!inp||!resp)return;
+  const t=inp.value.trim();if(!t){inp.focus();return}
+  resp.style.display='block';resp.textContent='···';
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:250,system:SYS,messages:[{role:'user',content:t}]})
+    });
+    const d=await r.json();resp.textContent=d.content?.[0]?.text||'Escribinos al WA y te ayudamos.'
+  }catch(e){
+    const arr=FB[tipo]||FB.mac;resp.textContent=arr[Math.floor(Math.random()*arr.length)]
+  }
+}
+</script>
+</body>
+</html>

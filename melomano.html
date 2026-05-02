@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Melómano · El Pasaje 3D Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --negro:#0A0A0A;
+  --profundo:#111111;
+  --carbono:#1C1C1C;
+  --grafito:#2A2A2A;
+  --gris:#4A4A4A;
+  --gris2:#777777;
+  --gris3:#AAAAAA;
+  --claro:#E8E8E8;
+  --papel:#F2F0EC;
+  --blanco:#FFFFFF;
+  --cobre:#B87333;
+  --cobre2:#D4924A;
+  --cobre3:#E8B86D;
+  --crema:#F5EDD9;
+  --brd:rgba(184,115,51,.2);
+  --brd2:rgba(184,115,51,.1);
+  --verde:#059669;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--profundo);color:var(--claro);font-family:'DM Sans',sans-serif;font-weight:300;overflow-x:hidden;cursor:none}
+#cur{width:8px;height:8px;background:var(--cobre);border-radius:50%;position:fixed;top:0;left:0;pointer-events:none;z-index:9999;transition:width .2s,height .2s}
+#cur2{width:28px;height:28px;border:1px solid rgba(184,115,51,.35);border-radius:50%;position:fixed;top:0;left:0;pointer-events:none;z-index:9998}
+
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:400;padding:0 64px;height:58px;display:flex;justify-content:space-between;align-items:center;background:rgba(10,10,10,.97);backdrop-filter:blur(16px);border-bottom:1px solid var(--brd)}
+.nav-logo{font-family:'Playfair Display',serif;font-size:.9rem;font-weight:400;letter-spacing:5px;text-transform:uppercase;color:var(--blanco)}
+.nav-logo em{font-style:italic;color:var(--cobre)}
+.nav-back{font-size:.58rem;font-weight:500;letter-spacing:3px;text-transform:uppercase;color:var(--gris2);text-decoration:none;transition:color .3s}
+.nav-back:hover{color:var(--cobre)}
+
+/* ── TABS ── */
+.tab-bar{position:sticky;top:58px;z-index:300;background:rgba(17,17,17,.98);backdrop-filter:blur(12px);display:flex;justify-content:center;border-bottom:1px solid rgba(184,115,51,.15)}
+.tab-btn{padding:0 28px;height:48px;font-family:'DM Sans',sans-serif;font-size:.58rem;font-weight:500;letter-spacing:4px;text-transform:uppercase;color:var(--gris);background:none;border:none;cursor:pointer;transition:all .3s;position:relative}
+.tab-btn::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--cobre);transform:scaleX(0);transition:transform .3s}
+.tab-btn.active{color:var(--cobre)}
+.tab-btn.active::after{transform:scaleX(1)}
+.tab-btn:hover{color:var(--gris3)}
+
+/* ── PANELS ── */
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+/* ── HERO ── */
+.hero{min-height:92vh;background:var(--negro);position:relative;overflow:hidden;display:flex;align-items:center;padding:100px 100px 80px}
+/* Grid de vinilo decorativo */
+.hero::before{content:'';position:absolute;inset:0;background-image:radial-gradient(circle at 70% 50%,rgba(184,115,51,.06) 0%,transparent 60%),repeating-conic-gradient(rgba(184,115,51,.015) 0deg,transparent 1deg,transparent 2deg)}
+.hero::after{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(to bottom,transparent,var(--cobre),transparent)}
+.hero-left{position:relative;z-index:2;max-width:600px}
+.h-kicker{font-size:.58rem;font-weight:500;letter-spacing:7px;text-transform:uppercase;color:var(--cobre);margin-bottom:24px;display:flex;align-items:center;gap:14px}
+.h-kicker::before{content:'';width:32px;height:1px;background:var(--cobre)}
+.h-title{font-family:'Playfair Display',serif;font-size:clamp(3rem,5.5vw,6rem);font-weight:900;line-height:.88;color:var(--blanco);margin-bottom:12px;letter-spacing:-2px}
+.h-title em{font-style:italic;color:var(--cobre);display:block}
+.h-div{width:48px;height:1px;background:var(--cobre);margin-bottom:24px;opacity:.6}
+.h-sub{font-size:.92rem;font-weight:300;color:var(--gris3);line-height:1.85;max-width:440px;margin-bottom:40px}
+.h-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(184,115,51,.15);margin-bottom:36px}
+.hst{background:rgba(255,255,255,.03);padding:20px 14px;text-align:center;border:1px solid rgba(184,115,51,.12)}
+.hst-n{font-family:'Playfair Display',serif;font-size:2.2rem;font-weight:400;color:var(--cobre);line-height:1}
+.hst-l{font-size:.5rem;font-weight:500;letter-spacing:3px;text-transform:uppercase;color:var(--gris);margin-top:6px;line-height:1.4}
+.h-ctas{display:flex;gap:12px;flex-wrap:wrap}
+.h-cta{display:inline-flex;align-items:center;gap:10px;padding:14px 36px;background:var(--cobre);color:var(--negro);font-size:.62rem;font-weight:600;letter-spacing:4px;text-transform:uppercase;text-decoration:none;transition:all .3s;cursor:pointer;border:none}
+.h-cta:hover{background:var(--cobre2)}
+.h-cta-sec{display:inline-flex;align-items:center;gap:10px;padding:14px 28px;border:1px solid rgba(184,115,51,.4);color:var(--cobre);font-size:.62rem;font-weight:500;letter-spacing:4px;text-transform:uppercase;cursor:pointer;background:none;transition:all .3s}
+.h-cta-sec:hover{background:rgba(184,115,51,.08)}
+/* Disco decorativo hero */
+.hero-disco{position:absolute;right:5%;top:50%;transform:translateY(-50%);z-index:1;opacity:.12;width:360px;height:360px;border-radius:50%;border:1px solid var(--cobre);display:flex;align-items:center;justify-content:center}
+.hero-disco::before{content:'';position:absolute;width:280px;height:280px;border-radius:50%;border:1px solid var(--cobre)}
+.hero-disco::after{content:'';position:absolute;width:180px;height:180px;border-radius:50%;border:1px solid var(--cobre)}
+.disco-label{font-family:'Playfair Display',serif;font-size:1rem;font-weight:400;color:var(--cobre);letter-spacing:8px;text-transform:uppercase}
+
+/* ── STRIP ── */
+.strip{background:rgba(17,17,17,.95);padding:12px 64px;display:flex;align-items:center;justify-content:center;gap:48px;border-top:1px solid rgba(184,115,51,.2);border-bottom:1px solid rgba(184,115,51,.2)}
+.ss-item{display:flex;align-items:center;gap:10px;font-size:.56rem;font-weight:500;letter-spacing:4px;text-transform:uppercase;color:var(--gris2)}
+.ss-dot{width:4px;height:4px;border-radius:50%;background:var(--cobre);flex-shrink:0}
+
+/* ── SECCIONES ── */
+.sec{padding:80px 100px;background:var(--profundo)}
+.sec-light{background:var(--carbono)}
+.sec-papel{background:var(--papel);color:var(--negro)}
+.sec-papel .sec-ttl{color:var(--negro)}
+.sec-papel .sec-body{color:var(--gris)}
+.eyebrow{font-size:.56rem;font-weight:500;letter-spacing:6px;text-transform:uppercase;color:var(--cobre);margin-bottom:14px;display:flex;align-items:center;gap:12px}
+.eyebrow::before{content:'';width:20px;height:1px;background:var(--cobre)}
+.sec-ttl{font-family:'Playfair Display',serif;font-size:clamp(2.2rem,4vw,3.4rem);font-weight:700;color:var(--blanco);margin-bottom:20px;line-height:1}
+.sec-ttl em{font-style:italic;color:var(--cobre)}
+.sec-body{font-size:.9rem;font-weight:300;color:var(--gris3);line-height:1.85;margin-bottom:24px}
+
+/* ── CARDS ── */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+
+.pcard{background:var(--carbono);border-top:2px solid var(--grafito);border:1px solid rgba(184,115,51,.1);padding:28px 24px;cursor:none;transition:all .35s;position:relative}
+.pcard:hover{background:var(--grafito);border-color:var(--cobre);border-top-color:var(--cobre);transform:translateY(-4px);box-shadow:0 12px 36px rgba(0,0,0,.4)}
+.pcard::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(to right,var(--cobre),transparent);opacity:0;transition:opacity .3s}
+.pcard:hover::before{opacity:1}
+.pcard-badge{display:inline-flex;align-items:center;padding:3px 12px;margin-bottom:14px;font-size:.52rem;font-weight:600;letter-spacing:3px;text-transform:uppercase}
+.badge-vinilo{background:rgba(184,115,51,.15);color:var(--cobre);border:1px solid rgba(184,115,51,.3)}
+.badge-hifi{background:rgba(42,42,42,.8);color:var(--gris3);border:1px solid rgba(255,255,255,.08)}
+.badge-new{background:var(--cobre);color:var(--negro)}
+.pcard-icon{font-size:1.8rem;display:block;margin-bottom:12px;opacity:.7}
+.pcard-name{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:600;color:var(--blanco);margin-bottom:8px;transition:color .3s}
+.pcard:hover .pcard-name{color:var(--cobre)}
+.pcard-desc{font-size:.82rem;font-weight:300;color:var(--gris3);line-height:1.65;margin-bottom:14px;transition:color .3s}
+.pcard:hover .pcard-desc{color:var(--gris3)}
+.pcard-price{font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:400;color:var(--cobre)}
+.pcard-cta{display:inline-flex;align-items:center;gap:6px;margin-top:10px;font-size:.54rem;font-weight:500;letter-spacing:3px;text-transform:uppercase;color:var(--gris);text-decoration:none;transition:color .2s}
+.pcard:hover .pcard-cta{color:var(--cobre)}
+
+/* ── ESTRELLA ── */
+.star-wrap{display:grid;grid-template-columns:1.2fr 1fr;gap:0;margin-bottom:40px;border:1px solid rgba(184,115,51,.2)}
+.star-left{padding:48px;background:var(--carbono)}
+.star-kicker{font-size:.54rem;font-weight:500;letter-spacing:5px;text-transform:uppercase;color:var(--cobre);margin-bottom:16px;display:flex;align-items:center;gap:12px}
+.star-kicker::before{content:'';width:16px;height:1px;background:var(--cobre)}
+.star-ttl{font-family:'Playfair Display',serif;font-size:2.6rem;font-weight:700;color:var(--blanco);line-height:.95;margin-bottom:18px}
+.star-ttl em{font-style:italic;color:var(--cobre)}
+.star-body{font-size:.88rem;font-weight:300;color:var(--gris3);line-height:1.8;margin-bottom:24px}
+.ben-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:24px}
+.ben{background:var(--grafito);padding:14px 16px;border-left:2px solid var(--cobre)}
+.ben-t{font-size:.56rem;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--cobre);margin-bottom:4px}
+.ben-d{font-size:.78rem;font-weight:300;color:var(--gris3);line-height:1.5}
+.star-cta{display:inline-flex;align-items:center;gap:10px;padding:13px 32px;background:var(--cobre);color:var(--negro);font-size:.62rem;font-weight:600;letter-spacing:4px;text-transform:uppercase;text-decoration:none;cursor:none;transition:all .3s}
+.star-cta:hover{background:var(--cobre2)}
+.star-nota{font-size:.72rem;font-weight:300;color:var(--gris);margin-top:10px}
+.star-right{background:var(--negro);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;position:relative;overflow:hidden}
+.star-right::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at center,rgba(184,115,51,.08) 0%,transparent 70%)}
+.star-img-icon{font-size:4.5rem;opacity:.25;display:block;margin-bottom:14px;text-align:center;position:relative;z-index:1}
+.star-img-name{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:600;color:var(--blanco);text-align:center;margin-bottom:6px;position:relative;z-index:1}
+.star-img-sub{font-size:.72rem;font-weight:300;color:var(--gris);text-align:center;margin-bottom:20px;position:relative;z-index:1}
+.price-row{display:grid;grid-template-columns:1fr 1fr;gap:1px;width:100%;background:rgba(184,115,51,.15);position:relative;z-index:1}
+.pr-item{background:rgba(255,255,255,.02);padding:14px;text-align:center;border-top:2px solid rgba(184,115,51,.3)}
+.pr-n{font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:400;color:var(--cobre)}
+.pr-l{font-size:.48rem;font-weight:500;letter-spacing:3px;text-transform:uppercase;color:var(--gris);margin-top:4px}
+
+/* ── MANIFIESTO ── */
+.manifesto-grid{display:grid;grid-template-columns:1fr 1fr;gap:72px;align-items:start}
+.man-quote{font-family:'Playfair Display',serif;font-style:italic;font-size:clamp(1.8rem,3.2vw,2.6rem);font-weight:400;color:var(--blanco);line-height:1.2;position:relative;z-index:1;margin-bottom:20px}
+.man-quote em{font-style:normal;color:var(--cobre)}
+.man-firma{font-size:.52rem;font-weight:500;letter-spacing:5px;text-transform:uppercase;color:var(--cobre);padding-top:16px;border-top:1px solid rgba(184,115,51,.3)}
+.man-q-bg{font-family:'Playfair Display',serif;font-size:14rem;color:rgba(184,115,51,.06);line-height:.4;position:absolute;top:-20px;left:-10px;pointer-events:none;z-index:0}
+
+/* ── ACOUSTIC ADVISOR (IA) ── */
+.ia-wrap{background:var(--grafito);border:1px solid rgba(184,115,51,.2);border-top:2px solid var(--cobre);padding:44px 52px;display:grid;grid-template-columns:1fr 1fr;gap:52px;align-items:center;margin-top:40px}
+.ia-chip{display:inline-flex;align-items:center;gap:8px;background:rgba(184,115,51,.1);border:1px solid rgba(184,115,51,.3);padding:5px 14px;border-radius:0;font-size:.5rem;font-weight:500;letter-spacing:3px;text-transform:uppercase;color:var(--cobre);margin-bottom:14px}
+.ia-chip::before{content:'';width:6px;height:6px;background:var(--cobre);border-radius:50%;animation:bl 2s infinite}
+@keyframes bl{0%,100%{opacity:1}50%{opacity:.2}}
+.ia-ttl{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:600;color:var(--blanco);margin-bottom:6px}
+.ia-sub{font-size:.84rem;font-weight:300;color:var(--gris3);line-height:1.8}
+.ia-fn-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px}
+.ia-fn{background:var(--carbono);border:1px solid rgba(184,115,51,.15);border-left:2px solid rgba(184,115,51,.3);padding:10px 12px;cursor:pointer;transition:all .3s;font-size:.68rem;font-weight:400;color:var(--gris3);text-align:left}
+.ia-fn:hover,.ia-fn.active-fn{background:rgba(184,115,51,.1);border-color:var(--cobre);border-left-color:var(--cobre);color:var(--cobre)}
+.ia-inp{width:100%;background:transparent;border:none;border-bottom:1px solid rgba(184,115,51,.25);color:var(--blanco);padding:10px 0;font-family:'DM Sans',sans-serif;font-size:.82rem;outline:none;transition:border-color .3s;margin-bottom:12px}
+.ia-inp:focus{border-bottom-color:var(--cobre)}
+.ia-inp::placeholder{color:rgba(184,115,51,.3);font-style:italic}
+.ia-btn{background:transparent;border:1px solid var(--cobre);color:var(--cobre);padding:11px;font-family:'DM Sans',sans-serif;font-size:.6rem;font-weight:500;letter-spacing:4px;text-transform:uppercase;cursor:pointer;transition:all .3s;width:100%}
+.ia-btn:hover{background:var(--cobre);color:var(--negro)}
+.ia-resp{margin-top:12px;padding:14px 16px;background:rgba(184,115,51,.06);border-left:2px solid var(--cobre);font-family:'Playfair Display',serif;font-style:italic;font-size:.88rem;color:var(--gris3);line-height:1.8;display:none}
+
+/* ── PERSONALIZACIÓN ── */
+.per-box{background:var(--negro);padding:36px 48px;border:1px solid rgba(184,115,51,.2);border-top:3px solid var(--cobre);margin-bottom:24px;display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center}
+.per-preview{font-family:'Playfair Display',serif;font-size:2.8rem;font-weight:400;color:var(--blanco);letter-spacing:4px;margin-bottom:6px}
+.per-preview em{color:var(--cobre);font-style:italic}
+.per-sub{font-size:.76rem;font-weight:300;color:var(--gris);margin-top:8px}
+.per-cta{display:inline-flex;align-items:center;gap:8px;padding:12px 28px;border:1px solid rgba(184,115,51,.4);color:var(--cobre);font-size:.6rem;font-weight:500;letter-spacing:4px;text-transform:uppercase;text-decoration:none;transition:all .3s;cursor:none}
+.per-cta:hover{background:rgba(184,115,51,.1)}
+
+/* ── IMPACTO ── */
+.don-wrap{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:start}
+.don-thermo{background:rgba(255,255,255,.03);border:1px solid rgba(184,115,51,.12);border-left:2px solid var(--verde);padding:20px 24px;margin-bottom:14px}
+.don-lbl{font-size:.52rem;font-weight:500;letter-spacing:4px;text-transform:uppercase;color:var(--verde);margin-bottom:12px;display:block}
+.don-bar-bg{background:rgba(255,255,255,.05);height:4px;overflow:hidden;margin-bottom:8px}
+.don-bar{height:100%;background:var(--verde);transition:width 2.2s ease}
+.don-row{display:flex;justify-content:space-between;font-size:.68rem;font-weight:300;color:var(--gris)}
+.don-row span{color:var(--verde)}
+.fondo-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:20px}
+.fondo-item{background:rgba(255,255,255,.03);border:1px solid rgba(184,115,51,.1);padding:16px;cursor:none;transition:all .3s}
+.fondo-item:hover{border-color:var(--verde)}
+.fondo-emoji{font-size:1.2rem;display:block;margin-bottom:6px}
+.fondo-name{font-family:'Playfair Display',serif;font-size:.95rem;font-weight:600;color:var(--blanco);margin-bottom:4px}
+.fondo-desc{font-size:.7rem;font-weight:300;color:var(--gris);line-height:1.4}
+.don-pct{font-family:'Playfair Display',serif;font-size:4rem;font-weight:400;color:var(--verde);display:block;line-height:1}
+.don-info{font-size:.86rem;font-weight:300;color:var(--gris3);line-height:1.85}
+
+/* ── SINERGIA ── */
+.sin-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:28px}
+.scard{background:var(--carbono);padding:28px 22px;text-decoration:none;color:inherit;display:block;transition:all .35s;cursor:none;border:1px solid rgba(184,115,51,.1);border-top:2px solid var(--grafito)}
+.scard:hover{background:var(--grafito);border-color:rgba(184,115,51,.4);border-top-color:var(--cobre);transform:translateY(-4px)}
+.scard:hover .sc-name{color:var(--cobre)}
+.sc-tag{font-size:.48rem;font-weight:500;letter-spacing:4px;text-transform:uppercase;color:var(--gris);margin-bottom:8px;display:block}
+.sc-name{font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:600;color:var(--blanco);margin-bottom:8px;transition:color .3s}
+.sc-why{font-size:.8rem;font-weight:300;color:var(--gris3);line-height:1.6}
+
+/* ── CIERRE ── */
+.cierre{background:var(--negro);padding:80px;text-align:center;border-top:1px solid rgba(184,115,51,.2)}
+.c-line{width:48px;height:1px;background:linear-gradient(to right,transparent,var(--cobre),transparent);margin:0 auto 44px}
+.c-quote{font-family:'Playfair Display',serif;font-style:italic;font-size:clamp(2.2rem,4.5vw,4rem);font-weight:400;color:var(--blanco);max-width:720px;margin:0 auto;line-height:1.1}
+.c-quote em{font-style:normal;color:var(--cobre)}
+.c-firma{margin-top:18px;font-size:.52rem;font-weight:500;letter-spacing:6px;text-transform:uppercase;color:var(--gris)}
+.c-ctas{margin-top:40px;display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap}
+.c-cta{display:inline-flex;align-items:center;gap:10px;padding:14px 48px;background:var(--cobre);color:var(--negro);font-size:.62rem;font-weight:600;letter-spacing:5px;text-transform:uppercase;text-decoration:none;transition:background .3s;cursor:none}
+.c-cta:hover{background:var(--cobre2)}
+.c-back{font-size:.52rem;font-weight:400;letter-spacing:4px;text-transform:uppercase;color:var(--gris);text-decoration:none;transition:color .2s}
+.c-back:hover{color:var(--cobre)}
+
+footer{padding:18px 64px;background:rgba(0,0,0,.8);border-top:1px solid rgba(184,115,51,.12);display:flex;justify-content:space-between;align-items:center}
+.fl{font-family:'Playfair Display',serif;font-size:.82rem;letter-spacing:4px;color:rgba(255,255,255,.15)}
+.fl em{color:var(--cobre);font-style:italic}
+.fr{font-size:.46rem;font-weight:400;letter-spacing:3px;color:rgba(255,255,255,.07);text-transform:uppercase}
+
+.sep{height:1px;background:rgba(184,115,51,.15)}
+.reveal{opacity:0;transform:translateY(16px);transition:opacity .9s ease,transform .9s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+
+.wa-float{position:fixed;bottom:28px;right:28px;width:52px;height:52px;background:#25D366;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:500;text-decoration:none;animation:waPulse 3s infinite;cursor:none}
+.wa-float svg{width:26px;height:26px;fill:white}
+@keyframes waPulse{0%,100%{box-shadow:0 0 0 0 rgba(37,211,102,.4)}70%{box-shadow:0 0 0 12px rgba(37,211,102,0)}}
+#back-banner{position:fixed;top:66px;left:20px;z-index:250;opacity:0;transform:translateX(-10px);transition:opacity .4s,transform .4s;pointer-events:none}
+#back-banner a{display:flex;align-items:center;gap:8px;background:rgba(10,10,10,.95);backdrop-filter:blur(8px);border:1px solid var(--brd);padding:8px 14px;font-size:.52rem;font-weight:500;letter-spacing:3px;text-transform:uppercase;color:var(--cobre);text-decoration:none}
+
+@media(max-width:960px){
+  .hero{padding:100px 28px 60px}
+  .hero-disco{display:none}
+  .sec{padding:56px 28px}
+  .star-wrap,.manifesto-grid,.don-wrap,.ia-wrap,.per-box,.grid-2{grid-template-columns:1fr}
+  .sin-grid,.grid-4{grid-template-columns:1fr 1fr}
+  nav{padding:0 20px}
+  footer{flex-direction:column;gap:8px;text-align:center;padding:16px 20px}
+  .tab-btn{padding:0 16px;font-size:.52rem}
+}
+@media(max-width:600px){.sin-grid,.grid-4,.grid-3,.ben-grid,.fondo-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="cur"></div><div id="cur2"></div>
+
+<nav>
+  <div class="nav-logo">🎵 &nbsp;<em>Melómano</em> · El Pasaje</div>
+  <a href="index.html" class="nav-back">← El Pasaje</a>
+</nav>
+
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('inicio',this)">🎵 Inicio</button>
+  <button class="tab-btn" onclick="switchTab('vinilo',this)">📻 Vinilo</button>
+  <button class="tab-btn" onclick="switchTab('hifi',this)">🎧 Hi-Fi</button>
+  <button class="tab-btn" onclick="switchTab('personalizar',this)">✨ Personalización</button>
+  <button class="tab-btn" onclick="switchTab('impacto',this)">💚 Impacto</button>
+</div>
+
+
+<!-- ═══════════════ INICIO ═══════════════ -->
+<div id="tab-inicio" class="tab-panel active">
+
+<div class="hero">
+  <div class="hero-left reveal">
+    <div class="h-kicker">Melómano · El Pasaje 3D Studio</div>
+    <h1 class="h-title">
+      Para los que<br>escuchan
+      <em>diferente.</em>
+    </h1>
+    <div class="h-div"></div>
+    <p class="h-sub">Accesorios 3D para audiófilos, coleccionistas de vinilo y amantes del sonido de alta fidelidad. Diseñados por un perfeccionista que entiende que la vibración — igual que en la aviación — es el enemigo del sonido puro.</p>
+    <div class="h-stats">
+      <div class="hst"><div class="hst-n" id="cnt-mel">0</div><div class="hst-l">Piezas<br>disponibles</div></div>
+      <div class="hst"><div class="hst-n">2</div><div class="hst-l">Mundos:<br>Vinilo · Hi-Fi</div></div>
+      <div class="hst"><div class="hst-n">∞</div><div class="hst-l">Opciones de<br>personalización</div></div>
+    </div>
+    <div class="h-ctas">
+      <button class="h-cta" onclick="switchTab('vinilo',document.querySelectorAll('.tab-btn')[1])">Mundo Vinilo →</button>
+      <button class="h-cta-sec" onclick="switchTab('hifi',document.querySelectorAll('.tab-btn')[2])">Línea Hi-Fi</button>
+    </div>
+  </div>
+  <div class="hero-disco"><div class="disco-label">🎵</div></div>
+</div>
+
+<div class="strip">
+  <div class="ss-item"><span class="ss-dot"></span>La ingeniería del silencio y la vibración</div>
+  <div class="ss-item"><span class="ss-dot"></span>Anti-vibración · Alta densidad · PLA Seda premium</div>
+  <div class="ss-item"><span class="ss-dot"></span>Personalización con nombre o iniciales</div>
+</div>
+
+<!-- Manifiesto -->
+<div class="sec reveal">
+  <div class="manifesto-grid">
+    <div style="position:relative">
+      <div class="man-q-bg">"</div>
+      <div class="man-quote">En un avión, como en un parlante,<br>la vibración es<br><em>el enemigo.</em></div>
+      <div class="man-firma">— Melómano · El Pasaje</div>
+    </div>
+    <div>
+      <p class="sec-body">Hay personas que no escuchan música — la habitan. Conocen la diferencia entre un disco que suena en una repisa de madera y uno que descansa sobre aisladores de geometría precisa. Sienten cuándo la vibración del piso le roba claridad al médium.<br><br>Melómano nació para esas personas. Accesorios de impresión 3D diseñados con la misma lógica de anti-resonancia que se aplica en la industria aeronáutica, ahora al servicio del santuario del sonido en tu casa.</p>
+      <div style="display:grid;grid-template-columns:1fr;gap:8px;margin-top:20px">
+        <div style="background:var(--carbono);padding:16px 20px;border-left:2px solid var(--cobre)">
+          <div style="font-size:.5rem;font-weight:500;letter-spacing:4px;text-transform:uppercase;color:var(--cobre);margin-bottom:6px">Anti-vibración de precisión</div>
+          <div style="font-size:.82rem;font-weight:300;color:var(--gris3);line-height:1.6">Geometrías internas que disipan la vibración mecánica antes de que llegue al plato, al tóner o al tweeter.</div>
+        </div>
+        <div style="background:var(--carbono);padding:16px 20px;border-left:2px solid rgba(184,115,51,.4)">
+          <div style="font-size:.5rem;font-weight:500;letter-spacing:4px;text-transform:uppercase;color:var(--gris3);margin-bottom:6px">Colección como obra de arte</div>
+          <div style="font-size:.82rem;font-weight:300;color:var(--gris3);line-height:1.6">Los soportes que transforman tus discos en exhibición. Tu biblioteca de vinilo como la galería que siempre mereció ser.</div>
+        </div>
+        <div style="background:var(--carbono);padding:16px 20px;border-left:2px solid var(--cobre)">
+          <div style="font-size:.5rem;font-weight:500;letter-spacing:4px;text-transform:uppercase;color:var(--cobre);margin-bottom:6px">El sonido que querés escuchar</div>
+          <div style="font-size:.82rem;font-weight:300;color:var(--gris3);line-height:1.6">No vendemos plásticos. Vendemos la diferencia entre escuchar y sentir la música.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Vista rápida 3 líneas -->
+<div class="sec sec-light reveal">
+  <div class="eyebrow">Dos mundos · Un santuario</div>
+  <h2 class="sec-ttl">¿Qué necesita tu <em>setup?</em></h2>
+  <div class="grid-3">
+    <div class="pcard" onclick="switchTab('vinilo',document.querySelectorAll('.tab-btn')[1])" style="cursor:pointer">
+      <span class="pcard-icon">📻</span>
+      <div class="pcard-badge badge-vinilo">Mundo Vinilo</div>
+      <div class="pcard-name">Analógico · Colección</div>
+      <div class="pcard-desc">Soportes LP, aisladores para giradiscos, exhibidores "Now Playing" y dioramas de escenarios icónicos. Tu vinilo como nunca lo exhibiste.</div>
+      <div class="pcard-cta">Ver colección →</div>
+    </div>
+    <div class="pcard" onclick="switchTab('hifi',document.querySelectorAll('.tab-btn')[2])" style="cursor:pointer">
+      <span class="pcard-icon">🎧</span>
+      <div class="pcard-badge badge-hifi">Mundo Hi-Fi</div>
+      <div class="pcard-name">Digital · Alta fidelidad</div>
+      <div class="pcard-desc">Soportes de auriculares, gestión de cables, pads antivibración para bafles y amplificadores. Para el que invirtió en el sonido y quiere proteger esa inversión.</div>
+      <div class="pcard-cta">Ver línea →</div>
+    </div>
+    <div class="pcard" onclick="switchTab('personalizar',document.querySelectorAll('.tab-btn')[3])" style="cursor:pointer">
+      <span class="pcard-icon">✨</span>
+      <div class="pcard-badge badge-new">Custom</div>
+      <div class="pcard-name">Tuyo, único</div>
+      <div class="pcard-desc">Tu nombre o iniciales grabados en relieve. La pieza que ya es tuya antes de recibirla. Personalización disponible en toda la colección.</div>
+      <div class="pcard-cta">Personalizar →</div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /inicio -->
+
+
+<!-- ═══════════════ VINILO ═══════════════ -->
+<div id="tab-vinilo" class="tab-panel">
+<div class="sec reveal">
+  <div class="eyebrow">Mundo Vinilo · Analógico</div>
+  <h2 class="sec-ttl">Tu colección merece<br>ser una <em>obra de arte.</em></h2>
+  <p class="sec-body">Para el coleccionista que entiende que un disco no se guarda — se exhibe. Cada pieza está diseñada para realzar la estética de tu biblioteca y proteger el sonido que tanto cuidás.</p>
+
+  <!-- Estrella: Soportes LP Wall-Art -->
+  <div class="star-wrap">
+    <div class="star-left">
+      <div class="star-kicker">★ Producto estrella · Vinilo</div>
+      <h3 class="star-ttl">Soportes LP<br><em>Wall-Art</em></h3>
+      <p class="star-body">Soportes de pared que hacen flotar tus discos como si fueran cuadros. Diseños basados en ondas sonoras o invisibles según tu preferencia. El plástico del soporte desaparece — solo queda el disco.</p>
+      <div class="ben-grid">
+        <div class="ben"><div class="ben-t">Perfil invisible</div><div class="ben-d">El soporte no se ve. Solo el disco flotando en la pared.</div></div>
+        <div class="ben"><div class="ben-t">Ondas sonoras</div><div class="ben-d">Diseño con forma de onda que enmarca cada vinilo.</div></div>
+        <div class="ben"><div class="ben-t">Cualquier LP</div><div class="ben-d">Compatible con todos los formatos de 12 pulgadas.</div></div>
+        <div class="ben"><div class="ben-t">Pack de 3</div><div class="ben-d">Colección en hilera o composición libre en la pared.</div></div>
+      </div>
+      <a href="https://wa.me/541165497234?text=Hola! Me interesan los Soportes LP Wall-Art de Melómano" class="star-cta" target="_blank">Pedir los míos →</a>
+      <div class="star-nota">Disponibles en PLA Negro Mate y PLA Seda Cobre · Precio por unidad y pack</div>
+    </div>
+    <div class="star-right">
+      <span class="star-img-icon">🎵</span>
+      <div class="star-img-name">Soporte LP Wall-Art</div>
+      <div class="star-img-sub">PLA Negro Mate · Perfil ondas sonoras</div>
+      <div class="price-row">
+        <div class="pr-item"><div class="pr-n">$2.800</div><div class="pr-l">x unidad</div></div>
+        <div class="pr-item"><div class="pr-n">$7.200</div><div class="pr-l">Pack x3</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="eyebrow" style="margin-top:40px">Más productos · Mundo Vinilo</div>
+  <h3 style="font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:600;color:var(--blanco);margin-bottom:24px">El santuario <em style="font-style:italic;color:var(--cobre)">completo.</em></h3>
+  <div class="grid-2">
+    <div class="pcard">
+      <div class="pcard-badge badge-vinilo">Vinilo</div>
+      <span class="pcard-icon">⚙️</span>
+      <div class="pcard-name">Turbine Feet</div>
+      <div class="pcard-desc">Aisladores de vibración para bandejas giradiscos y bafles. Geometrías internas inspiradas en los álabes de turbina que disipan la resonancia mecánica. La diferencia se escucha.</div>
+      <div class="pcard-price">$4.500 (set x4)</div>
+      <a href="https://wa.me/541165497234?text=Hola! Me interesan los Turbine Feet de Melómano" class="pcard-cta" target="_blank">Pedir →</a>
+    </div>
+    <div class="pcard">
+      <div class="pcard-badge badge-vinilo">Vinilo</div>
+      <span class="pcard-icon">🎙️</span>
+      <div class="pcard-name">Now Playing</div>
+      <div class="pcard-desc">Exhibidor minimalista para la tapa del disco que estás escuchando. Lo posiciona en ángulo de lectura perfecta. Con espacio para iniciales grabadas en la base.</div>
+      <div class="pcard-price">$3.200</div>
+      <a href="https://wa.me/541165497234?text=Hola! Me interesa el Now Playing de Melómano" class="pcard-cta" target="_blank">Pedir →</a>
+    </div>
+    <div class="pcard">
+      <div class="pcard-badge badge-vinilo">Vinilo · Guitarra</div>
+      <span class="pcard-icon">🎸</span>
+      <div class="pcard-name">Caja de Púas</div>
+      <div class="pcard-desc">Estuche con mecanismo de expulsión tipo "peine" — deslizás el pulgar y la púa aparece lista. Para el guitarrista que no puede buscarla entre los cojines del sillón nunca más.</div>
+      <div class="pcard-price">$2.400</div>
+      <a href="https://wa.me/541165497234?text=Hola! Me interesa la Caja de Púas de Melómano" class="pcard-cta" target="_blank">Pedir →</a>
+    </div>
+    <div class="pcard">
+      <div class="pcard-badge badge-vinilo">Vinilo · Diorama</div>
+      <span class="pcard-icon">🎪</span>
+      <div class="pcard-name">Dioramas Icónicos</div>
+      <div class="pcard-desc">Maquetas de escenarios legendarios para decorar tu biblioteca. Queen en Live Aid. Los Beatles en el rooftop. El estadio de Woodstock. Tu historia del rock en miniatura.</div>
+      <div class="pcard-price">Cotizar</div>
+      <a href="https://wa.me/541165497234?text=Hola! Quiero cotizar un Diorama Icónico de Melómano" class="pcard-cta" target="_blank">Cotizar →</a>
+    </div>
+    <div class="pcard">
+      <div class="pcard-badge badge-vinilo">Vinilo</div>
+      <span class="pcard-icon">🔧</span>
+      <div class="pcard-name">Maintenance Kit</div>
+      <div class="pcard-desc">Organizador técnico con divisiones precisas para tus herramientas de limpieza de vinilo. Brush, stylus cleaner, paño antiestático. Todo en su lugar, como en un kit de precisión aeronáutica.</div>
+      <div class="pcard-price">$3.800</div>
+      <a href="https://wa.me/541165497234?text=Hola! Me interesa el Maintenance Kit de Melómano" class="pcard-cta" target="_blank">Pedir →</a>
+    </div>
+    <div class="pcard">
+      <div class="pcard-badge badge-new">Novedad</div>
+      <span class="pcard-icon">💿</span>
+      <div class="pcard-name">Aero-Core 45 RPM</div>
+      <div class="pcard-desc">Adaptadores para discos de 7 pulgadas con diseño de álabes de turbina. PLA Seda de alta densidad para un giro perfecto. Donde la aviación y el vinilo se encuentran.</div>
+      <div class="pcard-price">$1.600 (x2)</div>
+      <a href="https://wa.me/541165497234?text=Hola! Me interesan los Aero-Core 45 RPM de Melómano" class="pcard-cta" target="_blank">Pedir →</a>
+    </div>
+  </div>
+</div>
+
+<!-- IA Vinilo -->
+<div class="sec sec-light reveal" style="padding-top:0">
+  <div class="ia-wrap">
+    <div>
+      <div class="ia-chip">🎵 Acoustic Advisor · IA</div>
+      <h3 class="ia-ttl">¿Qué necesita tu setup de vinilo?</h3>
+      <p class="ia-sub">Describime tu colección o tu giradiscos y te recomiendo qué piezas de Melómano mejoran tu experiencia de escucha.</p>
+    </div>
+    <div>
+      <div class="ia-fn-grid">
+        <div class="ia-fn" onclick="setFn(this,'Tengo una colección de vinilos y quiero exhibirlos mejor en la pared')">📻 Exhibir colección</div>
+        <div class="ia-fn" onclick="setFn(this,'Quiero mejorar el aislamiento de vibración de mi giradiscos')">⚙️ Reducir vibración</div>
+        <div class="ia-fn" onclick="setFn(this,'Soy guitarrista y busco algo para mi setup musical')">🎸 Setup guitarrista</div>
+        <div class="ia-fn" onclick="setFn(this,'¿Por dónde arranco con Melómano si recién empiezo a coleccionar?')">🎵 Empezar colección</div>
+      </div>
+      <input class="ia-inp" id="ia-vinilo" placeholder="Describí tu setup o colección…" />
+      <button class="ia-btn" onclick="callIA('ia-vinilo','r-vinilo')">Consultar al Acoustic Advisor →</button>
+      <div class="ia-resp" id="r-vinilo"></div>
+    </div>
+  </div>
+</div>
+</div><!-- /vinilo -->
+
+
+<!-- ═══════════════ HI-FI ═══════════════ -->
+<div id="tab-hifi" class="tab-panel">
+<div class="sec reveal">
+  <div class="eyebrow">Mundo Hi-Fi · Alta Fidelidad</div>
+  <h2 class="sec-ttl">Invertiste en el sonido.<br>Ahora <em>protegelo.</em></h2>
+  <p class="sec-body">Para el que armó un sistema de audio serio y sabe que cada detalle suma — o resta. Accesorios de precisión para gestión de cables, aislamiento acústico y organización del setup digital.</p>
+
+  <!-- Estrella: Soporte Auriculares -->
+  <div class="star-wrap">
+    <div class="star-left">
+      <div class="star-kicker">★ Producto estrella · Hi-Fi</div>
+      <h3 class="star-ttl">Pista de Despegue<br><em>Soporte auriculares</em></h3>
+      <p class="star-body">Un soporte de diseño aerodinámico con base pesada y canaletas integradas para el cable. Mantiene la vincha en su posición correcta, evitando deformaciones. Tu auricular de $50.000 merece mejor soporte que la punta del monitor.</p>
+      <div class="ben-grid">
+        <div class="ben"><div class="ben-t">Base pesada</div><div class="ben-d">No se mueve. No vuelca. Llena de relleno de alta densidad.</div></div>
+        <div class="ben"><div class="ben-t">Canaleta de cable</div><div class="ben-d">El cable organizado desde el primer día.</div></div>
+        <div class="ben"><div class="ben-t">Vincha protegida</div><div class="ben-d">El arco queda en posición natural, sin tensión.</div></div>
+        <div class="ben"><div class="ben-t">PLA Seda</div><div class="ben-d">Acabado metalizado que combina con cualquier setup.</div></div>
+      </div>
+      <a href="https://wa.me/541165497234?text=Hola! Me interesa el soporte Pista de Despegue de Melómano" class="star-cta" target="_blank">Pedir el mío →</a>
+      <div class="star-nota">Con iniciales grabadas en la base: +$500</div>
+    </div>
+    <div class="star-right">
+      <span class="star-img-icon">🎧</span>
+      <div class="star-img-name">Pista de Despegue</div>
+      <div class="star-img-sub">Soporte auriculares · Base pesada · PLA Seda</div>
+      <div class="price-row">
+        <div class="pr-item"><div class="pr-n">$4.200</div><div class="pr-l">Estándar</div></div>
+        <div class="pr-item"><div class="pr-n">$4.700</div><div class="pr-l">Con iniciales</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="eyebrow" style="margin-top:40px">Más productos · Hi-Fi</div>
+  <h3 style="font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:600;color:var(--blanco);margin-bottom:24px">El setup <em style="font-style:italic;color:var(--cobre)">que querés tener.</em></h3>
+  <div class="grid-2">
+    <div class="pcard">
+      <div class="pcard-badge badge-hifi">Hi-Fi</div>
+      <span class="pcard-icon">🔌</span>
+      <div class="pcard-name">Organizador de Cables</div>
+      <div class="pcard-desc">Sistema de clips y guías para mantener el cableado de tu setup ordenado y sin interferencias. Para el rack de audio que finalmente va a verse a la altura del sonido que produce.</div>
+      <div class="pcard-price">$3.200</div>
+      <a href="https://wa.me/541165497234?text=Hola! Me interesa el Organizador de Cables de Melómano" class="pcard-cta" target="_blank">Pedir →</a>
+    </div>
+    <div class="pcard">
+      <div class="pcard-badge badge-hifi">Hi-Fi</div>
+      <span class="pcard-icon">🔊</span>
+      <div class="pcard-name">Patas Anti-Vibración Bafles</div>
+      <div class="pcard-desc">Pies para parlantes con geometría interna de disipación de resonancia. Lo mismo que los Turbine Feet para giradiscos, aplicado a tus monitores. Más claridad en el médium y el bajo.</div>
+      <div class="pcard-price">$5.200 (set x4)</div>
+      <a href="https://wa.me/541165497234?text=Hola! Me interesan las Patas Anti-Vibración de Melómano" class="pcard-cta" target="_blank">Pedir →</a>
+    </div>
+    <div class="pcard">
+      <div class="pcard-badge badge-hifi">Hi-Fi</div>
+      <span class="pcard-icon">📱</span>
+      <div class="pcard-name">Soporte DAC / Amplificador</div>
+      <div class="pcard-desc">Plataforma elevadora con patas anti-vibración integradas para DAC, amplis de auriculares y equipos pequeños. Aislado del escritorio, en su posición correcta.</div>
+      <div class="pcard-price">$4.800</div>
+      <a href="https://wa.me/541165497234?text=Hola! Me interesa el Soporte DAC de Melómano" class="pcard-cta" target="_blank">Pedir →</a>
+    </div>
+    <div class="pcard">
+      <div class="pcard-badge badge-new">Novedad</div>
+      <span class="pcard-icon">🎛️</span>
+      <div class="pcard-name">Rack Organizador Hi-Fi</div>
+      <div class="pcard-desc">Sistema modular para organizar equipos de audio en estante. Control remoto, cables y accesorios en sus slots. El setup que siempre soñaste tener ordenado.</div>
+      <div class="pcard-price">Cotizar</div>
+      <a href="https://wa.me/541165497234?text=Hola! Quiero cotizar el Rack Organizador Hi-Fi de Melómano" class="pcard-cta" target="_blank">Cotizar →</a>
+    </div>
+  </div>
+</div>
+
+<!-- IA Hi-Fi -->
+<div class="sec sec-light reveal" style="padding-top:0">
+  <div class="ia-wrap">
+    <div>
+      <div class="ia-chip">🎧 Acoustic Advisor · IA</div>
+      <h3 class="ia-ttl">¿Qué necesita tu setup Hi-Fi?</h3>
+      <p class="ia-sub">Describime tu sistema de audio — auriculares, bafles, amplificador — y te recomiendo qué piezas de Melómano mejoran el sonido y el orden.</p>
+    </div>
+    <div>
+      <div class="ia-fn-grid">
+        <div class="ia-fn" onclick="setFn(this,'Tengo auriculares de alta gama y quiero un buen soporte para el escritorio')">🎧 Soporte auriculares</div>
+        <div class="ia-fn" onclick="setFn(this,'Mis parlantes vibran la mesa y quiero aislarlos del mueble')">🔊 Aislar parlantes</div>
+        <div class="ia-fn" onclick="setFn(this,'Tengo DAC y amplificador y quiero organizar el setup')">🎛️ Organizar setup</div>
+        <div class="ia-fn" onclick="setFn(this,'¿Qué me recomendás para mejorar la claridad de mi sistema de audio?')">✨ Mejorar sonido</div>
+      </div>
+      <input class="ia-inp" id="ia-hifi" placeholder="Describí tu sistema de audio…" />
+      <button class="ia-btn" onclick="callIA('ia-hifi','r-hifi')">Consultar al Acoustic Advisor →</button>
+      <div class="ia-resp" id="r-hifi"></div>
+    </div>
+  </div>
+</div>
+</div><!-- /hifi -->
+
+
+<!-- ═══════════════ PERSONALIZACIÓN ═══════════════ -->
+<div id="tab-personalizar" class="tab-panel">
+<div class="sec reveal">
+  <div class="eyebrow">Personalización · Tu sello</div>
+  <h2 class="sec-ttl">La pieza que ya es tuya<br>antes de <em>recibirla.</em></h2>
+  <p class="sec-body">Cualquier producto de Melómano puede llevar tu nombre, iniciales o un texto corto grabado en relieve. No es un sticker. No se borra. Es parte de la pieza desde que sale de la impresora.</p>
+
+  <div class="per-box">
+    <div>
+      <span style="font-size:.52rem;font-weight:500;letter-spacing:5px;text-transform:uppercase;color:rgba(184,115,51,.6);display:block;margin-bottom:16px">Así queda grabado</span>
+      <div class="per-preview"><em>Fernando</em> · Melómano</div>
+      <div class="per-sub">En relieve permanente · PLA Negro Mate o Seda Cobre</div>
+    </div>
+    <div>
+      <h3 style="font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:600;color:var(--blanco);margin-bottom:10px">Para vos o para regalar</h3>
+      <p style="font-size:.84rem;font-weight:300;color:var(--gris3);line-height:1.75;margin-bottom:20px">Un soporte de auriculares con el nombre del dueño. Un Wall-Art con las iniciales de la pareja. Un Turbine Feet con la fecha de la primera vez que escucharon ese disco. Los detalles hacen la diferencia.</p>
+      <a href="https://wa.me/541165497234?text=Hola! Quiero personalizar una pieza de Melómano con mi nombre o iniciales" class="per-cta" target="_blank">Pedir personalizado →</a>
+    </div>
+  </div>
+
+  <div class="grid-2" style="margin-top:0">
+    <div class="pcard">
+      <div class="pcard-badge badge-new">Gift</div>
+      <span class="pcard-icon">🎁</span>
+      <div class="pcard-name">Pack Regalo Audiófilo</div>
+      <div class="pcard-desc">Soporte de auriculares + Wall-Art x2 + Now Playing. El regalo para el melómano de tu vida que ya tiene todo — excepto esto. Presentación premium, personalizado con su nombre.</div>
+      <div class="pcard-price">Cotizar pack</div>
+      <a href="https://wa.me/541165497234?text=Hola! Quiero cotizar el Pack Regalo Audiófilo de Melómano" class="pcard-cta" target="_blank">Cotizar →</a>
+    </div>
+    <div class="pcard">
+      <div class="pcard-badge badge-vinilo">Custom</div>
+      <span class="pcard-icon">🎨</span>
+      <div class="pcard-name">Diseño a pedido</div>
+      <div class="pcard-desc">Tenés una idea específica para tu setup — un diseño, una frase, una referencia musical. Trabajamos desde cero. Consultanos y lo evaluamos juntos.</div>
+      <div class="pcard-price">Cotizar</div>
+      <a href="https://wa.me/541165497234?text=Hola! Tengo una idea de personalización para Melómano" class="pcard-cta" target="_blank">Contar la idea →</a>
+    </div>
+  </div>
+
+  <div style="background:var(--negro);padding:32px 40px;text-align:center;border:1px solid rgba(184,115,51,.2);border-top:2px solid var(--cobre);margin-top:24px">
+    <div style="font-family:'Playfair Display',serif;font-style:italic;font-size:1.4rem;font-weight:400;color:var(--blanco);margin-bottom:16px">"Para los que escuchan diferente."</div>
+    <a href="https://wa.me/541165497234?text=Hola! Quiero personalizar algo de Melómano" class="star-cta" target="_blank">Hablar con Fer →</a>
+  </div>
+</div>
+</div><!-- /personalizar -->
+
+
+<!-- ═══════════════ IMPACTO ═══════════════ -->
+<div id="tab-impacto" class="tab-panel">
+
+<div class="sec reveal" style="background:var(--negro)">
+  <div style="display:grid;grid-template-columns:1fr auto;gap:24px;align-items:flex-end;margin-bottom:40px;flex-wrap:wrap">
+    <div>
+      <div class="eyebrow" style="color:var(--verde)">Impacto · Melómano</div>
+      <h2 class="sec-ttl" style="color:var(--blanco)">Cada compra<br>también <em style="color:var(--verde)">contribuye.</em></h2>
+    </div>
+    <div style="text-align:center">
+      <span class="don-pct" id="pct-mel">%</span>
+      <div class="don-pct-lbl" style="font-size:.5rem;font-weight:500;letter-spacing:4px;text-transform:uppercase;color:var(--gris);margin-top:4px">DE CADA VENTA<br>A FONDOS SOLIDARIOS</div>
+      <div style="font-size:.68rem;color:var(--gris);margin-top:4px">(% a confirmar)</div>
+    </div>
+  </div>
+
+  <div class="don-wrap">
+    <div>
+      <div class="don-thermo">
+        <span class="don-lbl">Refugio Oasis Animal</span>
+        <div class="don-bar-bg"><div class="don-bar" id="don-bar-1" style="width:0%"></div></div>
+        <div class="don-row"><span id="don-val-1">Cargando…</span><span>Meta $50.000</span></div>
+      </div>
+      <div class="don-thermo" style="border-left-color:#818CF8">
+        <span class="don-lbl" style="color:#818CF8">Mentes Brillantes</span>
+        <div class="don-bar-bg"><div class="don-bar" id="don-bar-2" style="width:0%;background:#818CF8"></div></div>
+        <div class="don-row"><span id="don-val-2" style="color:#818CF8">Cargando…</span><span>Meta $40.000</span></div>
+      </div>
+      <div class="don-thermo" style="border-left-color:#FB7185">
+        <span class="don-lbl" style="color:#FB7185">Fondo General</span>
+        <div class="don-bar-bg"><div class="don-bar" id="don-bar-3" style="width:0%;background:#FB7185"></div></div>
+        <div class="don-row"><span id="don-val-3" style="color:#FB7185">Cargando…</span><span>Meta $30.000</span></div>
+      </div>
+      <a href="oasis-animal.html" style="display:inline-flex;align-items:center;gap:8px;padding:10px 22px;border:1px solid rgba(5,150,105,.3);color:var(--verde);font-size:.54rem;font-weight:500;letter-spacing:3px;text-transform:uppercase;text-decoration:none;transition:all .3s;cursor:none;margin-top:10px">Ver Oasis Animal →</a>
+    </div>
+    <div>
+      <p class="don-info">Melómano forma parte del ecosistema solidario de El Pasaje 3D Studio. Una porción de cada venta va a los fondos que sostienen el refugio de animales de Oasis Animal, el programa educativo Mentes Brillantes y el fondo general del estudio.</p>
+      <div style="margin-top:24px">
+        <div style="font-size:.5rem;font-weight:500;letter-spacing:4px;text-transform:uppercase;color:var(--gris);margin-bottom:14px">Elegí el destino de tu aporte</div>
+        <div class="fondo-grid">
+          <div class="fondo-item"><span class="fondo-emoji">🐾</span><div class="fondo-name">Oasis Animal</div><div class="fondo-desc">Rescate, alimento y vet. para animales que esperan un hogar.</div></div>
+          <div class="fondo-item"><span class="fondo-emoji">🧠</span><div class="fondo-name">Mentes Brillantes</div><div class="fondo-desc">Apoyo educativo para chicos con talento y pocos recursos.</div></div>
+          <div class="fondo-item" style="grid-column:span 2"><span class="fondo-emoji">❤️</span><div class="fondo-name">Fondo General</div><div class="fondo-desc">Se distribuye donde más se necesita dentro del ecosistema El Pasaje.</div></div>
+        </div>
+      </div>
+      <a href="https://wa.me/541165497234?text=Hola! Quiero que mi compra de Melómano vaya al fondo: " class="per-cta" style="margin-top:16px;display:inline-flex" target="_blank">Indicar destino del aporte →</a>
+    </div>
+  </div>
+</div>
+
+<!-- Sinergia -->
+<div class="sec sec-light reveal">
+  <div class="eyebrow">Ecosistema · El Pasaje</div>
+  <h2 class="sec-ttl">Melómano es parte de algo<br>más <em>grande.</em></h2>
+  <div class="sin-grid">
+    <a href="index.html" class="scard"><span class="sc-tag">El estudio · Hub</span><div class="sc-name">El Pasaje 3D Studio</div><div class="sc-why">El estudio familiar donde todo se fabrica. Fer en producción y mantenimiento. Cinco líneas. Un ecosistema.</div></a>
+    <a href="aero-tech.html" class="scard"><span class="sc-tag">Sinergias · Aero-Tech</span><div class="sc-name">Aero-Tech</div><div class="sc-why">La línea de Nando. Los Aero-Core y Turbine Feet unen aviación y audio. Dos mundos, un mismo perfeccionismo.</div></a>
+    <a href="oasis-animal.html" class="scard"><span class="sc-tag">Sinergias · Oasis</span><div class="sc-name">Oasis Animal</div><div class="sc-why">La línea solidaria. Pack regalo: Soporte auriculares Melómano + Guardián Tag Oasis para el coleccionista con mascotas.</div></a>
+    <a href="coquette.html" class="scard"><span class="sc-tag">Sinergias · Coquette</span><div class="sc-name">Coquette</div><div class="sc-why">La línea de Olivia. Para regalos premium a la pareja audiofílica. Estética opuesta, mismo nivel de detalle.</div></a>
+  </div>
+</div>
+
+<!-- Cierre -->
+<div class="cierre">
+  <div class="c-line"></div>
+  <div style="font-size:.52rem;font-weight:500;letter-spacing:8px;text-transform:uppercase;color:var(--cobre);margin-bottom:18px">Melómano · El Pasaje 3D Studio</div>
+  <div class="c-quote">Para los que<br>escuchan <em>diferente.</em></div>
+  <div class="c-firma">La ingeniería del silencio y la vibración</div>
+  <div class="c-ctas">
+    <a href="https://wa.me/541165497234?text=Hola! Quiero ver el catálogo de Melómano" class="c-cta" target="_blank">Hablar con Fer →</a>
+    <a href="index.html" class="c-back">← Volver a El Pasaje</a>
+  </div>
+</div>
+
+</div><!-- /impacto -->
+
+<footer>
+  <div class="fl">🎵 &nbsp;<em>Melómano</em> · El Pasaje 3D Studio</div>
+  <div class="fr">Para los que escuchan diferente</div>
+</footer>
+
+<a href="https://wa.me/541165497234?text=Hola! Me interesa Melómano de El Pasaje" target="_blank" class="wa-float">
+  <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+</a>
+
+<div id="back-banner"><a href="index.html">← El Pasaje</a></div>
+
+<script>
+const cur=document.getElementById("cur"),cur2=document.getElementById("cur2");
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener("mousemove",e=>{mx=e.clientX;my=e.clientY;cur.style.transform=`translate(${mx-4}px,${my-4}px)`});
+(function loop(){rx+=(mx-rx)*.1;ry+=(my-ry)*.1;cur2.style.transform=`translate(${rx-14}px,${ry-14}px)`;requestAnimationFrame(loop)})();
+document.querySelectorAll("a,button,.pcard,.scard,.fondo-item,.ia-fn").forEach(el=>{
+  el.addEventListener("mouseenter",()=>{cur.style.width="14px";cur.style.height="14px"});
+  el.addEventListener("mouseleave",()=>{cur.style.width="8px";cur.style.height="8px"});
+});
+
+const obs=new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting)x.target.classList.add("visible")})},{threshold:.05});
+document.querySelectorAll(".reveal").forEach(el=>obs.observe(el));
+
+// Counter
+setTimeout(()=>{
+  let v=0;const t=setInterval(()=>{v=Math.min(v+1,12);const el=document.getElementById("cnt-mel");if(el)el.textContent=v;if(v>=12)clearInterval(t)},80);
+},400);
+
+// Termómetros
+setTimeout(()=>{
+  [["don-bar-1","don-val-1",62,50000],["don-bar-2","don-val-2",48,40000],["don-bar-3","don-val-3",35,30000]].forEach(([bid,vid,pct,meta])=>{
+    const b=document.getElementById(bid),v=document.getElementById(vid);
+    if(b)b.style.width=pct+"%";
+    if(v)v.innerHTML=`<span>$${Math.round(meta*pct/100).toLocaleString()} recaudados</span>`;
+  });
+},700);
+
+// Back banner
+window.addEventListener("scroll",()=>{
+  const b=document.getElementById("back-banner");
+  if(window.scrollY>300){b.style.opacity="1";b.style.transform="translateX(0)";b.style.pointerEvents="auto"}
+  else{b.style.opacity="0";b.style.transform="translateX(-10px)";b.style.pointerEvents="none"}
+});
+
+// Tabs
+function switchTab(id,btn){
+  document.querySelectorAll(".tab-panel").forEach(p=>p.classList.remove("active"));
+  document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
+  document.getElementById("tab-"+id).classList.add("active");
+  if(btn)btn.classList.add("active");
+  window.scrollTo({top:0,behavior:"smooth"});
+  document.querySelectorAll("#tab-"+id+" .reveal").forEach(el=>{if(!el.classList.contains("visible"))obs.observe(el)});
+}
+
+function setFn(el,texto){
+  el.closest(".ia-fn-grid").querySelectorAll(".ia-fn").forEach(f=>f.classList.remove("active-fn"));
+  el.classList.add("active-fn");
+  const inp=el.closest(".ia-wrap").querySelector(".ia-inp");
+  if(inp){inp.value=texto;inp.focus()}
+}
+
+const SYS=`Sos el Acoustic Advisor de Melómano, la línea de accesorios 3D para audiófilos y coleccionistas de vinilo de El Pasaje 3D Studio. La línea fue diseñada por un perfeccionista del sonido que entiende que la vibración es el enemigo de la alta fidelidad.
+
+PRODUCTOS:
+MUNDO VINILO:
+- Soportes LP Wall-Art $2.800 u / $7.200 pack x3: exhibición en pared, diseño ondas sonoras o invisible
+- Turbine Feet $4.500 (x4): aisladores de vibración para giradiscos y bafles, geometría anti-resonancia
+- Now Playing $3.200: exhibidor para tapa del vinilo en reproducción, con iniciales
+- Caja de Púas $2.400: mecanismo de expulsión tipo peine para guitarristas
+- Maintenance Kit $3.800: organizador técnico para herramientas de limpieza de vinilo
+- Dioramas Icónicos: cotizar — maquetas de escenarios legendarios (Queen Live Aid, Beatles rooftop, etc.)
+- Aero-Core 45 RPM $1.600 (x2): adaptadores diseño álabes de turbina, PLA Seda alta densidad
+
+MUNDO HI-FI:
+- Pista de Despegue $4.200 (+$500 con iniciales): soporte auriculares, base pesada, canaleta cable
+- Organizador de Cables $3.200: gestión de cableado de setup
+- Patas Anti-Vibración Bafles $5.200 (x4): para parlantes y monitores
+- Soporte DAC/Amplificador $4.800: plataforma elevadora con anti-vibración
+- Rack Organizador Hi-Fi: cotizar
+
+PERSONALIZACIÓN: nombre, iniciales o texto en relieve en cualquier pieza.
+Pack Regalo Audiófilo: cotizar.
+
+Tono: apasionado del audio, técnico pero accesible, cálido. Máximo 3 oraciones. Siempre recomendá algo concreto.
+Contacto WA: +54 11 6549-7234.`;
+
+const FB_def=[
+  "Para un giradiscos que vibra la mesa, los Turbine Feet son el primer paso — la geometría interna disipa la resonancia antes de que llegue al tóner. La diferencia es inmediata y se escucha.",
+  "Los Soportes LP Wall-Art convierten tu colección en galería: el disco flota en la pared, el soporte desaparece. El pack de 3 en hilera transforma cualquier pared en el centro visual de la habitación.",
+  "Para auriculares de alta gama, la Pista de Despegue resuelve dos problemas a la vez: la vincha queda en su forma correcta y el cable ordenado desde el primer día."
+];
+
+async function callIA(inputId,respId){
+  const inp=document.getElementById(inputId),resp=document.getElementById(respId);
+  if(!inp||!resp)return;
+  const t=inp.value.trim();if(!t){inp.focus();return}
+  resp.style.display="block";resp.textContent="···";
+  try{
+    const r=await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:220,system:SYS,messages:[{role:"user",content:t}]})
+    });
+    const d=await r.json();resp.textContent=d.content?.[0]?.text||"Escribinos al WA y te ayudamos."
+  }catch(e){resp.textContent=FB_def[Math.floor(Math.random()*FB_def.length)]}
+}
+</script>
+</body>
+</html>

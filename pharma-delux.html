@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pharma DeLux · El Pasaje 3D Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root{
+  --blanco:#FFFFFF;
+  --hielo:#F7FAFA;
+  --claro:#EEF5F3;
+  --gris1:#F0F0F0;
+  --gris2:#DDDDDD;
+  --gris3:#AAAAAA;
+  --gris4:#6A6A6A;
+  --negro:#111111;
+  --verde:#00A86B;
+  --verde2:#00C27D;
+  --verde3:#E8F8F2;
+  --cian:#00B7EB;
+  --cian2:#E6F7FB;
+  --azul:#4682B4;
+  --brd:rgba(0,168,107,.18);
+  --brd2:rgba(0,168,107,.08);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--blanco);color:var(--negro);font-family:'Inter',sans-serif;font-weight:300;overflow-x:hidden;cursor:none}
+#cur{width:8px;height:8px;background:var(--verde);border-radius:50%;position:fixed;top:0;left:0;pointer-events:none;z-index:9999;transition:width .2s,height .2s}
+#cur2{width:28px;height:28px;border:1px solid rgba(0,168,107,.3);border-radius:50%;position:fixed;top:0;left:0;pointer-events:none;z-index:9998}
+
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:400;padding:0 64px;height:58px;display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,.97);backdrop-filter:blur(16px);border-bottom:1px solid var(--brd)}
+.nav-logo{font-family:'Inter',sans-serif;font-size:.78rem;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:var(--negro)}
+.nav-logo em{font-style:normal;color:var(--verde)}
+.nav-logo span{color:var(--gris3);font-weight:300}
+.nav-back{font-size:.52rem;font-weight:500;letter-spacing:3px;text-transform:uppercase;color:var(--gris3);text-decoration:none;transition:color .3s}
+.nav-back:hover{color:var(--verde)}
+
+/* ── TABS ── */
+.tab-bar{position:sticky;top:58px;z-index:300;background:var(--blanco);display:flex;justify-content:center;border-bottom:2px solid var(--gris1)}
+.tab-btn{padding:0 26px;height:46px;font-family:'Inter',sans-serif;font-size:.54rem;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--gris3);background:none;border:none;cursor:pointer;transition:all .3s;position:relative}
+.tab-btn::after{content:'';position:absolute;bottom:-2px;left:0;right:0;height:2px;background:var(--verde);transform:scaleX(0);transition:transform .3s}
+.tab-btn.active{color:var(--verde)}
+.tab-btn.active::after{transform:scaleX(1)}
+.tab-btn:hover{color:var(--negro)}
+
+/* ── PANELS ── */
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+/* ── HERO ── */
+.hero{min-height:88vh;background:var(--hielo);position:relative;overflow:hidden;display:flex;align-items:center;padding:100px 100px 80px}
+.hero::before{content:'';position:absolute;right:-100px;top:-100px;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(0,168,107,.07) 0%,transparent 70%)}
+.hero::after{content:'';position:absolute;right:0;top:0;bottom:0;width:4px;background:linear-gradient(to bottom,transparent,var(--verde),transparent)}
+.hero-left{position:relative;z-index:2;max-width:620px}
+.h-kicker{font-size:.56rem;font-weight:600;letter-spacing:6px;text-transform:uppercase;color:var(--verde);margin-bottom:20px;display:flex;align-items:center;gap:12px}
+.h-kicker::before{content:'';width:24px;height:2px;background:var(--verde)}
+.h-title{font-family:'DM Serif Display',serif;font-size:clamp(2.8rem,5vw,5rem);font-weight:400;line-height:.95;color:var(--negro);margin-bottom:16px;letter-spacing:-1px}
+.h-title em{font-style:italic;color:var(--verde)}
+.h-div{width:48px;height:2px;background:var(--verde);margin-bottom:22px;opacity:.5}
+.h-sub{font-size:.9rem;font-weight:300;color:var(--gris4);line-height:1.85;max-width:460px;margin-bottom:40px}
+.h-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--brd);margin-bottom:36px}
+.hst{background:var(--blanco);padding:18px 14px;text-align:center;border:1px solid var(--brd2)}
+.hst-n{font-family:'DM Serif Display',serif;font-size:2rem;font-weight:400;color:var(--verde);line-height:1}
+.hst-l{font-size:.48rem;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--gris3);margin-top:6px;line-height:1.4}
+.h-ctas{display:flex;gap:12px;flex-wrap:wrap}
+.h-cta{display:inline-flex;align-items:center;gap:10px;padding:13px 32px;background:var(--verde);color:var(--blanco);font-size:.6rem;font-weight:600;letter-spacing:4px;text-transform:uppercase;text-decoration:none;transition:all .3s;cursor:pointer;border:none;border-radius:2px}
+.h-cta:hover{background:var(--verde2)}
+.h-cta-sec{display:inline-flex;align-items:center;gap:10px;padding:13px 28px;border:1px solid var(--brd);color:var(--verde);font-size:.6rem;font-weight:600;letter-spacing:4px;text-transform:uppercase;cursor:pointer;background:none;transition:all .3s;border-radius:2px}
+.h-cta-sec:hover{background:var(--verde3)}
+/* Cruz médica decorativa */
+.hero-deco{position:absolute;right:8%;top:50%;transform:translateY(-50%);z-index:1;opacity:.06;font-size:22rem;line-height:1;user-select:none;color:var(--verde)}
+
+/* ── STRIP ── */
+.strip{background:var(--verde);padding:11px 64px;display:flex;align-items:center;justify-content:center;gap:44px}
+.ss-item{display:flex;align-items:center;gap:9px;font-size:.54rem;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.9)}
+.ss-dot{width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,.6);flex-shrink:0}
+
+/* ── SECCIONES ── */
+.sec{padding:72px 100px;background:var(--blanco)}
+.sec-ice{background:var(--hielo)}
+.sec-green{background:var(--verde3)}
+.sec-dark{background:var(--negro)}
+.eyebrow{font-size:.54rem;font-weight:600;letter-spacing:6px;text-transform:uppercase;color:var(--verde);margin-bottom:14px;display:flex;align-items:center;gap:12px}
+.eyebrow::before{content:'';width:18px;height:2px;background:var(--verde)}
+.sec-ttl{font-family:'DM Serif Display',serif;font-size:clamp(2rem,3.5vw,3rem);font-weight:400;color:var(--negro);margin-bottom:18px;line-height:1}
+.sec-ttl em{font-style:italic;color:var(--verde)}
+.sec-dark .sec-ttl{color:var(--blanco)}
+.sec-body{font-size:.88rem;font-weight:300;color:var(--gris4);line-height:1.85;margin-bottom:24px}
+.sec-dark .sec-body{color:var(--gris3)}
+
+/* ── CARDS ── */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+
+.pcard{background:var(--blanco);border:1px solid var(--gris2);border-top:3px solid var(--gris2);padding:28px 24px;cursor:none;transition:all .35s;position:relative}
+.pcard:hover{border-color:var(--verde);border-top-color:var(--verde);transform:translateY(-4px);box-shadow:0 12px 32px rgba(0,168,107,.1)}
+.pcard-badge{display:inline-flex;align-items:center;padding:3px 10px;margin-bottom:14px;font-size:.5rem;font-weight:600;letter-spacing:3px;text-transform:uppercase;border-radius:99px}
+.badge-clinic{background:var(--verde3);color:var(--verde)}
+.badge-b2b{background:var(--cian2);color:var(--cian)}
+.badge-anat{background:rgba(70,130,180,.1);color:var(--azul)}
+.badge-new{background:var(--verde);color:var(--blanco)}
+.pcard-icon{font-size:1.8rem;display:block;margin-bottom:12px;opacity:.7}
+.pcard-name{font-family:'DM Serif Display',serif;font-size:1.1rem;font-weight:400;color:var(--negro);margin-bottom:8px;transition:color .3s}
+.pcard:hover .pcard-name{color:var(--verde)}
+.pcard-desc{font-size:.82rem;font-weight:300;color:var(--gris4);line-height:1.65;margin-bottom:14px}
+.pcard-price{font-family:'DM Serif Display',serif;font-size:1.1rem;font-weight:400;color:var(--verde)}
+.pcard-cta{display:inline-flex;align-items:center;gap:6px;margin-top:10px;font-size:.52rem;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--gris3);text-decoration:none;transition:color .2s}
+.pcard:hover .pcard-cta{color:var(--verde)}
+
+/* ── ESTRELLA ── */
+.star-wrap{display:grid;grid-template-columns:1.2fr 1fr;gap:0;margin-bottom:40px;border:1px solid var(--gris2);border-top:4px solid var(--verde)}
+.star-left{padding:48px;background:var(--blanco)}
+.star-kicker{font-size:.52rem;font-weight:600;letter-spacing:5px;text-transform:uppercase;color:var(--verde);margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.star-kicker::before{content:'';width:14px;height:2px;background:var(--verde)}
+.star-ttl{font-family:'DM Serif Display',serif;font-size:2.4rem;font-weight:400;color:var(--negro);line-height:.95;margin-bottom:16px}
+.star-ttl em{font-style:italic;color:var(--verde)}
+.star-body{font-size:.88rem;font-weight:300;color:var(--gris4);line-height:1.8;margin-bottom:22px}
+.ben-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:22px}
+.ben{background:var(--hielo);padding:14px 16px;border-left:3px solid var(--verde)}
+.ben-t{font-size:.54rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--negro);margin-bottom:4px}
+.ben-d{font-size:.78rem;font-weight:300;color:var(--gris4);line-height:1.5}
+.star-cta{display:inline-flex;align-items:center;gap:10px;padding:12px 30px;background:var(--verde);color:var(--blanco);font-size:.6rem;font-weight:600;letter-spacing:4px;text-transform:uppercase;text-decoration:none;cursor:none;transition:all .3s;border-radius:2px}
+.star-cta:hover{background:var(--verde2)}
+.star-nota{font-size:.72rem;font-weight:300;color:var(--gris3);margin-top:8px}
+.star-right{background:var(--verde3);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;position:relative}
+.star-right::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at center,rgba(0,168,107,.08) 0%,transparent 70%)}
+.star-img-icon{font-size:4rem;opacity:.35;display:block;margin-bottom:14px;text-align:center;position:relative;z-index:1}
+.star-img-name{font-family:'DM Serif Display',serif;font-size:1.1rem;font-weight:400;color:var(--negro);text-align:center;margin-bottom:6px;position:relative;z-index:1}
+.star-img-sub{font-size:.7rem;font-weight:400;color:var(--gris3);text-align:center;margin-bottom:20px;position:relative;z-index:1}
+.price-row{display:grid;grid-template-columns:1fr 1fr;gap:1px;width:100%;background:var(--brd);position:relative;z-index:1}
+.pr-item{background:var(--blanco);padding:14px;text-align:center;border-top:2px solid var(--brd)}
+.pr-n{font-family:'DM Serif Display',serif;font-size:1.2rem;font-weight:400;color:var(--verde)}
+.pr-l{font-size:.46rem;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--gris3);margin-top:4px}
+
+/* ── B2B PROPUESTA ── */
+.b2b-box{background:var(--negro);padding:48px;border-top:4px solid var(--verde);margin-bottom:24px}
+.b2b-kicker{font-size:.54rem;font-weight:600;letter-spacing:5px;text-transform:uppercase;color:var(--verde);margin-bottom:16px;display:block}
+.b2b-ttl{font-family:'DM Serif Display',serif;font-size:2rem;font-weight:400;color:var(--blanco);margin-bottom:12px;line-height:1}
+.b2b-ttl em{font-style:italic;color:var(--verde)}
+.b2b-body{font-size:.86rem;font-weight:300;color:var(--gris3);line-height:1.8;margin-bottom:28px}
+.b2b-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(255,255,255,.06);margin-bottom:28px}
+.b2b-item{background:rgba(255,255,255,.03);padding:20px 18px;border-top:2px solid rgba(0,168,107,.3);transition:all .3s;cursor:none}
+.b2b-item:hover{background:rgba(0,168,107,.08);border-top-color:var(--verde)}
+.b2b-n{font-family:'DM Serif Display',serif;font-size:1.6rem;color:var(--verde);display:block;margin-bottom:4px}
+.b2b-l{font-size:.52rem;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--gris3)}
+
+/* ── IA PROPUESTA ── */
+.ia-wrap{background:var(--hielo);border:1px solid var(--gris2);border-top:3px solid var(--verde);padding:44px 52px;display:grid;grid-template-columns:1fr 1fr;gap:52px;align-items:center;margin-top:40px}
+.ia-chip{display:inline-flex;align-items:center;gap:8px;background:var(--verde3);border:1px solid var(--brd);padding:5px 14px;border-radius:99px;font-size:.5rem;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--verde);margin-bottom:14px}
+.ia-chip::before{content:'';width:6px;height:6px;background:var(--verde);border-radius:50%;animation:bl 2s infinite}
+@keyframes bl{0%,100%{opacity:1}50%{opacity:.2}}
+.ia-ttl{font-family:'DM Serif Display',serif;font-size:1.5rem;font-weight:400;color:var(--negro);margin-bottom:6px}
+.ia-sub{font-size:.84rem;font-weight:300;color:var(--gris4);line-height:1.8}
+.ia-fn-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px}
+.ia-fn{background:var(--blanco);border:1px solid var(--gris2);border-left:3px solid var(--gris2);padding:10px 12px;cursor:pointer;transition:all .3s;font-size:.66rem;font-weight:500;color:var(--gris4);text-align:left;border-radius:0}
+.ia-fn:hover,.ia-fn.active-fn{background:var(--verde3);border-color:var(--brd);border-left-color:var(--verde);color:var(--verde)}
+.ia-inp{width:100%;background:var(--blanco);border:1px solid var(--gris2);color:var(--negro);padding:10px 14px;font-family:'Inter',sans-serif;font-size:.82rem;outline:none;transition:border-color .3s;margin-bottom:12px;border-radius:2px}
+.ia-inp:focus{border-color:var(--verde)}
+.ia-inp::placeholder{color:var(--gris3);font-style:italic}
+.ia-btn{background:var(--verde);border:none;color:var(--blanco);padding:12px;font-family:'Inter',sans-serif;font-size:.6rem;font-weight:600;letter-spacing:3px;text-transform:uppercase;cursor:pointer;transition:all .3s;width:100%;border-radius:2px}
+.ia-btn:hover{background:var(--verde2)}
+.ia-resp{margin-top:12px;padding:14px 16px;background:var(--verde3);border-left:3px solid var(--verde);font-size:.84rem;font-weight:300;color:var(--gris4);line-height:1.8;display:none;border-radius:0 2px 2px 0}
+
+/* ── IMPACTO ── */
+.don-wrap{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:start}
+.don-thermo{background:var(--blanco);border:1px solid var(--gris2);border-left:3px solid var(--verde);padding:20px 24px;margin-bottom:12px}
+.don-lbl{font-size:.52rem;font-weight:600;letter-spacing:4px;text-transform:uppercase;color:var(--verde);margin-bottom:12px;display:block}
+.don-bar-bg{background:var(--gris1);height:6px;overflow:hidden;margin-bottom:8px;border-radius:99px}
+.don-bar{height:100%;background:var(--verde);transition:width 2.2s ease;border-radius:99px}
+.don-row{display:flex;justify-content:space-between;font-size:.68rem;font-weight:400;color:var(--gris3)}
+.don-row span{color:var(--verde)}
+.fondo-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:20px}
+.fondo-item{background:var(--hielo);border:1px solid var(--gris2);padding:16px;cursor:none;transition:all .3s}
+.fondo-item:hover{border-color:var(--verde);background:var(--verde3)}
+.fondo-emoji{font-size:1.2rem;display:block;margin-bottom:6px}
+.fondo-name{font-family:'DM Serif Display',serif;font-size:.95rem;font-weight:400;color:var(--negro);margin-bottom:4px}
+.fondo-desc{font-size:.7rem;font-weight:300;color:var(--gris4);line-height:1.4}
+.don-pct{font-family:'DM Serif Display',serif;font-size:4rem;font-weight:400;color:var(--verde);display:block;line-height:1}
+.don-info{font-size:.86rem;font-weight:300;color:var(--gris4);line-height:1.85}
+
+/* ── SINERGIA ── */
+.sin-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:28px}
+.scard{background:var(--blanco);padding:28px 22px;text-decoration:none;color:inherit;display:block;transition:all .35s;cursor:none;border:1px solid var(--gris2);border-top:3px solid var(--gris2)}
+.scard:hover{border-color:var(--verde);border-top-color:var(--verde);transform:translateY(-4px);box-shadow:0 10px 28px rgba(0,168,107,.1)}
+.scard:hover .sc-name{color:var(--verde)}
+.sc-tag{font-size:.48rem;font-weight:600;letter-spacing:4px;text-transform:uppercase;color:var(--gris3);margin-bottom:8px;display:block}
+.sc-name{font-family:'DM Serif Display',serif;font-size:1.05rem;font-weight:400;color:var(--negro);margin-bottom:8px;transition:color .3s}
+.sc-why{font-size:.8rem;font-weight:300;color:var(--gris4);line-height:1.6}
+
+/* ── CIERRE ── */
+.cierre{background:var(--negro);padding:80px;text-align:center}
+.c-line{width:48px;height:2px;background:var(--verde);margin:0 auto 44px;opacity:.5}
+.c-quote{font-family:'DM Serif Display',serif;font-style:italic;font-size:clamp(2rem,4vw,3.5rem);font-weight:400;color:var(--blanco);max-width:700px;margin:0 auto;line-height:1.1}
+.c-quote em{font-style:normal;color:var(--verde)}
+.c-firma{margin-top:16px;font-size:.52rem;font-weight:500;letter-spacing:6px;text-transform:uppercase;color:var(--gris3)}
+.c-ctas{margin-top:40px;display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap}
+.c-cta{display:inline-flex;align-items:center;gap:10px;padding:14px 48px;background:var(--verde);color:var(--blanco);font-size:.62rem;font-weight:600;letter-spacing:5px;text-transform:uppercase;text-decoration:none;transition:background .3s;cursor:none;border-radius:2px}
+.c-cta:hover{background:var(--verde2)}
+.c-back{font-size:.52rem;font-weight:400;letter-spacing:4px;text-transform:uppercase;color:var(--gris3);text-decoration:none;transition:color .2s}
+.c-back:hover{color:var(--verde)}
+
+footer{padding:16px 64px;background:var(--hielo);border-top:1px solid var(--gris2);display:flex;justify-content:space-between;align-items:center}
+.fl{font-size:.72rem;font-weight:500;letter-spacing:4px;text-transform:uppercase;color:var(--gris3)}
+.fl em{color:var(--verde);font-style:normal}
+.fr{font-size:.44rem;font-weight:400;letter-spacing:3px;text-transform:uppercase;color:var(--gris2)}
+
+.sep{height:1px;background:var(--gris1)}
+.reveal{opacity:0;transform:translateY(14px);transition:opacity .85s ease,transform .85s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+
+.wa-float{position:fixed;bottom:28px;right:28px;width:52px;height:52px;background:#25D366;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:500;text-decoration:none;animation:waPulse 3s infinite;cursor:none}
+.wa-float svg{width:26px;height:26px;fill:white}
+@keyframes waPulse{0%,100%{box-shadow:0 0 0 0 rgba(37,211,102,.4)}70%{box-shadow:0 0 0 12px rgba(37,211,102,0)}}
+#back-banner{position:fixed;top:66px;left:20px;z-index:250;opacity:0;transform:translateX(-10px);transition:opacity .4s,transform .4s;pointer-events:none}
+#back-banner a{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.97);backdrop-filter:blur(8px);border:1px solid var(--brd);padding:8px 14px;font-size:.52rem;font-weight:500;letter-spacing:3px;text-transform:uppercase;color:var(--verde);text-decoration:none}
+
+@media(max-width:960px){
+  .hero{padding:100px 28px 60px}
+  .hero-deco{display:none}
+  .sec{padding:56px 28px}
+  .star-wrap,.don-wrap,.ia-wrap,.b2b-box .grid-2,.grid-2{grid-template-columns:1fr}
+  .b2b-grid{grid-template-columns:1fr}
+  .sin-grid,.grid-4{grid-template-columns:1fr 1fr}
+  nav{padding:0 20px}
+  footer{flex-direction:column;gap:8px;text-align:center;padding:16px 20px}
+  .tab-btn{padding:0 14px;font-size:.5rem}
+}
+@media(max-width:600px){.sin-grid,.grid-4,.grid-3,.ben-grid,.fondo-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="cur"></div><div id="cur2"></div>
+
+<nav>
+  <div class="nav-logo">💊 &nbsp;<em>Pharma</em> DeLux <span>· El Pasaje</span></div>
+  <a href="index.html" class="nav-back">← El Pasaje</a>
+</nav>
+
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('inicio',this)">💊 Inicio</button>
+  <button class="tab-btn" onclick="switchTab('consultorio',this)">🏥 Consultorio</button>
+  <button class="tab-btn" onclick="switchTab('corporativo',this)">🏢 Corporate Gifts</button>
+  <button class="tab-btn" onclick="switchTab('b2b',this)">📋 B2B</button>
+  <button class="tab-btn" onclick="switchTab('impacto',this)">💚 Impacto</button>
+</div>
+
+
+<!-- ═══════════════ INICIO ═══════════════ -->
+<div id="tab-inicio" class="tab-panel active">
+
+<div class="hero">
+  <div class="hero-left reveal">
+    <div class="h-kicker">Pharma DeLux · El Pasaje 3D Studio</div>
+    <h1 class="h-title">
+      La precisión<br>que tu salud
+      <em>merece.</em>
+    </h1>
+    <div class="h-div"></div>
+    <p class="h-sub">Accesorios e instrumentales 3D de alta precisión para el universo médico. Diseñados desde adentro del sector, para que el regalo institucional deje de ser olvidado en un cajón y se convierta en parte del consultorio.</p>
+    <div class="h-stats">
+      <div class="hst"><div class="hst-n" id="cnt-ph">0</div><div class="hst-l">Piezas<br>disponibles</div></div>
+      <div class="hst"><div class="hst-n">B2B</div><div class="hst-l">Nivel<br>empresarial</div></div>
+      <div class="hst"><div class="hst-n">💊</div><div class="hst-l">Diseñado<br>desde adentro</div></div>
+    </div>
+    <div class="h-ctas">
+      <button class="h-cta" onclick="switchTab('consultorio',document.querySelectorAll('.tab-btn')[1])">Ver catálogo →</button>
+      <button class="h-cta-sec" onclick="switchTab('b2b',document.querySelectorAll('.tab-btn')[3])">Propuesta B2B</button>
+    </div>
+  </div>
+  <div class="hero-deco">⚕️</div>
+</div>
+
+<div class="strip">
+  <div class="ss-item"><span class="ss-dot"></span>Higiene visual y precisión clínica</div>
+  <div class="ss-item"><span class="ss-dot"></span>PETG resistente a alcohol · PLA Seda premium</div>
+  <div class="ss-item"><span class="ss-dot"></span>Personalización con logo de laboratorio</div>
+</div>
+
+<!-- Manifiesto -->
+<div class="sec reveal">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:72px;align-items:start">
+    <div>
+      <div class="eyebrow">El concepto</div>
+      <h2 class="sec-ttl">El regalo que<br>no termina en<br>un <em>cajón.</em></h2>
+      <p class="sec-body" style="margin-bottom:16px">Hay una crisis silenciosa en el marketing médico. Los laboratorios gastan fortunas en merchandising que los médicos ni miran. Lapiceras sin tinta, agendas que se apilan, tazas que nunca salen del armario.</p>
+      <p class="sec-body">Pharma DeLux tiene la respuesta: objetos de precisión que resuelven un problema real del consultorio. El médico los usa, los ve todos los días y recuerda quién se los regaló. Así funciona la fidelización verdadera.</p>
+      <a href="https://wa.me/541165497234?text=Hola! Me interesa Pharma DeLux para mi laboratorio" class="star-cta" target="_blank" style="margin-top:8px;display:inline-flex">Hablar con Lucas →</a>
+    </div>
+    <div>
+      <div class="eyebrow">Tres mundos</div>
+      <h2 class="sec-ttl">¿Qué necesita<br>tu <em>sector?</em></h2>
+      <div style="display:grid;grid-template-columns:1fr;gap:10px">
+        <div onclick="switchTab('consultorio',document.querySelectorAll('.tab-btn')[1])" style="background:var(--hielo);padding:18px 22px;border-left:4px solid var(--verde);cursor:pointer;transition:all .3s" onmouseenter="this.style.background='var(--verde3)'" onmouseleave="this.style.background='var(--hielo)'">
+          <div style="font-size:.52rem;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--verde);margin-bottom:6px">🏥 Consultorio · Instrumental</div>
+          <div style="font-size:.82rem;font-weight:300;color:var(--gris4)">Organizadores, soportes y accesorios que mejoran el orden y la imagen del espacio médico.</div>
+        </div>
+        <div onclick="switchTab('corporativo',document.querySelectorAll('.tab-btn')[2])" style="background:var(--hielo);padding:18px 22px;border-left:4px solid var(--cian);cursor:pointer;transition:all .3s" onmouseenter="this.style.background='var(--cian2)'" onmouseleave="this.style.background='var(--hielo)'">
+          <div style="font-size:.52rem;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--cian);margin-bottom:6px">🏢 Corporate Gifts · Laboratorios</div>
+          <div style="font-size:.82rem;font-weight:300;color:var(--gris4)">Obsequios institucionales de élite con logo del laboratorio. Para fidelizar médicos de manera genuina.</div>
+        </div>
+        <div onclick="switchTab('b2b',document.querySelectorAll('.tab-btn')[3])" style="background:var(--hielo);padding:18px 22px;border-left:4px solid var(--azul);cursor:pointer;transition:all .3s" onmouseenter="this.style.background='rgba(70,130,180,.06)'" onmouseleave="this.style.background='var(--hielo)'">
+          <div style="font-size:.52rem;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--azul);margin-bottom:6px">📋 B2B · Propuesta mayorista</div>
+          <div style="font-size:.82rem;font-weight:300;color:var(--gris4)">Cotización personalizada para laboratorios, clínicas y droguerías. Volumen, branding y entrega.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /inicio -->
+
+
+<!-- ═══════════════ CONSULTORIO ═══════════════ -->
+<div id="tab-consultorio" class="tab-panel">
+<div class="sec reveal">
+  <div class="eyebrow">Línea Consultorio · Instrumental</div>
+  <h2 class="sec-ttl">Orden clínico.<br>Imagen <em>profesional.</em></h2>
+  <p class="sec-body">Piezas de PETG resistente al alcohol en gel y PLA Seda premium para el escritorio del médico. Cada accesorio resuelve un problema real del consultorio — y comunica que quien lo usa presta atención a los detalles.</p>
+
+  <!-- Estrella: Organizador ADN -->
+  <div class="star-wrap">
+    <div class="star-left">
+      <div class="star-kicker">★ Producto estrella · Consultorio</div>
+      <h3 class="star-ttl">Organizador<br><em>Estructura de ADN</em></h3>
+      <p class="star-body">Un lapicero y soporte de tarjetas con la geometría de la doble hélice. Impreso en PLA Seda Blanco o Azul Cian. El objeto que transforma el escritorio de cualquier médico en una declaración de identidad científica.</p>
+      <div class="ben-grid">
+        <div class="ben"><div class="ben-t">Lapicero central</div><div class="ben-d">Capacidad para 8-10 lapiceras o instrumentos.</div></div>
+        <div class="ben"><div class="ben-t">Porta-tarjetas</div><div class="ben-d">Slot lateral para tarjetas personales o de consultorio.</div></div>
+        <div class="ben"><div class="ben-t">Logo del lab</div><div class="ben-d">Grabado en la base, personalizable por pedido.</div></div>
+        <div class="ben"><div class="ben-t">PLA Seda premium</div><div class="ben-d">Acabado metalizado, resistente al uso diario.</div></div>
+      </div>
+      <a href="https://wa.me/541165497234?text=Hola Lucas! Me interesa el Organizador ADN de Pharma DeLux" class="star-cta" target="_blank">Pedir el mío →</a>
+      <div class="star-nota">Disponible en Blanco, Azul Cian y Negro · Con logo de laboratorio: +$800</div>
+    </div>
+    <div class="star-right">
+      <span class="star-img-icon">🧬</span>
+      <div class="star-img-name">Organizador Estructura de ADN</div>
+      <div class="star-img-sub">PLA Seda Blanco · Doble hélice · Logo en base</div>
+      <div class="price-row">
+        <div class="pr-item"><div class="pr-n">$5.200</div><div class="pr-l">Sin logo</div></div>
+        <div class="pr-item"><div class="pr-n">$6.000</div><div class="pr-l">Con logo</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="eyebrow" style="margin-top:40px">Más productos · Consultorio</div>
+  <h3 style="font-family:'DM Serif Display',serif;font-size:1.8rem;font-weight:400;color:var(--negro);margin-bottom:24px">El consultorio que <em style="font-style:italic;color:var(--verde)">refleja tu nivel.</em></h3>
+  <div class="grid-2">
+    <div class="pcard">
+      <div class="pcard-badge badge-clinic">Consultorio</div>
+      <span class="pcard-icon">📋</span>
+      <div class="pcard-name">Soporte Recetario "Asepsia"</div>
+      <div class="pcard-desc">Atril minimalista que sostiene el recetario en ángulo óptimo de escritura. El médico no busca más el taco de hojas entre los papeles. PETG Blanco, resistente al alcohol en gel.</div>
+      <div class="pcard-price">$3.800</div>
+      <a href="https://wa.me/541165497234?text=Hola Lucas! Me interesa el Soporte Recetario de Pharma DeLux" class="pcard-cta" target="_blank">Pedir →</a>
+    </div>
+    <div class="pcard">
+      <div class="pcard-badge badge-clinic">Consultorio</div>
+      <span class="pcard-icon">🔏</span>
+      <div class="pcard-name">Porta-Sellos Ergonómico</div>
+      <div class="pcard-desc">Rediseño del mango del sello médico con ergonomía de precisión. Reduce la fatiga en jornadas de alta demanda. Con nombre o matrícula grabada. El sello que el médico cuida.</div>
+      <div class="pcard-price">$2.800</div>
+      <a href="https://wa.me/541165497234?text=Hola Lucas! Me interesa el Porta-Sellos de Pharma DeLux" class="pcard-cta" target="_blank">Pedir →</a>
+    </div>
+    <div class="pcard">
+      <div class="pcard-badge badge-clinic">Consultorio · Molécula</div>
+      <span class="pcard-icon">⚗️</span>
+      <div class="pcard-name">Llavero Molecular</div>
+      <div class="pcard-desc">Llavero con la estructura 3D de una molécula específica. Aspirina, Ibuprofeno, Paracetamol, Dopamina o la que el visitador promocione. El gift técnico que ninguna otra empresa ofrece.</div>
+      <div class="pcard-price">$1.800</div>
+      <a href="https://wa.me/541165497234?text=Hola Lucas! Me interesa el Llavero Molecular de Pharma DeLux" class="pcard-cta" target="_blank">Pedir →</a>
+    </div>
+    <div class="pcard">
+      <div class="pcard-badge badge-clinic">Consultorio</div>
+      <span class="pcard-icon">📊</span>
+      <div class="pcard-name">Checklist Visual de Consultorio</div>
+      <div class="pcard-desc">Panel de pared con slots para indicadores visuales de lo que está disponible: recetas, muestras, sellos. El médico sabe de un vistazo qué falta. Diseño clean, fondo blanco.</div>
+      <div class="pcard-price">$4.500</div>
+      <a href="https://wa.me/541165497234?text=Hola Lucas! Me interesa el Checklist Visual de Pharma DeLux" class="pcard-cta" target="_blank">Pedir →</a>
+    </div>
+    <div class="pcard">
+      <div class="pcard-badge badge-anat">Anatómico</div>
+      <span class="pcard-icon">🫀</span>
+      <div class="pcard-name">Maqueta Anatómica</div>
+      <div class="pcard-desc">Modelos tridimensionales de alta precisión para que los médicos expliquen procedimientos a pacientes o decoren consultorios. Corazón, columna, articulaciones y más. A pedido.</div>
+      <div class="pcard-price">Cotizar</div>
+      <a href="https://wa.me/541165497234?text=Hola Lucas! Quiero cotizar una Maqueta Anatómica de Pharma DeLux" class="pcard-cta" target="_blank">Cotizar →</a>
+    </div>
+    <div class="pcard">
+      <div class="pcard-badge badge-new">Novedad</div>
+      <span class="pcard-icon">💉</span>
+      <div class="pcard-name">Dispensador de Muestras Custom</div>
+      <div class="pcard-desc">Caja con diseño exclusivo y logo del laboratorio calado para exhibición de muestras en el mostrador. Las muestras dejan de estar en una caja de cartón y pasan a tener identidad de marca.</div>
+      <div class="pcard-price">Cotizar (por volumen)</div>
+      <a href="https://wa.me/541165497234?text=Hola Lucas! Quiero cotizar Dispensadores de Muestras de Pharma DeLux" class="pcard-cta" target="_blank">Cotizar →</a>
+    </div>
+  </div>
+</div>
+
+<!-- IA Consultorio -->
+<div class="sec sec-ice reveal" style="padding-top:0">
+  <div class="ia-wrap">
+    <div>
+      <div class="ia-chip">💊 Medical Advisor · IA</div>
+      <h3 class="ia-ttl">¿Qué necesita tu consultorio?</h3>
+      <p class="ia-sub">Describime el espacio o el problema que querés resolver y te recomiendo qué piezas de Pharma DeLux hacen la diferencia.</p>
+    </div>
+    <div>
+      <div class="ia-fn-grid">
+        <div class="ia-fn" onclick="setFn(this,'Soy médico y quiero mejorar el orden y la imagen de mi consultorio')">🏥 Mejorar consultorio</div>
+        <div class="ia-fn" onclick="setFn(this,'Busco un regalo original para médicos que realmente usen en su escritorio')">🎁 Regalo para médico</div>
+        <div class="ia-fn" onclick="setFn(this,'Soy visitador médico y quiero un obsequio que me diferencie')">💊 Soy visitador médico</div>
+        <div class="ia-fn" onclick="setFn(this,'¿Qué productos de Pharma DeLux son los más buscados?')">⭐ Más populares</div>
+      </div>
+      <input class="ia-inp" id="ia-cons" placeholder="Describí tu necesidad…" />
+      <button class="ia-btn" onclick="callIA('ia-cons','r-cons')">Consultar →</button>
+      <div class="ia-resp" id="r-cons"></div>
+    </div>
+  </div>
+</div>
+</div><!-- /consultorio -->
+
+
+<!-- ═══════════════ CORPORATE GIFTS ═══════════════ -->
+<div id="tab-corporativo" class="tab-panel">
+<div class="sec reveal">
+  <div class="eyebrow">Corporate Gifts · Laboratorios</div>
+  <h2 class="sec-ttl">El obsequio que<br>el médico <em>guarda.</em></h2>
+  <p class="sec-body">Los laboratorios invierten en fidelizar médicos. El problema no es el presupuesto — es que los obsequios habituales no generan recordación. Pharma DeLux ofrece una solución que ningún proveedor de China puede replicar: piezas de ingeniería personalizadas con el logo del laboratorio, diseñadas para vivir en el escritorio del médico.</p>
+
+  <div class="grid-3" style="margin-bottom:40px">
+    <div style="background:var(--verde3);padding:28px;border:1px solid var(--brd);text-align:center">
+      <div style="font-family:'DM Serif Display',serif;font-size:2.5rem;color:var(--verde);margin-bottom:8px">10</div>
+      <div style="font-size:.52rem;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--verde);margin-bottom:6px">Mínimo de unidades</div>
+      <div style="font-size:.8rem;font-weight:300;color:var(--gris4)">Para pedidos con logo grabado del laboratorio</div>
+    </div>
+    <div style="background:var(--cian2);padding:28px;border:1px solid rgba(0,183,235,.2);text-align:center">
+      <div style="font-family:'DM Serif Display',serif;font-size:2.5rem;color:var(--cian);margin-bottom:8px">-20%</div>
+      <div style="font-size:.52rem;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--cian);margin-bottom:6px">Descuento por volumen</div>
+      <div style="font-size:.8rem;font-weight:300;color:var(--gris4)">En pedidos de 50 unidades o más</div>
+    </div>
+    <div style="background:var(--hielo);padding:28px;border:1px solid var(--gris2);text-align:center">
+      <div style="font-family:'DM Serif Display',serif;font-size:2.5rem;color:var(--negro);margin-bottom:8px">7d</div>
+      <div style="font-size:.52rem;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--gris4);margin-bottom:6px">Tiempo de producción</div>
+      <div style="font-size:.8rem;font-weight:300;color:var(--gris4)">Pedidos estándar, logo incluido</div>
+    </div>
+  </div>
+
+  <div class="eyebrow">Catálogo Corporate</div>
+  <h3 style="font-family:'DM Serif Display',serif;font-size:1.8rem;font-weight:400;color:var(--negro);margin-bottom:24px">Gifts que <em style="font-style:italic;color:var(--verde)">generan recordación.</em></h3>
+  <div class="grid-2">
+    <div class="pcard">
+      <div class="pcard-badge badge-b2b">Corporate · Premium</div>
+      <span class="pcard-icon">🧬</span>
+      <div class="pcard-name">Pack Laboratorio Elite</div>
+      <div class="pcard-desc">Organizador ADN + Soporte Recetario + Llavero Molecular con la molécula del producto estrella del laboratorio. El kit que el médico usa, ve y asocia con tu marca.</div>
+      <div class="pcard-price">Cotizar pack</div>
+      <a href="https://wa.me/541165497234?text=Hola Lucas! Quiero cotizar el Pack Laboratorio Elite de Pharma DeLux" class="pcard-cta" target="_blank">Cotizar →</a>
+    </div>
+    <div class="pcard">
+      <div class="pcard-badge badge-b2b">Corporate · Farmacia</div>
+      <span class="pcard-icon">💉</span>
+      <div class="pcard-name">Dispensador de Muestras Branded</div>
+      <div class="pcard-desc">Exhibidor de mostrador con logo calado del laboratorio en relieve. Las muestras pasan de "caja de cartón" a punto de venta con identidad. Disponible en blanco, negro y colores corporativos.</div>
+      <div class="pcard-price">Cotizar por volumen</div>
+      <a href="https://wa.me/541165497234?text=Hola Lucas! Quiero cotizar Dispensadores Branded de Pharma DeLux" class="pcard-cta" target="_blank">Cotizar →</a>
+    </div>
+    <div class="pcard">
+      <div class="pcard-badge badge-anat">Anatómico · Premium</div>
+      <span class="pcard-icon">🫀</span>
+      <div class="pcard-name">Maqueta Anatómica Branded</div>
+      <div class="pcard-desc">Modelo 3D de alta precisión con el logo del laboratorio en la base. Para jefaturas médicas y consultorios de especialistas. El regalo que se exhibe, no se guarda.</div>
+      <div class="pcard-price">Cotizar</div>
+      <a href="https://wa.me/541165497234?text=Hola Lucas! Quiero cotizar una Maqueta Anatómica Branded de Pharma DeLux" class="pcard-cta" target="_blank">Cotizar →</a>
+    </div>
+    <div class="pcard">
+      <div class="pcard-badge badge-b2b">Corporate · Custom</div>
+      <span class="pcard-icon">🎨</span>
+      <div class="pcard-name">Diseño Corporativo a Medida</div>
+      <div class="pcard-desc">¿Tu laboratorio tiene un objeto específico en mente? Trabajamos desde el diseño. Molécula del producto, mascota de marca, símbolo corporativo. Lo que necesitás.</div>
+      <div class="pcard-price">Cotizar</div>
+      <a href="https://wa.me/541165497234?text=Hola Lucas! Quiero cotizar un Diseño Corporativo a Medida de Pharma DeLux" class="pcard-cta" target="_blank">Contar la idea →</a>
+    </div>
+  </div>
+</div>
+
+<!-- IA Corporate -->
+<div class="sec sec-ice reveal" style="padding-top:0">
+  <div class="ia-wrap">
+    <div>
+      <div class="ia-chip">🏢 Corporate Advisor · IA</div>
+      <h3 class="ia-ttl">¿Qué gift necesita tu laboratorio?</h3>
+      <p class="ia-sub">Contame el contexto — tipo de médicos, especialidad, cantidad — y te armo una recomendación de producto con estimación de costo.</p>
+    </div>
+    <div>
+      <div class="ia-fn-grid">
+        <div class="ia-fn" onclick="setFn(this,'Somos un laboratorio farmacéutico y buscamos gifts para médicos especialistas')">💊 Lab farmacéutico</div>
+        <div class="ia-fn" onclick="setFn(this,'Tenemos una farmacia y queremos mejorar la exhibición de muestras con branding')">🏪 Farmacia branded</div>
+        <div class="ia-fn" onclick="setFn(this,'Busco gifts únicos para médicos de primer nivel, presupuesto premium')">⭐ Gift premium</div>
+        <div class="ia-fn" onclick="setFn(this,'¿Cuál es el mínimo de producción y cómo funciona el proceso?')">📋 ¿Cómo funciona?</div>
+      </div>
+      <input class="ia-inp" id="ia-corp" placeholder="Describí tu laboratorio o necesidad corporativa…" />
+      <button class="ia-btn" onclick="callIA('ia-corp','r-corp')">Consultar →</button>
+      <div class="ia-resp" id="r-corp"></div>
+    </div>
+  </div>
+</div>
+</div><!-- /corporativo -->
+
+
+<!-- ═══════════════ B2B ═══════════════ -->
+<div id="tab-b2b" class="tab-panel">
+<div class="sec reveal">
+  <div class="eyebrow">B2B · Propuesta mayorista</div>
+  <h2 class="sec-ttl">Para laboratorios<br>que piensan en <em>grande.</em></h2>
+
+  <div class="b2b-box">
+    <span class="b2b-kicker">Modelo de negocio Pharma DeLux</span>
+    <h3 class="b2b-ttl">Fabricación local.<br><em>Personalización real.</em><br>Entrega directa.</h3>
+    <p class="b2b-body">Los proveedores de China ofrecen precio. No pueden ofrecer la molécula de tu producto estrella impresa en 3D con tu logo. No pueden entregar en 7 días. No pueden modificar el diseño por un cambio de campaña. Pharma DeLux sí puede todo eso, porque fabricamos en Buenos Aires y entendemos el sector desde adentro.</p>
+    <div class="b2b-grid">
+      <div class="b2b-item"><span class="b2b-n">10</span><div class="b2b-l">Unidades mínimas</div></div>
+      <div class="b2b-item"><span class="b2b-n">7d</span><div class="b2b-l">Entrega estándar</div></div>
+      <div class="b2b-item"><span class="b2b-n">∞</span><div class="b2b-l">Posibilidades de diseño</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:28px">
+      <div style="background:rgba(255,255,255,.05);padding:18px 20px;border-left:3px solid var(--verde)">
+        <div style="font-size:.52rem;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--verde);margin-bottom:8px">Lo que ofrecemos</div>
+        <div style="font-size:.82rem;font-weight:300;color:var(--gris3);line-height:1.65">Diseño a medida · Logo grabado · Colores corporativos · Embalaje individual · Facturación · Entrega en CABA/GBA</div>
+      </div>
+      <div style="background:rgba(255,255,255,.05);padding:18px 20px;border-left:3px solid rgba(0,183,235,.5)">
+        <div style="font-size:.52rem;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--cian);margin-bottom:8px">Para quién</div>
+        <div style="font-size:.82rem;font-weight:300;color:var(--gris3);line-height:1.65">Laboratorios farmacéuticos · Droguerías · Clínicas privadas · Farmacias de alto volumen · Distribuidoras médicas</div>
+      </div>
+    </div>
+    <a href="https://wa.me/541165497234?text=Hola Lucas! Quiero una propuesta B2B de Pharma DeLux para mi laboratorio" class="star-cta" target="_blank">Solicitar propuesta →</a>
+  </div>
+
+  <!-- IA Propuesta B2B -->
+  <div class="eyebrow" style="margin-top:40px">Generador de propuesta · IA</div>
+  <h3 style="font-family:'DM Serif Display',serif;font-size:1.8rem;font-weight:400;color:var(--negro);margin-bottom:12px">Completá los datos y recibís<br>una <em style="font-style:italic;color:var(--verde)">propuesta personalizada.</em></h3>
+  <p style="font-size:.86rem;font-weight:300;color:var(--gris4);margin-bottom:28px;line-height:1.7">Respondé las preguntas y nuestro sistema genera un resumen de propuesta que Lucas te envía por WhatsApp con precios y tiempos.</p>
+
+  <div class="ia-wrap" style="margin-top:0">
+    <div>
+      <div class="ia-chip">📋 Propuesta Generator · IA</div>
+      <h3 class="ia-ttl">¿Qué necesita tu laboratorio?</h3>
+      <p class="ia-sub">Contame el tipo de producto, la cantidad aproximada y el perfil del médico destinatario. El sistema arma la propuesta y se la pasamos a Lucas.</p>
+    </div>
+    <div>
+      <div class="ia-fn-grid">
+        <div class="ia-fn" onclick="setFn(this,'Somos un laboratorio y necesitamos 50 gifts para médicos cardiólogos')">50 gifts · Cardiología</div>
+        <div class="ia-fn" onclick="setFn(this,'Necesito dispensadores de muestras con logo para 3 farmacias')">Dispensadores · Farmacia</div>
+        <div class="ia-fn" onclick="setFn(this,'Quiero 20 maquetas anatómicas con logo para jefaturas médicas')">Maquetas · Jefaturas</div>
+        <div class="ia-fn" onclick="setFn(this,'¿Qué opciones tienen para presupuestos de entre $200.000 y $500.000?')">¿Qué entra en mi presupuesto?</div>
+      </div>
+      <input class="ia-inp" id="ia-b2b" placeholder="Describí tu laboratorio, cantidad y tipo de médico destinatario…" />
+      <button class="ia-btn" onclick="callIA('ia-b2b','r-b2b')">Generar propuesta →</button>
+      <div class="ia-resp" id="r-b2b"></div>
+    </div>
+  </div>
+</div>
+</div><!-- /b2b -->
+
+
+<!-- ═══════════════ IMPACTO ═══════════════ -->
+<div id="tab-impacto" class="tab-panel">
+
+<div class="sec sec-ice reveal">
+  <div style="display:grid;grid-template-columns:1fr auto;gap:24px;align-items:flex-end;margin-bottom:40px;flex-wrap:wrap">
+    <div>
+      <div class="eyebrow" style="color:var(--verde)">Impacto · Pharma DeLux</div>
+      <h2 class="sec-ttl">Cada compra<br>también <em>contribuye.</em></h2>
+    </div>
+    <div style="text-align:center">
+      <span class="don-pct" id="pct-ph">%</span>
+      <div style="font-size:.5rem;font-weight:600;letter-spacing:4px;text-transform:uppercase;color:var(--gris3);margin-top:4px">DE CADA VENTA<br>A FONDOS SOLIDARIOS</div>
+      <div style="font-size:.68rem;color:var(--gris3);margin-top:4px">(% a confirmar)</div>
+    </div>
+  </div>
+
+  <div class="don-wrap">
+    <div>
+      <div class="don-thermo">
+        <span class="don-lbl">Refugio Oasis Animal</span>
+        <div class="don-bar-bg"><div class="don-bar" id="don-bar-1" style="width:0%"></div></div>
+        <div class="don-row"><span id="don-val-1">Cargando…</span><span>Meta $50.000</span></div>
+      </div>
+      <div class="don-thermo" style="border-left-color:#818CF8">
+        <span class="don-lbl" style="color:#818CF8">Mentes Brillantes</span>
+        <div class="don-bar-bg"><div class="don-bar" id="don-bar-2" style="width:0%;background:#818CF8"></div></div>
+        <div class="don-row"><span id="don-val-2" style="color:#818CF8">Cargando…</span><span>Meta $40.000</span></div>
+      </div>
+      <div class="don-thermo" style="border-left-color:#FB7185">
+        <span class="don-lbl" style="color:#FB7185">Fondo General</span>
+        <div class="don-bar-bg"><div class="don-bar" id="don-bar-3" style="width:0%;background:#FB7185"></div></div>
+        <div class="don-row"><span id="don-val-3" style="color:#FB7185">Cargando…</span><span>Meta $30.000</span></div>
+      </div>
+      <a href="oasis-animal.html" style="display:inline-flex;align-items:center;gap:8px;padding:10px 22px;border:1px solid var(--brd);color:var(--verde);font-size:.54rem;font-weight:500;letter-spacing:3px;text-transform:uppercase;text-decoration:none;transition:all .3s;cursor:none;margin-top:10px;border-radius:2px">Ver Oasis Animal →</a>
+    </div>
+    <div>
+      <p class="don-info">Pharma DeLux forma parte del ecosistema solidario de El Pasaje 3D Studio. Una porción de cada venta va a los fondos que sostienen el refugio de animales de Oasis Animal, el programa educativo Mentes Brillantes y el fondo general del estudio.</p>
+      <div style="margin-top:24px">
+        <div style="font-size:.5rem;font-weight:600;letter-spacing:4px;text-transform:uppercase;color:var(--gris3);margin-bottom:14px">Elegí el destino de tu aporte</div>
+        <div class="fondo-grid">
+          <div class="fondo-item"><span class="fondo-emoji">🐾</span><div class="fondo-name">Oasis Animal</div><div class="fondo-desc">Rescate, alimento y vet. para animales que esperan un hogar.</div></div>
+          <div class="fondo-item"><span class="fondo-emoji">🧠</span><div class="fondo-name">Mentes Brillantes</div><div class="fondo-desc">Apoyo educativo para chicos con talento y pocos recursos.</div></div>
+          <div class="fondo-item" style="grid-column:span 2"><span class="fondo-emoji">❤️</span><div class="fondo-name">Fondo General</div><div class="fondo-desc">Se distribuye donde más se necesita dentro del ecosistema El Pasaje.</div></div>
+        </div>
+      </div>
+      <a href="https://wa.me/541165497234?text=Hola! Quiero que mi compra de Pharma DeLux vaya al fondo: " style="display:inline-flex;align-items:center;gap:8px;padding:10px 22px;border:1px solid var(--brd);color:var(--verde);font-size:.54rem;font-weight:500;letter-spacing:3px;text-transform:uppercase;text-decoration:none;transition:all .3s;cursor:none;margin-top:16px;border-radius:2px" target="_blank">Indicar destino →</a>
+    </div>
+  </div>
+</div>
+
+<!-- Sinergia -->
+<div class="sec reveal">
+  <div class="eyebrow">Ecosistema · El Pasaje</div>
+  <h2 class="sec-ttl">Pharma DeLux es parte<br>de algo más <em>grande.</em></h2>
+  <div class="sin-grid">
+    <a href="index.html" class="scard"><span class="sc-tag">El estudio · Hub</span><div class="sc-name">El Pasaje 3D Studio</div><div class="sc-why">El estudio familiar que fabrica todo. Fer en producción. Cinco líneas. Un ecosistema con propósito.</div></a>
+    <a href="oasis-animal.html" class="scard"><span class="sc-tag">Sinergias · Oasis</span><div class="sc-name">Oasis Animal</div><div class="sc-why">Pack regalo pharma + pet: Llavero Molecular + Guardián Tag para el médico que tiene mascotas.</div></a>
+    <a href="aero-tech.html" class="scard"><span class="sc-tag">Sinergias · Aero-Tech</span><div class="sc-name">Aero-Tech</div><div class="sc-why">La línea de Nando. Misma lógica B2B, distintos sectores. Posible kit inter-líneas para empresas.</div></a>
+    <a href="melomano.html" class="scard"><span class="sc-tag">Sinergias · Melómano</span><div class="sc-name">Melómano</div><div class="sc-why">Para el médico que después del turno se refugia en su setup de audio. Pack regalo de alto estatus.</div></a>
+  </div>
+</div>
+
+<!-- Cierre -->
+<div class="cierre">
+  <div class="c-line"></div>
+  <div style="font-size:.52rem;font-weight:500;letter-spacing:8px;text-transform:uppercase;color:var(--verde);margin-bottom:18px">Pharma DeLux · El Pasaje 3D Studio</div>
+  <div class="c-quote">"La precisión<br>que tu salud <em>merece."</em></div>
+  <div class="c-firma">Higiene visual · Precisión clínica · Fidelización real</div>
+  <div class="c-ctas">
+    <a href="https://wa.me/541165497234?text=Hola Lucas! Quiero ver el catálogo de Pharma DeLux" class="c-cta" target="_blank">Hablar con Lucas →</a>
+    <a href="index.html" class="c-back">← Volver a El Pasaje</a>
+  </div>
+</div>
+
+</div><!-- /impacto -->
+
+<footer>
+  <div class="fl">💊 &nbsp;<em>Pharma DeLux</em> · El Pasaje 3D Studio</div>
+  <div class="fr">La precisión que tu salud merece</div>
+</footer>
+
+<a href="https://wa.me/541165497234?text=Hola Lucas! Me interesa Pharma DeLux" target="_blank" class="wa-float">
+  <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+</a>
+
+<div id="back-banner"><a href="index.html">← El Pasaje</a></div>
+
+<script>
+const cur=document.getElementById("cur"),cur2=document.getElementById("cur2");
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener("mousemove",e=>{mx=e.clientX;my=e.clientY;cur.style.transform=`translate(${mx-4}px,${my-4}px)`});
+(function loop(){rx+=(mx-rx)*.1;ry+=(my-ry)*.1;cur2.style.transform=`translate(${rx-14}px,${ry-14}px)`;requestAnimationFrame(loop)})();
+document.querySelectorAll("a,button,.pcard,.scard,.fondo-item,.ia-fn,.b2b-item").forEach(el=>{
+  el.addEventListener("mouseenter",()=>{cur.style.width="14px";cur.style.height="14px"});
+  el.addEventListener("mouseleave",()=>{cur.style.width="8px";cur.style.height="8px"});
+});
+
+const obs=new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting)x.target.classList.add("visible")})},{threshold:.05});
+document.querySelectorAll(".reveal").forEach(el=>obs.observe(el));
+
+setTimeout(()=>{
+  let v=0;const t=setInterval(()=>{v=Math.min(v+1,10);const el=document.getElementById("cnt-ph");if(el)el.textContent=v;if(v>=10)clearInterval(t)},90);
+},400);
+
+setTimeout(()=>{
+  [["don-bar-1","don-val-1",62,50000],["don-bar-2","don-val-2",48,40000],["don-bar-3","don-val-3",35,30000]].forEach(([bid,vid,pct,meta])=>{
+    const b=document.getElementById(bid),v=document.getElementById(vid);
+    if(b)b.style.width=pct+"%";
+    if(v)v.innerHTML=`<span>$${Math.round(meta*pct/100).toLocaleString()} recaudados</span>`;
+  });
+},700);
+
+window.addEventListener("scroll",()=>{
+  const b=document.getElementById("back-banner");
+  if(window.scrollY>300){b.style.opacity="1";b.style.transform="translateX(0)";b.style.pointerEvents="auto"}
+  else{b.style.opacity="0";b.style.transform="translateX(-10px)";b.style.pointerEvents="none"}
+});
+
+function switchTab(id,btn){
+  document.querySelectorAll(".tab-panel").forEach(p=>p.classList.remove("active"));
+  document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
+  document.getElementById("tab-"+id).classList.add("active");
+  if(btn)btn.classList.add("active");
+  window.scrollTo({top:0,behavior:"smooth"});
+  document.querySelectorAll("#tab-"+id+" .reveal").forEach(el=>{if(!el.classList.contains("visible"))obs.observe(el)});
+}
+
+function setFn(el,texto){
+  el.closest(".ia-fn-grid").querySelectorAll(".ia-fn").forEach(f=>f.classList.remove("active-fn"));
+  el.classList.add("active-fn");
+  const inp=el.closest(".ia-wrap").querySelector(".ia-inp");
+  if(inp){inp.value=texto;inp.focus()}
+}
+
+const SYS=`Sos el asesor de Pharma DeLux, la línea B2B de accesorios 3D para el sector médico-farmacéutico de El Pasaje 3D Studio. El responsable comercial es Lucas Peluffo, que conoce profundamente el sector.
+
+PROPUESTA DE VALOR: transformar el merchandising médico genérico en piezas de ingeniería personalizadas que el médico realmente usa y recuerda.
+
+PRODUCTOS:
+- Organizador ADN $5.200 (sin logo) / $6.000 (con logo): lapicero + porta-tarjetas, diseño doble hélice
+- Soporte Recetario "Asepsia" $3.800: atril para recetario, PETG resistente alcohol
+- Porta-Sellos Ergonómico $2.800: mango ergonómico para sello médico, con matrícula
+- Llavero Molecular $1.800: estructura 3D de molécula (Aspirina, Ibuprofeno, Dopamina, etc.)
+- Checklist Visual Consultorio $4.500: panel de orden visual para consultorio
+- Dispensador de Muestras: cotizar por volumen — exhibidor con logo del laboratorio
+- Maqueta Anatómica: cotizar — corazón, columna, articulaciones, etc.
+- Pack Laboratorio Elite: cotizar — combo ADN + Recetario + Llavero Molecular
+- Diseño corporativo a medida: cotizar
+
+B2B: mínimo 10 unidades para logo grabado. Descuento 20% desde 50 unidades. Entrega 7 días CABA/GBA.
+Materiales: PETG blanco (resistente alcohol) para piezas de uso clínico, PLA Seda para piezas de escritorio.
+
+Tono: profesional, claro, orientado a resultados. Máximo 3 oraciones. Siempre recomendá algo concreto y mencioná el canal de contacto.
+Contacto: Lucas por WA +54 11 6549-7234.`;
+
+const FB_def=[
+  "Para un laboratorio farmacéutico, el Organizador ADN con logo grabado es el gift que ningún proveedor de China puede replicar: la geometría de la doble hélice más el logo del producto estrella, en el escritorio del médico todos los días.",
+  "El Llavero Molecular es el gift más exclusivo del catálogo: la estructura 3D de la molécula de tu producto principal, impresa en PLA Seda. El médico lo muestra, lo comenta, y recuerda el laboratorio cada vez que lo usa.",
+  "Para clínicas o farmacias, el Dispensador de Muestras Branded transforma el mostrador en un punto de identidad visual — las muestras pasan de 'caja de cartón' a exhibidor con marca. Cotizamos por volumen."
+];
+
+async function callIA(inputId,respId){
+  const inp=document.getElementById(inputId),resp=document.getElementById(respId);
+  if(!inp||!resp)return;
+  const t=inp.value.trim();if(!t){inp.focus();return}
+  resp.style.display="block";resp.textContent="···";
+  try{
+    const r=await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:220,system:SYS,messages:[{role:"user",content:t}]})
+    });
+    const d=await r.json();resp.textContent=d.content?.[0]?.text||"Escribile a Lucas al WA."
+  }catch(e){resp.textContent=FB_def[Math.floor(Math.random()*FB_def.length)]}
+}
+</script>
+</body>
+</html>

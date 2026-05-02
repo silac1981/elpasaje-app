@@ -16,8 +16,9 @@
 *.bak
 *.old
 
-# HTML sueltos
-*.html
+# HTML sueltos — excluir solo duplicados y archivos con espacios
+melomano  - copia.html
+coquette .html
 
 # Scripts temporales y de reparación
 main_viejo*.py
