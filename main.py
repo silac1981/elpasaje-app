@@ -1073,6 +1073,28 @@ elif menu == "🤝 Socios":
 elif menu == "📈 Mi Panel":
     uid  = st.session_state["uid"]
     role = st.session_state["role"]
+    # ── Tema oscuro para el panel de socios ──────────────────
+    st.markdown("""<style>
+.stApp,[data-testid="stAppViewContainer"],[data-testid="stMain"]{background-color:#0D1117!important}
+.stTabs [data-baseweb="tab-list"]{background:#161B22!important;border-radius:12px!important;padding:4px!important;gap:2px!important}
+.stTabs [data-baseweb="tab"]{color:#8B949E!important;font-weight:600!important;border-radius:8px!important}
+.stTabs [aria-selected="true"]{background:#21262D!important;color:#F0F6FC!important}
+[data-testid="stMetricValue"]{color:#E6EDF3!important}
+[data-testid="stMetricLabel"]{color:#8B949E!important}
+[data-testid="stMetricDelta"]{font-size:0.8rem!important}
+.stDataFrame,[data-testid="stDataFrame"]{background:#161B22!important}
+.stSelectbox [data-baseweb="select"]{background:#161B22!important;border-color:#30363D!important}
+[data-testid="stChatMessage"]{background:#161B22!important;border-radius:12px!important}
+[data-testid="stChatMessageContent"] p{color:#E6EDF3!important}
+[data-testid="stFileUploaderDropzone"]{background:#161B22!important;border-color:#30363D!important}
+.stMarkdown p,.stMarkdown span{color:#C9D1D9!important}
+.stMarkdown strong,.stMarkdown b{color:#F0F6FC!important}
+.stSelectbox label,.stTextInput label,.stTextArea label{color:#8B949E!important;font-weight:500!important}
+[data-testid="stAlert"] p,[data-testid="stAlert"] div{color:#C9D1D9!important}
+[data-testid="stAlert"]{background:#1a2332!important;border-color:#30363D!important}
+/* Charts */
+[data-testid="stVegaLiteChart"] canvas,[data-testid="stArrowVegaLiteChart"]{background:#161B22!important}
+</style>""", unsafe_allow_html=True)
     if role == "socio_multi":
         lineas_activas = st.session_state.get("linea_filtro", get_lineas_usuario(uid))
         sel_nombre     = st.session_state.get("linea_sel", "Todas")
@@ -1182,7 +1204,7 @@ elif menu == "📈 Mi Panel":
         (_sk5, f"{_margen_avg:.1f}%",  "📊 Margen Prom.",    "promedio de tu catálogo",   _mg_color),
     ]:
         with _sc:
-            st.markdown(f"<div style='background:white;border-radius:14px;padding:18px 14px;border:1px solid #E5E7EB;border-top:3px solid {_scolor};text-align:center;margin-bottom:8px;box-shadow:0 2px 8px rgba(0,0,0,0.05);'><div style='font-size:1.5rem;font-weight:800;color:{_scolor};line-height:1;'>{_sv}</div><div style='font-size:0.72rem;font-weight:600;color:#374151;margin-top:8px;'>{_sl}</div><div style='font-size:0.62rem;color:#9CA3AF;margin-top:3px;'>{_ss}</div></div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='background:#161B22;border-radius:14px;padding:18px 14px;border:1px solid #21262D;border-top:3px solid {_scolor};text-align:center;margin-bottom:8px;'><div style='font-size:1.5rem;font-weight:800;color:{_scolor};line-height:1;'>{_sv}</div><div style='font-size:0.72rem;font-weight:600;color:#C9D1D9;margin-top:8px;'>{_sl}</div><div style='font-size:0.62rem;color:#8B949E;margin-top:3px;'>{_ss}</div></div>", unsafe_allow_html=True)
 
     # ── Tabs ──────────────────────────────────────────────────
     _t_res, _t_stats, _t_prod, _t_ped, _t_mike = st.tabs([
@@ -1193,32 +1215,31 @@ elif menu == "📈 Mi Panel":
     with _t_res:
         _ra, _rb = st.columns([1.4, 1])
         with _ra:
-            st.markdown("<div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#6B7280;margin-bottom:10px;'>PEDIDOS ACTIVOS</div>", unsafe_allow_html=True)
+            st.markdown("<div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#58A6FF;margin-bottom:10px;'>PEDIDOS ACTIVOS</div>", unsafe_allow_html=True)
             _pact = _pedidos_s[_pedidos_s["status"].isin(["Pendiente","En Proceso"])] if not _pedidos_s.empty else pd.DataFrame()
             if _pact.empty:
-                st.markdown("<div style='background:#F0FDF4;border-radius:12px;padding:16px 20px;border:1px solid #BBF7D0;border-left:4px solid #10B981;'><span style='color:#10B981;font-weight:700;'>✅ Sin pedidos en curso</span><br><span style='color:#6B7280;font-size:0.8rem;'>Podés cargar un nuevo pedido desde el menú 🛒</span></div>", unsafe_allow_html=True)
+                st.markdown("<div style='background:#0D2818;border-radius:12px;padding:16px 20px;border:1px solid #238636;border-left:4px solid #3FB950;'><span style='color:#3FB950;font-weight:700;'>✅ Sin pedidos en curso</span><br><span style='color:#8B949E;font-size:0.8rem;'>Podés cargar un nuevo pedido desde el menú 🛒</span></div>", unsafe_allow_html=True)
             else:
                 for _, _pr in _pact.iterrows():
                     _sc2 = _SC.get(_pr["status"],"#9CA3AF")
-                    _lid2 = LINEAS.get(_pr["client_id"],{}).get("nombre","")
                     _fecha2 = str(_pr["date"])[:10] if _pr["date"] else "—"
                     _entrega2 = str(_pr.get("fecha_entrega_est","—") or "—")
-                    st.markdown(f"<div style='background:white;border-radius:12px;padding:14px 18px;margin-bottom:8px;border-left:4px solid {_sc2};box-shadow:0 2px 8px rgba(0,0,0,0.06);'><div style='font-weight:700;font-size:0.95rem;color:#111827;'>Pedido #{int(_pr['id'])} <span style='background:{_sc2}22;color:{_sc2};border:1px solid {_sc2}44;border-radius:99px;padding:2px 10px;font-size:0.7rem;font-weight:600;margin-left:6px;'>{_pr['status']}</span></div><div style='font-size:0.75rem;color:#6B7280;margin-top:4px;'>Cargado: {_fecha2} · Entrega: {_entrega2}</div><div style='font-size:0.88rem;font-weight:700;color:{_sc2};margin-top:6px;'>${float(_pr['total']):,.0f}</div></div>", unsafe_allow_html=True)
+                    st.markdown(f"<div style='background:#161B22;border-radius:12px;padding:14px 18px;margin-bottom:8px;border-left:4px solid {_sc2};border:1px solid #21262D;'><div style='font-weight:700;font-size:0.95rem;color:#E6EDF3;'>Pedido #{int(_pr['id'])} <span style='background:{_sc2}22;color:{_sc2};border:1px solid {_sc2}44;border-radius:99px;padding:2px 10px;font-size:0.7rem;font-weight:600;margin-left:6px;'>{_pr['status']}</span></div><div style='font-size:0.75rem;color:#8B949E;margin-top:4px;'>Cargado: {_fecha2} · Entrega: {_entrega2}</div><div style='font-size:0.88rem;font-weight:700;color:{_sc2};margin-top:6px;'>${float(_pr['total']):,.0f}</div></div>", unsafe_allow_html=True)
 
         with _rb:
-            st.markdown("<div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#6B7280;margin-bottom:10px;'>ESTADO DE TU CATÁLOGO</div>", unsafe_allow_html=True)
+            st.markdown("<div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#58A6FF;margin-bottom:10px;'>ESTADO DE TU CATÁLOGO</div>", unsafe_allow_html=True)
             if not prod.empty:
                 _top3 = prod.sort_values("margen_pct", ascending=False).head(3)
                 for _, _p3 in _top3.iterrows():
                     _mc3 = "#10B981" if _p3["margen_pct"]>=50 else ("#F59E0B" if _p3["margen_pct"]>=25 else "#EF4444")
-                    st.markdown(f"<div style='background:white;border-radius:10px;padding:10px 14px;margin-bottom:6px;border:1px solid #F3F4F6;'><div style='font-size:0.8rem;font-weight:600;color:#111827;'>{_p3['name']}</div><div style='background:#F3F4F6;border-radius:3px;height:5px;margin:5px 0;'><div style='background:{_mc3};height:5px;border-radius:3px;width:{min(100,_p3['margen_pct']):.0f}%;'></div></div><div style='font-size:0.72rem;color:{_mc3};font-weight:700;'>{_p3['margen_pct']:.1f}% margen · ${_p3['price']:,.0f}</div></div>", unsafe_allow_html=True)
+                    st.markdown(f"<div style='background:#161B22;border-radius:10px;padding:10px 14px;margin-bottom:6px;border:1px solid #21262D;'><div style='font-size:0.8rem;font-weight:600;color:#E6EDF3;'>{_p3['name']}</div><div style='background:#21262D;border-radius:3px;height:5px;margin:5px 0;'><div style='background:{_mc3};height:5px;border-radius:3px;width:{min(100,_p3['margen_pct']):.0f}%;'></div></div><div style='font-size:0.72rem;color:{_mc3};font-weight:700;'>{_p3['margen_pct']:.1f}% margen · ${_p3['price']:,.0f}</div></div>", unsafe_allow_html=True)
                 _stock_bajo = prod[prod["stock"] <= 2] if "stock" in prod.columns else pd.DataFrame()
                 if not _stock_bajo.empty:
-                    st.markdown(f"<div style='background:#FFF7ED;border-radius:10px;padding:10px 14px;border-left:3px solid #F59E0B;margin-top:6px;'><span style='color:#F59E0B;font-weight:700;font-size:0.8rem;'>⚠️ Stock bajo: {', '.join(_stock_bajo['name'].tolist()[:3])}</span></div>", unsafe_allow_html=True)
+                    st.markdown(f"<div style='background:#2D2007;border-radius:10px;padding:10px 14px;border-left:3px solid #F59E0B;margin-top:6px;border:1px solid #3D2B0A;'><span style='color:#F59E0B;font-weight:700;font-size:0.8rem;'>⚠️ Stock bajo: {', '.join(_stock_bajo['name'].tolist()[:3])}</span></div>", unsafe_allow_html=True)
 
         # Últimas fabricaciones
         if not _fab_socio.empty:
-            st.markdown("<div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#6B7280;margin-top:20px;margin-bottom:10px;'>ÚLTIMAS FABRICACIONES</div>", unsafe_allow_html=True)
+            st.markdown("<div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#58A6FF;margin-top:20px;margin-bottom:10px;'>ÚLTIMAS FABRICACIONES</div>", unsafe_allow_html=True)
             _fab_show = _fab_socio.head(5).copy()
             _fab_show["resultado"] = _fab_show["resultado"].fillna("ok")
             _fab_show["fecha_fin"] = _fab_show["fecha_fin"].astype(str).str[:10]
@@ -1233,7 +1254,7 @@ elif menu == "📈 Mi Panel":
     with _t_stats:
         _sa, _sb = st.columns(2)
         with _sa:
-            st.markdown("<div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#6B7280;margin-bottom:8px;'>FACTURACIÓN MENSUAL (pedidos listos)</div>", unsafe_allow_html=True)
+            st.markdown("<div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#58A6FF;margin-bottom:8px;'>FACTURACIÓN MENSUAL (pedidos listos)</div>", unsafe_allow_html=True)
             if not _hist_mes.empty and len(_hist_mes) > 0:
                 _chart_df = _hist_mes.set_index("mes")[["facturado"]].rename(columns={"facturado":"Facturado $"})
                 st.bar_chart(_chart_df, color=hdr_color, height=220)
@@ -1249,23 +1270,23 @@ elif menu == "📈 Mi Panel":
                 st.info("Aún no hay pedidos completados para graficar.")
 
         with _sb:
-            st.markdown("<div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#6B7280;margin-bottom:8px;'>MARGEN POR PRODUCTO</div>", unsafe_allow_html=True)
+            st.markdown("<div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#58A6FF;margin-bottom:8px;'>MARGEN POR PRODUCTO</div>", unsafe_allow_html=True)
             if not prod.empty:
                 _mg_chart = prod.sort_values("margen_pct",ascending=False)[["name","margen_pct"]].head(12).copy()
                 _mg_chart["name"] = _mg_chart["name"].str[:22]
-                st.bar_chart(_mg_chart.set_index("name")[["margen_pct"]].rename(columns={"margen_pct":"Margen %"}), height=220)
+                st.bar_chart(_mg_chart.set_index("name")[["margen_pct"]].rename(columns={"margen_pct":"Margen %"}), color="#3FB950", height=220)
             else:
                 st.info("Sin productos para analizar.")
 
         # Estado de pedidos (distribución)
-        st.markdown("<div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#6B7280;margin-top:20px;margin-bottom:10px;'>DISTRIBUCIÓN DE PEDIDOS</div>", unsafe_allow_html=True)
+        st.markdown("<div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#58A6FF;margin-top:20px;margin-bottom:10px;'>DISTRIBUCIÓN DE PEDIDOS</div>", unsafe_allow_html=True)
         if not _pedidos_s.empty:
             _dist_cols = st.columns(4)
             for _dci, _dst in enumerate(["Pendiente","En Proceso","Listo","Cancelado"]):
                 _dn = len(_pedidos_s[_pedidos_s["status"]==_dst])
                 _dc = _SC[_dst]
                 with _dist_cols[_dci]:
-                    st.markdown(f"<div style='background:white;border-radius:12px;padding:16px;border:1px solid #E5E7EB;border-top:3px solid {_dc};text-align:center;'><div style='font-size:1.8rem;font-weight:800;color:{_dc};'>{_dn}</div><div style='font-size:0.7rem;color:#6B7280;margin-top:4px;'>{_dst}</div></div>", unsafe_allow_html=True)
+                    st.markdown(f"<div style='background:#161B22;border-radius:12px;padding:16px;border:1px solid #21262D;border-top:3px solid {_dc};text-align:center;'><div style='font-size:1.8rem;font-weight:800;color:{_dc};'>{_dn}</div><div style='font-size:0.7rem;color:#8B949E;margin-top:4px;'>{_dst}</div></div>", unsafe_allow_html=True)
 
         # Historial de precios
         if not _prec_hist.empty:
@@ -1283,7 +1304,7 @@ elif menu == "📈 Mi Panel":
 
         # Top productos por volumen de fabricación
         if not _fab_socio.empty:
-            st.markdown("<div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#6B7280;margin-top:20px;margin-bottom:8px;'>PRODUCTOS MÁS FABRICADOS</div>", unsafe_allow_html=True)
+            st.markdown("<div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#58A6FF;margin-top:20px;margin-bottom:8px;'>PRODUCTOS MÁS FABRICADOS</div>", unsafe_allow_html=True)
             _vol_prod = _fab_socio.groupby("producto").agg(
                 fabricaciones=("resultado","count"),
                 gramos_total=("gramos_usados","sum")
@@ -1302,7 +1323,7 @@ elif menu == "📈 Mi Panel":
                 _lp3 = prod[prod["client_id"]==_lid3]
                 _lc3 = LINEAS.get(_lid3, {"nombre":_lid3,"emoji":"●","color":"#6366F1"})
                 with _lc_cols[_li]:
-                    st.markdown(f"<div style='background:{_lc3['color']}11;border-radius:10px;padding:12px 16px;border:1px solid {_lc3['color']}33;text-align:center;'><div style='font-size:1.5rem;'>{_lc3['emoji']}</div><div style='font-weight:700;color:#111827;font-size:0.82rem;'>{_lc3['nombre']}</div><div style='color:{_lc3['color']};font-weight:700;font-size:0.9rem;'>${_lp3['valor_stock'].sum():,.0f}</div><div style='color:#9CA3AF;font-size:0.68rem;'>{len(_lp3)} productos</div></div>", unsafe_allow_html=True)
+                    st.markdown(f"<div style='background:#161B22;border-radius:10px;padding:12px 16px;border:1px solid {_lc3['color']}44;text-align:center;'><div style='font-size:1.5rem;'>{_lc3['emoji']}</div><div style='font-weight:700;color:#E6EDF3;font-size:0.82rem;'>{_lc3['nombre']}</div><div style='color:{_lc3['color']};font-weight:700;font-size:0.9rem;'>${_lp3['valor_stock'].sum():,.0f}</div><div style='color:#8B949E;font-size:0.68rem;'>{len(_lp3)} productos</div></div>", unsafe_allow_html=True)
             st.markdown("---")
 
         if prod.empty:
@@ -1315,15 +1336,15 @@ elif menu == "📈 Mi Panel":
                 _plincolor = _plin.get("color","#6B7280")
                 _pstock_color = "#10B981" if (_prow.get("stock",0) or 0) > 5 else ("#F59E0B" if (_prow.get("stock",0) or 0) > 0 else "#EF4444")
                 with _pcols2[_pii % 3]:
-                    st.markdown(f"""<div style='background:white;border-radius:14px;padding:16px;border:1px solid #E5E7EB;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,0.04);border-top:3px solid {_plincolor};'>
+                    st.markdown(f"""<div style='background:#161B22;border-radius:14px;padding:16px;border:1px solid #21262D;margin-bottom:10px;border-top:3px solid {_plincolor};'>
 <div style='font-size:0.62rem;color:{_plincolor};font-weight:700;letter-spacing:1px;text-transform:uppercase;'>{_prow.get('sku','')}</div>
-<div style='font-size:0.9rem;font-weight:700;color:#111827;margin-top:4px;line-height:1.2;'>{_prow['name']}</div>
-<div style='font-size:0.68rem;color:#9CA3AF;margin-top:2px;'>{_prow.get('categoria','') or ''}</div>
-<div style='margin-top:10px;background:#F3F4F6;border-radius:3px;height:5px;'><div style='background:{_pmc};height:5px;border-radius:3px;width:{min(100,max(0,_prow['margen_pct'])):.0f}%;'></div></div>
+<div style='font-size:0.9rem;font-weight:700;color:#E6EDF3;margin-top:4px;line-height:1.2;'>{_prow['name']}</div>
+<div style='font-size:0.68rem;color:#8B949E;margin-top:2px;'>{_prow.get('categoria','') or ''}</div>
+<div style='margin-top:10px;background:#21262D;border-radius:3px;height:5px;'><div style='background:{_pmc};height:5px;border-radius:3px;width:{min(100,max(0,_prow['margen_pct'])):.0f}%;'></div></div>
 <div style='margin-top:8px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;'>
-  <div><div style='font-size:0.6rem;color:#9CA3AF;'>PVP</div><div style='font-size:0.82rem;font-weight:700;color:#111827;'>${_prow['price']:,.0f}</div></div>
-  <div><div style='font-size:0.6rem;color:#9CA3AF;'>Margen</div><div style='font-size:0.82rem;font-weight:700;color:{_pmc};'>{_prow['margen_pct']:.1f}%</div></div>
-  <div><div style='font-size:0.6rem;color:#9CA3AF;'>Stock</div><div style='font-size:0.82rem;font-weight:700;color:{_pstock_color};'>{int(_prow.get("stock",0) or 0)} u</div></div>
+  <div><div style='font-size:0.6rem;color:#8B949E;'>PVP</div><div style='font-size:0.82rem;font-weight:700;color:#E6EDF3;'>${_prow['price']:,.0f}</div></div>
+  <div><div style='font-size:0.6rem;color:#8B949E;'>Margen</div><div style='font-size:0.82rem;font-weight:700;color:{_pmc};'>{_prow['margen_pct']:.1f}%</div></div>
+  <div><div style='font-size:0.6rem;color:#8B949E;'>Stock</div><div style='font-size:0.82rem;font-weight:700;color:{_pstock_color};'>{int(_prow.get("stock",0) or 0)} u</div></div>
 </div>
 </div>""", unsafe_allow_html=True)
 
@@ -1344,25 +1365,25 @@ elif menu == "📈 Mi Panel":
                 _lcol2  = LINEAS.get(_pr2["client_id"],{}).get("color",hdr_color)
                 _fec2   = str(_pr2["date"])[:10] if _pr2["date"] else "—"
                 _ent2   = str(_pr2.get("fecha_entrega_est","—") or "—")
-                _not2   = f"<div style='font-size:0.75rem;color:#6B7280;margin-top:4px;'><em>{_pr2['notas']}</em></div>" if _pr2.get("notas") else ""
+                _not2   = f"<div style='font-size:0.75rem;color:#8B949E;margin-top:4px;'><em>{_pr2['notas']}</em></div>" if _pr2.get("notas") else ""
                 _badge2 = f"<span style='background:{_lcol2}22;color:{_lcol2};border:1px solid {_lcol2}44;border-radius:99px;padding:2px 9px;font-size:0.68rem;font-weight:600;margin-left:8px;'>{_lnom2}</span>" if _show_badge else ""
                 st.markdown(
-                    f"<div style='background:white;border-radius:14px;padding:16px 20px;margin-bottom:10px;"
-                    f"border-left:4px solid {_sc3};box-shadow:0 2px 8px rgba(0,0,0,0.05);'>"
+                    f"<div style='background:#161B22;border-radius:14px;padding:16px 20px;margin-bottom:10px;"
+                    f"border-left:4px solid {_sc3};border:1px solid #21262D;'>"
                     f"<div style='display:flex;justify-content:space-between;align-items:center;'>"
-                    f"<div><span style='font-weight:800;font-size:1rem;color:#111827;'>#{int(_pr2['id'])}</span>"
+                    f"<div><span style='font-weight:800;font-size:1rem;color:#E6EDF3;'>#{int(_pr2['id'])}</span>"
                     f"<span style='background:{_sc3}22;color:{_sc3};border:1px solid {_sc3}44;"
                     f"border-radius:99px;padding:2px 10px;font-size:0.7rem;font-weight:700;margin-left:8px;'>{_pr2['status']}</span>"
                     f"{_badge2}"
-                    f"<div style='font-size:0.72rem;color:#9CA3AF;margin-top:5px;'>📅 {_fec2} → entrega {_ent2}</div>"
+                    f"<div style='font-size:0.72rem;color:#8B949E;margin-top:5px;'>📅 {_fec2} → entrega {_ent2}</div>"
                     f"{_not2}</div>"
-                    f"<div style='font-family:Cormorant Garamond,serif;font-size:1.5rem;font-weight:700;color:#111827;'>${float(_pr2['total']):,.0f}</div>"
+                    f"<div style='font-family:Cormorant Garamond,serif;font-size:1.5rem;font-weight:700;color:#E6EDF3;'>${float(_pr2['total']):,.0f}</div>"
                     f"</div></div>",
                     unsafe_allow_html=True
                 )
             # Resumen total
             _tot_fac = float(_pedidos_s[_pedidos_s["status"]=="Listo"]["total"].sum())
-            st.markdown(f"<div style='background:#F0F9FF;border-radius:10px;padding:12px 18px;margin-top:6px;border:1px solid #BAE6FD;text-align:right;'><span style='color:#0369A1;font-weight:700;'>Total facturado (pedidos Listo): ${_tot_fac:,.0f}</span></div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='background:#0D1B2E;border-radius:10px;padding:12px 18px;margin-top:6px;border:1px solid #1B2D4A;text-align:right;'><span style='color:#58A6FF;font-weight:700;'>Total facturado (pedidos Listo): ${_tot_fac:,.0f}</span></div>", unsafe_allow_html=True)
 
     # ══ TAB MIKE ════════════════════════════════════════════
     with _t_mike:
