@@ -301,8 +301,18 @@ PRODUCTS_SOCIOS = [
     ("OE-REG-001", "oasis_del_estero","pla_blanco","Regadera Decorativa Mini", "Regadera impresa 3D ornamental",                           "jardin",    "#34D399",800,  35,  50, 8),
     ("OE-SOP-001", "oasis_del_estero","pla_blanco","Soporte Macetas Pared",    "Rack impreso 3 macetas en linea para pared",                "hogar",     "#34D399",2200, 90,  125,3),
     ("OE-FAU-001", "oasis_del_estero","pla_blanco","Figura Fauna Local",       "Animal chaquenio impreso decorativo coleccionable",         "arte",      "#34D399",2800, 80,  115,4),
-    # ── OASIS ANIMAL (oasis_animal) — ya existe, OR IGNORE protege
-    ("OAS-COM-001","oasis_animal",   "pla_blanco", "Soporte Comedero con Cuenco","Soporte impreso patita para comedero",                   "mascotas",  "#F472B6",4500, 95,  60, 5),
+    # ── OASIS ANIMAL (oasis_animal) ─────────────────────────
+    ("OAS-LLA-001","oasis_animal",   "pla_negro",  "Llavero Perrito Globo",     "Llavero 3D perro globo detalle fino acabado mate",          "accesorios","#F472B6",1000, 18,  25, 30),
+    ("OAS-TAG-001","oasis_animal",   "pla_negro",  "Guardian Tag",              "Identificador mascota resistente agua personalizable",      "identificacion","#F472B6",800, 15, 20, 20),
+    ("OAS-COM-001","oasis_animal",   "pla_negro",  "Comedero Diseno Patita",    "Soporte comedero cuenco forma patita — talla S/M",          "mascotas",  "#F472B6",9000, 320, 180,5),
+    ("OAS-COM-002","oasis_animal",   "pla_negro",  "Comedero Diseno Huesito",   "Soporte comedero cuenco forma huesito — talla S/M",         "mascotas",  "#F472B6",9000, 320, 180,5),
+    ("OAS-EST-001","oasis_animal",   "pla_negro",  "Estacion Evolutiva Base",   "Modulo inicial comedero/juguete expandible por niveles",    "mascotas",  "#F472B6",8000, 180, 240,4),
+    ("OAS-EST-002","oasis_animal",   "pla_negro",  "Estacion Evolutiva Alto",   "Modulo alto expansion estacion evolutiva — nivel 2",        "mascotas",  "#F472B6",10000,280, 360,3),
+    ("OAS-JOY-001","oasis_animal",   "pla_rosa",   "Pet Jewelry Coquette",      "Joyeria 3D para mascotas linea colaboracion Coquette",      "joyeria",   "#F472B6",4500,  8,  45, 10),
+    ("OAS-LIT-001","oasis_animal",   "pla_blanco", "Memory Litophany",          "Litofania personalizada foto de tu mascota luz trasera",    "memoria",   "#F472B6",35000,120, 960,2),
+    ("OAS-TRV-001","oasis_animal",   "pla_negro",  "Travel Kit Ergonomico",     "Kit viaje mascota: bowl plegable + clip + tag todo en uno", "viaje",     "#F472B6",12000,200, 280,3),
+    ("OAS-B2B-VKH-001","oasis_animal","pla_negro", "Bandeja Decorativa Organica","Bandeja organica 3D decoracion B2B VK-Home",               "b2b",       "#F472B6",15000,350, 300,3),
+    ("OAS-B2B-VKH-002","oasis_animal","pla_negro", "Soporte Aromatico",         "Soporte aromatico difusor 3D B2B VK-Home",                 "b2b",       "#F472B6",12000,280, 240,3),
     # ── VKHOME (vkhome_cliente) ──────────────────────────────
     ("VKH-ORG-001","vkhome_cliente", "pla_blanco", "Organizador Escritorio VK","Set modular escritorio hogar-oficina 3 piezas",             "hogar",     "#A78BFA",3500, 95,  135,3),
     ("VKH-POT-001","vkhome_cliente", "pla_blanco", "Porta-Cables VK",          "Organizador cables escritorio adhesivo",                    "hogar",     "#A78BFA",1200, 30,  45, 8),
@@ -386,6 +396,15 @@ def init_schema():
                 conn.execute(text(_m))
             except Exception:
                 pass  # columna ya existe
+
+        # ── Corrección de productos Oasis Animal ya seeded con datos incorrectos ──
+        conn.execute(text("""
+            UPDATE products SET
+                material_id='pla_negro', name='Comedero Diseno Patita',
+                description='Soporte comedero cuenco forma patita — talla S/M',
+                price=9000, weight_gr=320, tiempo_impresion_min=180
+            WHERE sku='OAS-COM-001'
+        """))
 
         # ── Actualizar password de vkhome si tiene valor legacy ──
         conn.execute(text(
