@@ -1535,7 +1535,7 @@ details{{background:#161B22!important;border:1px solid #21262D!important;border-
     with engine.connect() as _conn:
         _frames = [
             pd.read_sql(
-                text("SELECT name, sku, price, weight_gr, descripcion, categoria, color, client_id FROM products WHERE client_id=:uid AND activo=1 ORDER BY name"),
+                text("SELECT name, sku, price, weight_gr, description, categoria, color, client_id FROM products WHERE client_id=:uid AND activo=1 ORDER BY name"),
                 _conn, params={"uid": lid}
             ) for lid in lineas_activas
         ]
@@ -1564,7 +1564,7 @@ details{{background:#161B22!important;border:1px solid #21262D!important;border-
 <div style='font-size:0.88rem;font-weight:700;color:#E6EDF3;margin-top:3px;'>{_cpr['name']}</div>
 <div style='font-size:0.68rem;color:#8B949E;margin-top:2px;'>{_cpr.get('categoria','') or ''}</div>
 <div style='margin-top:8px;font-size:1rem;font-weight:800;color:{_cpc};'>${float(_cpr['price']):,.0f}</div>
-<div style='font-size:0.65rem;color:#6B7280;'>{float(_cpr.get('weight_gr',0) or 0):.0f} g · {_cpr.get('descripcion','')[:50] if _cpr.get('descripcion') else ''}</div>
+<div style='font-size:0.65rem;color:#6B7280;'>{float(_cpr.get('weight_gr',0) or 0):.0f} g · {str(_cpr.get('description','') or '')[:50]}</div>
 </div>""", unsafe_allow_html=True)
             if st.button("Seleccionar", key=f"cpbtn_{_cpr['sku']}", use_container_width=True,
                          type="primary" if _is_sel else "secondary"):
