@@ -82,6 +82,9 @@ import os as _os
 DB_PATH = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "elpasaje_v2.db")
 engine = create_engine(f"sqlite:///{DB_PATH}")
 
+from crear_schema_v3 import init_schema as _init_schema
+_init_schema()
+
 LINEAS = {
     "admin":            {"nombre": "Administracion",     "color": "#1E3A8A", "emoji": "🏛️"},
     "oasis_animal":     {"nombre": "Oasis Animal",       "color": "#F472B6", "emoji": "🐾"},
