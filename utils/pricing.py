@@ -28,10 +28,12 @@ def cargar_productos() -> pd.DataFrame:
 
     df["costo_unit"]     = df.apply(
         lambda r: calcular_costo_pieza(r["weight_gr"], tipo_producto=r["tipo_producto"]), axis=1
-    )
+    ).astype(float)
     df["ganancia_unit"]  = df["price"] - df["costo_unit"]
-    df["margen_pct"]     = df.apply(
-        lambda r: (r["ganancia_unit"] / r["price"] * 100).round(1) if r["price"] else 0.0, axis=1
+    df["margen_pct"]     = (
+        (df["ganancia_unit"] / df["price"].replace(0, float("nan")) * 100)
+        .round(1)
+        .fillna(0.0)
     )
     df["valor_stock"]    = df["price"] * df["stock"]
     df["costo_stock"]    = df["costo_unit"] * df["stock"]
