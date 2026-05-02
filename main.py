@@ -5,6 +5,7 @@ import plotly.graph_objects as go
 from sqlalchemy import create_engine, text
 from datetime import datetime
 import hashlib
+from slicer_parser import parsear_archivo_slicer, match_material_idx
 
 st.set_page_config(
     page_title="El Pasaje - Sistema Integral",
@@ -405,6 +406,33 @@ elif menu == "🛠️ Produccion (Fer)":
     # ══════════════════════════════════════════════════════
     with tab_fab:
         st.markdown("<div class='section-title'>Registrar produccion de una pieza</div>", unsafe_allow_html=True)
+        # ── Importar desde slicer ──────────────────────────────
+        _slicer_up = st.file_uploader(
+            "📎 Importar desde slicer (.gcode / .3mf)",
+            type=["gcode", "3mf"],
+            help="Bambu Studio, PrusaSlicer o Cura — pre-llena gramos, tiempo y material automáticamente",
+            key="slicer_upload"
+        )
+        if _slicer_up is not None:
+            _sp = parsear_archivo_slicer(_slicer_up)
+            if _sp:
+                _mat_nombres_all = mats["name"].tolist() if not mats.empty else []
+                if _sp.get("gramos"):
+                    st.session_state["fab_grams"] = float(_sp["gramos"])
+                if _sp.get("tiempo_min"):
+                    st.session_state["fab_tiempo"] = int(_sp["tiempo_min"])
+                if _sp.get("material_tipo") and _mat_nombres_all:
+                    _mi = match_material_idx(_sp["material_tipo"], _mat_nombres_all)
+                    st.session_state["fab_mat"] = _mat_nombres_all[_mi]
+                _info_parts = []
+                if _sp.get("gramos"):     _info_parts.append(f"**{_sp['gramos']} g**")
+                if _sp.get("tiempo_min"): _info_parts.append(f"**{_sp['tiempo_min']} min**")
+                if _sp.get("material_tipo"): _info_parts.append(f"**{_sp['material_tipo']}**")
+                if _sp.get("color"):      _info_parts.append(f"color {_sp['color']}")
+                st.success(f"✅ Slicer cargado — {' · '.join(_info_parts)}")
+            else:
+                st.warning("No se pudieron leer los datos del archivo. Completá el formulario manualmente.")
+        st.markdown("---")
         _ops_pedido = {"Sin pedido": None}
         if not _pedidos_activos.empty:
             for _, _r in _pedidos_activos.drop_duplicates("id").iterrows():
