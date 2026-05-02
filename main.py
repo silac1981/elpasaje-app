@@ -344,6 +344,152 @@ if menu == "📊 Dashboard Alejandra":
             lvl = get_linea(row["client_id"])
             st.markdown(f"<div class='stock-critico'><b>{lvl['emoji']} {row['name']}</b> · SKU: {row['sku']} &nbsp;|&nbsp; Stock: <b style='color:#EF4444'>{int(row['stock'])} uds</b> &nbsp;|&nbsp; Pedido sugerido: 20 uds → ${row['price']*20:,.0f} potencial</div>", unsafe_allow_html=True)
 
+    # ── Facturación real desde órdenes ─────────────────────────
+    st.markdown("<div style='height:28px'></div>", unsafe_allow_html=True)
+    st.markdown("<div class='section-title'>📅 Facturación Real — Órdenes Completadas</div>", unsafe_allow_html=True)
+    try:
+        _df_fac = pd.read_sql("""
+            SELECT strftime('%Y-%m', o.date) AS mes,
+                   o.client_id,
+                   COUNT(DISTINCT o.id) AS pedidos,
+                   SUM(oi.cantidad * oi.precio_unitario) AS facturado,
+                   SUM(oi.cantidad * oi.precio_unitario * 0.25) AS costo_aprox
+            FROM orders o
+            JOIN order_items oi ON oi.order_id = o.id
+            WHERE o.status = 'Listo'
+            GROUP BY mes, o.client_id
+            ORDER BY mes
+        """, engine)
+        _df_fac_mes = pd.read_sql("""
+            SELECT strftime('%Y-%m', o.date) AS mes,
+                   SUM(oi.cantidad * oi.precio_unitario) AS facturado
+            FROM orders o
+            JOIN order_items oi ON oi.order_id = o.id
+            WHERE o.status = 'Listo'
+            GROUP BY mes ORDER BY mes
+        """, engine)
+    except Exception:
+        _df_fac = pd.DataFrame()
+        _df_fac_mes = pd.DataFrame()
+
+    _fa, _fb = st.columns([1.6, 1])
+    with _fa:
+        if not _df_fac_mes.empty:
+            _fig_fac = go.Figure()
+            _fig_fac.add_trace(go.Bar(x=_df_fac_mes["mes"], y=_df_fac_mes["facturado"],
+                marker_color="#3B82F6", name="Facturado"))
+            _fig_fac.update_layout(plot_bgcolor="white", paper_bgcolor="white", height=280,
+                margin=dict(l=10,r=10,t=10,b=40), yaxis=dict(tickprefix="$",tickformat=",.0f"))
+            st.plotly_chart(_fig_fac, use_container_width=True)
+        else:
+            st.info("Sin pedidos completados aún.")
+    with _fb:
+        if not _df_fac.empty:
+            _fac_por_linea = _df_fac.groupby("client_id")["facturado"].sum().reset_index()
+            _fac_por_linea["linea"] = _fac_por_linea["client_id"].apply(
+                lambda c: f"{get_linea(c)['emoji']} {get_linea(c)['nombre']}")
+            _fac_por_linea = _fac_por_linea.sort_values("facturado", ascending=False)
+            for _, _flr in _fac_por_linea.iterrows():
+                _lc = get_linea(_flr["client_id"])
+                st.markdown(f"<div style='background:white;border-radius:8px;padding:10px 14px;margin-bottom:6px;box-shadow:0 1px 4px rgba(0,0,0,0.06);display:flex;justify-content:space-between;align-items:center;'><span style='font-weight:600;color:#1a1a2e;'>{_lc['emoji']} {_lc['nombre']}</span><span style='font-weight:800;color:#1E3A8A;'>${_flr['facturado']:,.0f}</span></div>", unsafe_allow_html=True)
+        else:
+            st.info("Sin datos de facturación por línea.")
+
+    # ── Canales de contacto y adquisición ─────────────────────
+    st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)
+    st.markdown("<div class='section-title'>🌐 Canales de Contacto y Adquisición</div>", unsafe_allow_html=True)
+    try:
+        _df_senales = pd.read_sql("""
+            SELECT canal, reaccion, linea, COUNT(*) AS total
+            FROM senales_mercado
+            WHERE canal IS NOT NULL AND canal != ''
+            GROUP BY canal, reaccion, linea
+            ORDER BY total DESC
+        """, engine)
+        _df_canal_tot = pd.read_sql("""
+            SELECT canal, COUNT(*) AS contactos,
+                   SUM(CASE WHEN reaccion IN ('Le encantó','Pidió muestra','Quiere hablar con alguien') THEN 1 ELSE 0 END) AS calientes
+            FROM senales_mercado WHERE canal IS NOT NULL AND canal != ''
+            GROUP BY canal ORDER BY contactos DESC
+        """, engine)
+        _df_lead = pd.read_sql("""
+            SELECT lead_source AS canal, COUNT(*) AS clientes
+            FROM tenants WHERE lead_source IS NOT NULL AND lead_source != '' AND es_cliente_real = 1
+            GROUP BY lead_source ORDER BY clientes DESC
+        """, engine)
+    except Exception:
+        _df_senales = pd.DataFrame()
+        _df_canal_tot = pd.DataFrame()
+        _df_lead = pd.DataFrame()
+
+    _ca, _cb = st.columns(2)
+    with _ca:
+        st.markdown("<div style='font-size:0.68rem;color:#6B7280;font-weight:700;letter-spacing:1px;margin-bottom:8px;'>SEÑALES DE MERCADO POR CANAL</div>", unsafe_allow_html=True)
+        if not _df_canal_tot.empty:
+            _canal_colors = {"Instagram":"#E1306C","TikTok":"#010101","WhatsApp":"#25D366",
+                             "Presencial":"#1E3A8A","Email":"#3B82F6","Otro":"#9CA3AF"}
+            for _, _cr in _df_canal_tot.iterrows():
+                _cc = _canal_colors.get(_cr["canal"], "#6B7280")
+                _pct_cal = int(_cr["calientes"] / max(_cr["contactos"],1) * 100)
+                st.markdown(
+                    f"<div style='background:white;border-radius:8px;padding:10px 14px;margin-bottom:6px;box-shadow:0 1px 4px rgba(0,0,0,0.06);'>"
+                    f"<div style='display:flex;justify-content:space-between;margin-bottom:4px;'>"
+                    f"<span style='font-weight:700;color:#1a1a2e;'>{_cr['canal']}</span>"
+                    f"<span style='color:{_cc};font-weight:700;'>{int(_cr['contactos'])} contactos</span></div>"
+                    f"<div style='background:#F3F4F6;border-radius:999px;height:6px;overflow:hidden;'>"
+                    f"<div style='width:{_pct_cal}%;background:{_cc};height:100%;border-radius:999px;'></div></div>"
+                    f"<div style='font-size:0.68rem;color:#6B7280;margin-top:3px;'>{int(_cr['calientes'])} señales calientes ({_pct_cal}%)</div>"
+                    f"</div>", unsafe_allow_html=True)
+        else:
+            st.info("Registrá señales de mercado para ver estadísticas de canal.")
+    with _cb:
+        st.markdown("<div style='font-size:0.68rem;color:#6B7280;font-weight:700;letter-spacing:1px;margin-bottom:8px;'>TIPO DE REACCIÓN POR CANAL</div>", unsafe_allow_html=True)
+        if not _df_senales.empty:
+            _fig_react = px.bar(
+                _df_senales.groupby(["canal","reaccion"])["total"].sum().reset_index(),
+                x="canal", y="total", color="reaccion",
+                color_discrete_sequence=px.colors.qualitative.Set2,
+                height=280
+            )
+            _fig_react.update_layout(plot_bgcolor="white", paper_bgcolor="white",
+                margin=dict(l=10,r=10,t=10,b=40),
+                legend=dict(orientation="h", yanchor="bottom", y=1.02, font_size=10),
+                xaxis_title="", yaxis_title="Señales")
+            st.plotly_chart(_fig_react, use_container_width=True)
+        else:
+            st.info("Sin señales registradas aún.")
+
+    # ── Top clientes por facturación ───────────────────────────
+    st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)
+    st.markdown("<div class='section-title'>🏆 Ranking Líneas por Facturación Total</div>", unsafe_allow_html=True)
+    try:
+        _df_rank = pd.read_sql("""
+            SELECT o.client_id,
+                   COUNT(DISTINCT o.id) AS pedidos_completados,
+                   SUM(oi.cantidad * oi.precio_unitario) AS facturado_total,
+                   MAX(o.date) AS ultimo_pedido
+            FROM orders o
+            JOIN order_items oi ON oi.order_id = o.id
+            WHERE o.status = 'Listo'
+            GROUP BY o.client_id ORDER BY facturado_total DESC
+        """, engine)
+    except Exception:
+        _df_rank = pd.DataFrame()
+    if not _df_rank.empty:
+        _rk_cols = st.columns(min(len(_df_rank), 4))
+        for _rki, (_, _rkr) in enumerate(_df_rank.head(4).iterrows()):
+            _rkl = get_linea(_rkr["client_id"])
+            with _rk_cols[_rki]:
+                st.markdown(
+                    f"<div style='background:white;border-radius:14px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.07);text-align:center;border-top:4px solid {_rkl['color']};'>"
+                    f"<div style='font-size:1.6rem;'>{_rkl['emoji']}</div>"
+                    f"<div style='font-weight:700;color:#1a1a2e;font-size:0.82rem;margin-top:4px;'>{_rkl['nombre']}</div>"
+                    f"<div style='font-size:1.3rem;font-weight:800;color:{_rkl['color']};margin-top:6px;'>${_rkr['facturado_total']:,.0f}</div>"
+                    f"<div style='font-size:0.68rem;color:#6B7280;margin-top:2px;'>{int(_rkr['pedidos_completados'])} pedidos · último {str(_rkr['ultimo_pedido'])[:10]}</div>"
+                    f"</div>", unsafe_allow_html=True)
+    else:
+        st.info("Completá pedidos para ver el ranking de facturación.")
+
 elif menu == "📦 Inventario Pro":
     st.markdown("<div class='main-header'><h1>📦 Inventario Unificado</h1><p>Control de stock en tiempo real</p></div>", unsafe_allow_html=True)
     df = cargar_productos()
@@ -1348,36 +1494,58 @@ elif menu == "📈 Mi Panel":
 
     # ══ TAB PRODUCTOS ════════════════════════════════════════
     with _t_prod:
-        if role == "socio_multi" and len(lineas_activas) > 1:
-            _lc_cols = st.columns(len(lineas_activas))
-            for _li, _lid3 in enumerate(lineas_activas):
-                _lp3 = prod[prod["client_id"]==_lid3]
-                _lc3 = LINEAS.get(_lid3, {"nombre":_lid3,"emoji":"●","color":"#6366F1"})
-                with _lc_cols[_li]:
-                    st.markdown(f"<div style='background:#161B22;border-radius:10px;padding:12px 16px;border:1px solid {_lc3['color']}44;text-align:center;'><div style='font-size:1.5rem;'>{_lc3['emoji']}</div><div style='font-weight:700;color:#E6EDF3;font-size:0.82rem;'>{_lc3['nombre']}</div><div style='color:{_lc3['color']};font-weight:700;font-size:0.9rem;'>${_lp3['valor_stock'].sum():,.0f}</div><div style='color:#8B949E;font-size:0.68rem;'>{len(_lp3)} productos</div></div>", unsafe_allow_html=True)
-            st.markdown("---")
-
-        if prod.empty:
-            st.info("Aún no tenés productos cargados en tu línea.")
-        else:
+        def _render_cards_linea(df_p, _col_default):
+            _df_act = df_p[df_p["activo"]==1] if "activo" in df_p.columns else df_p
+            if _df_act.empty:
+                st.info("Sin productos activos en esta línea.")
+                return
             _pcols2 = st.columns(3)
-            for _pii, (_, _prow) in enumerate(prod.sort_values("margen_pct",ascending=False).iterrows()):
+            for _pii, (_, _prow) in enumerate(_df_act.sort_values("margen_pct", ascending=False).iterrows()):
                 _pmc = "#10B981" if _prow["margen_pct"]>=50 else ("#F59E0B" if _prow["margen_pct"]>=25 else "#EF4444")
-                _plin = LINEAS.get(_prow["client_id"],{})
-                _plincolor = _plin.get("color","#6B7280")
-                _pstock_color = "#10B981" if (_prow.get("stock",0) or 0) > 5 else ("#F59E0B" if (_prow.get("stock",0) or 0) > 0 else "#EF4444")
+                _plincolor = LINEAS.get(_prow["client_id"],{}).get("color", _col_default)
+                _pstock_c  = "#10B981" if (_prow.get("stock",0) or 0) > 5 else ("#F59E0B" if (_prow.get("stock",0) or 0) > 0 else "#EF4444")
+                _costo_u   = _prow.get("costo_unit", 0) or 0
+                _peso_g    = int(_prow.get("weight_gr", 0) or 0)
                 with _pcols2[_pii % 3]:
                     st.markdown(f"""<div style='background:#161B22;border-radius:14px;padding:16px;border:1px solid #21262D;margin-bottom:10px;border-top:3px solid {_plincolor};'>
-<div style='font-size:0.62rem;color:{_plincolor};font-weight:700;letter-spacing:1px;text-transform:uppercase;'>{_prow.get('sku','')}</div>
+<div style='font-size:0.62rem;color:{_plincolor};font-weight:700;letter-spacing:1px;text-transform:uppercase;'>{_prow.get('sku','')} · {_peso_g}g</div>
 <div style='font-size:0.9rem;font-weight:700;color:#E6EDF3;margin-top:4px;line-height:1.2;'>{_prow['name']}</div>
 <div style='font-size:0.68rem;color:#8B949E;margin-top:2px;'>{_prow.get('categoria','') or ''}</div>
 <div style='margin-top:10px;background:#21262D;border-radius:3px;height:5px;'><div style='background:{_pmc};height:5px;border-radius:3px;width:{min(100,max(0,_prow['margen_pct'])):.0f}%;'></div></div>
-<div style='margin-top:8px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;'>
-  <div><div style='font-size:0.6rem;color:#8B949E;'>PVP</div><div style='font-size:0.82rem;font-weight:700;color:#E6EDF3;'>${_prow['price']:,.0f}</div></div>
-  <div><div style='font-size:0.6rem;color:#8B949E;'>Margen</div><div style='font-size:0.82rem;font-weight:700;color:{_pmc};'>{_prow['margen_pct']:.1f}%</div></div>
-  <div><div style='font-size:0.6rem;color:#8B949E;'>Stock</div><div style='font-size:0.82rem;font-weight:700;color:{_pstock_color};'>{int(_prow.get("stock",0) or 0)} u</div></div>
+<div style='margin-top:8px;display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:4px;'>
+  <div style='background:#0D1117;border-radius:6px;padding:5px 4px;text-align:center;'><div style='font-size:0.56rem;color:#8B949E;margin-bottom:2px;'>COSTO EP</div><div style='font-size:0.76rem;font-weight:700;color:#F59E0B;'>${_costo_u:,.0f}</div></div>
+  <div style='background:#0D1117;border-radius:6px;padding:5px 4px;text-align:center;'><div style='font-size:0.56rem;color:#8B949E;margin-bottom:2px;'>PRECIO</div><div style='font-size:0.76rem;font-weight:700;color:#E6EDF3;'>${_prow['price']:,.0f}</div></div>
+  <div style='background:#0D1117;border-radius:6px;padding:5px 4px;text-align:center;'><div style='font-size:0.56rem;color:#8B949E;margin-bottom:2px;'>MARGEN</div><div style='font-size:0.76rem;font-weight:700;color:{_pmc};'>{_prow['margen_pct']:.1f}%</div></div>
+  <div style='background:#0D1117;border-radius:6px;padding:5px 4px;text-align:center;'><div style='font-size:0.56rem;color:#8B949E;margin-bottom:2px;'>STOCK</div><div style='font-size:0.76rem;font-weight:700;color:{_pstock_c};'>{int(_prow.get("stock",0) or 0)} u</div></div>
 </div>
 </div>""", unsafe_allow_html=True)
+
+        if role == "socio_multi" and len(lineas_activas) > 1:
+            _ltab_names = [
+                f"{LINEAS.get(l,{}).get('emoji','●')} {LINEAS.get(l,{}).get('nombre',l)}"
+                for l in lineas_activas
+            ]
+            _ltabs = st.tabs(_ltab_names)
+            for _ltab, _lid3 in zip(_ltabs, lineas_activas):
+                _lp3 = prod[prod["client_id"]==_lid3]
+                _lc3 = LINEAS.get(_lid3, {"nombre":_lid3,"emoji":"●","color":"#6366F1"})
+                with _ltab:
+                    _ls1, _ls2, _ls3 = st.columns(3)
+                    _n_act3 = len(_lp3[_lp3["activo"]==1]) if "activo" in _lp3.columns else len(_lp3)
+                    _mg3    = _lp3["margen_pct"].mean() if not _lp3.empty else 0
+                    with _ls1:
+                        st.markdown(f"<div style='background:#161B22;border-radius:10px;padding:10px;border:1px solid {_lc3['color']}33;text-align:center;'><div style='font-size:0.58rem;color:#8B949E;font-weight:600;letter-spacing:1px;'>PRODUCTOS</div><div style='font-size:1.5rem;font-weight:800;color:{_lc3['color']};'>{_n_act3}</div></div>", unsafe_allow_html=True)
+                    with _ls2:
+                        st.markdown(f"<div style='background:#161B22;border-radius:10px;padding:10px;border:1px solid {_lc3['color']}33;text-align:center;'><div style='font-size:0.58rem;color:#8B949E;font-weight:600;letter-spacing:1px;'>VALOR STOCK</div><div style='font-size:1.5rem;font-weight:800;color:{_lc3['color']};'>${_lp3['valor_stock'].sum():,.0f}</div></div>", unsafe_allow_html=True)
+                    with _ls3:
+                        st.markdown(f"<div style='background:#161B22;border-radius:10px;padding:10px;border:1px solid {_lc3['color']}33;text-align:center;'><div style='font-size:0.58rem;color:#8B949E;font-weight:600;letter-spacing:1px;'>MARGEN PROM.</div><div style='font-size:1.5rem;font-weight:800;color:{_lc3['color']};'>{_mg3:.1f}%</div></div>", unsafe_allow_html=True)
+                    st.markdown("<div style='height:12px;'></div>", unsafe_allow_html=True)
+                    _render_cards_linea(_lp3, _lc3["color"])
+        else:
+            if prod.empty:
+                st.info("Aún no tenés productos cargados en tu línea.")
+            else:
+                _render_cards_linea(prod, hdr_color)
 
     # ══ TAB PEDIDOS ══════════════════════════════════════════
     with _t_ped:
