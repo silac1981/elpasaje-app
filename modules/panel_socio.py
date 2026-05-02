@@ -4,7 +4,7 @@ import pandas as pd
 from datetime import datetime
 from sqlalchemy import text
 from utils.db import engine
-from utils.lineas import LINEAS, PAGINAS_SOCIOS, _BASE_PAGES, get_linea, get_lineas_usuario, _SC
+from utils.lineas import LINEAS, PAGINAS_SOCIOS, _BASE_PAGES, get_linea, get_lineas_usuario, _SC, get_productos_capa2, IP_RESTRINGIDA
 
 
 def render():
@@ -157,8 +157,8 @@ def render():
         with _sc_col:
             st.markdown(f"<div style='background:#161B22;border-radius:14px;padding:18px 14px;border:1px solid #21262D;border-top:3px solid {_scolor};text-align:center;margin-bottom:8px;'><div style='font-size:1.5rem;font-weight:800;color:{_scolor};line-height:1;'>{_sv}</div><div style='font-size:0.72rem;font-weight:600;color:#C9D1D9;margin-top:8px;'>{_sl}</div><div style='font-size:0.62rem;color:#8B949E;margin-top:3px;'>{_ss}</div></div>", unsafe_allow_html=True)
 
-    _t_res, _t_stats, _t_prod, _t_ped, _t_mike = st.tabs([
-        "🏠 Resumen", "📊 Estadísticas", "📦 Productos", "🛒 Pedidos", "🤖 Mike"
+    _t_res, _t_stats, _t_prod, _t_ped, _t_tienda, _t_mike = st.tabs([
+        "🏠 Resumen", "📊 Estadísticas", "📦 Productos", "🛒 Pedidos", "🏪 Mi Tienda", "🤖 Mike"
     ])
 
     # ══ TAB RESUMEN ══
@@ -343,6 +343,387 @@ def render():
                 )
             _tot_fac = float(_pedidos_s[_pedidos_s["status"]=="Listo"]["total"].sum())
             st.markdown(f"<div style='background:#0D1B2E;border-radius:10px;padding:12px 18px;margin-top:6px;border:1px solid #1B2D4A;text-align:right;'><span style='color:#58A6FF;font-weight:700;'>Total facturado (pedidos Listo): ${_tot_fac:,.0f}</span></div>", unsafe_allow_html=True)
+
+    # ══ TAB MI TIENDA ══
+    with _t_tienda:
+        from utils.pricing import cargar_productos as _cp_tienda
+
+        _VIS_COLOR = {"publico": "#10B981", "borrador": "#F59E0B", "pausado": "#6B7280"}
+        _VIS_LABEL = {"publico": "Publico",  "borrador": "Borrador",  "pausado": "Pausado"}
+
+        def _tienda_linea(lid, lnom, lcolor):
+            st.markdown(f"""
+<div style='background:linear-gradient(135deg,{lcolor}22,{lcolor}0a);border-radius:16px;
+     padding:18px 24px;border:1px solid {lcolor}33;margin-bottom:16px;'>
+  <div style='font-size:0.62rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;
+       color:{lcolor};'>CAPA 2 · UNIVERSO DE LA LINEA</div>
+  <div style='font-size:1.1rem;font-weight:800;color:#E6EDF3;margin-top:6px;'>🏪 Mi Tienda — {lnom}</div>
+  <div style='font-size:0.75rem;color:#8B949E;margin-top:4px;'>
+    Publicá tus propios productos. Borrador = solo vos lo ves · Publico = visible en tu página web.
+  </div>
+</div>""", unsafe_allow_html=True)
+
+            df_c2 = get_productos_capa2(lid)
+
+            # Preload kit components para todos los kits de esta línea (evita N+1 queries)
+            try:
+                with engine.connect() as _kc_conn:
+                    _df_kc_all = pd.read_sql(
+                        text("""
+                            SELECT kc.kit_sku, kc.component_sku, kc.cantidad,
+                                   p.name AS comp_name, p.price AS comp_price
+                            FROM kit_components kc
+                            LEFT JOIN products p ON p.sku = kc.component_sku
+                            WHERE kc.kit_sku IN (
+                                SELECT sku FROM products
+                                WHERE client_id=:cid AND tipo_producto='kit_mixto'
+                            )
+                            ORDER BY kc.kit_sku, kc.orden
+                        """),
+                        _kc_conn, params={"cid": lid}
+                    )
+            except Exception:
+                _df_kc_all = pd.DataFrame()
+
+            if df_c2.empty:
+                st.markdown("<div style='background:#161B22;border-radius:12px;padding:20px;border:1px dashed #30363D;text-align:center;color:#8B949E;margin-bottom:16px;'>Todavía no tenés productos propios en Capa 2.<br>Usá el formulario de abajo para agregar el primero.</div>", unsafe_allow_html=True)
+            else:
+                st.markdown("<div style='font-size:0.62rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#58A6FF;margin-bottom:10px;'>TUS PRODUCTOS</div>", unsafe_allow_html=True)
+                for _, _r2 in df_c2.iterrows():
+                    _vis2  = _r2.get("visibilidad", "borrador") or "borrador"
+                    _vc2   = _VIS_COLOR.get(_vis2, "#6B7280")
+                    _vl2   = _VIS_LABEL.get(_vis2, _vis2)
+                    _tipo2 = (_r2.get("tipo_producto", "linea_propio") or "linea_propio").replace("_", " ").title()
+                    _is_kit = (_r2.get("tipo_producto") or "") == "kit_mixto"
+                    _kc_this = _df_kc_all[_df_kc_all["kit_sku"] == _r2["sku"]] if not _df_kc_all.empty else pd.DataFrame()
+                    _kit_badge = f" · {len(_kc_this)} componentes" if _is_kit else ""
+                    _ca2, _cb2 = st.columns([3, 1])
+                    with _ca2:
+                        st.markdown(f"""
+<div style='background:#161B22;border-radius:12px;padding:14px 18px;
+     border:1px solid #21262D;border-left:3px solid {_vc2};'>
+  <div style='display:flex;align-items:center;gap:8px;flex-wrap:wrap;'>
+    <span style='font-size:0.82rem;font-weight:700;color:#E6EDF3;'>{_r2['name']}</span>
+    <span style='background:{_vc2}22;color:{_vc2};border:1px solid {_vc2}44;border-radius:99px;
+         padding:2px 9px;font-size:0.65rem;font-weight:700;'>{_vl2}</span>
+    <span style='background:#21262D;color:#8B949E;border-radius:99px;
+         padding:2px 9px;font-size:0.62rem;'>{_tipo2}</span>
+  </div>
+  <div style='font-size:0.72rem;color:#8B949E;margin-top:4px;'>
+    SKU: {_r2.get('sku','')} &nbsp;·&nbsp; Precio: ${float(_r2.get('price',0) or 0):,.0f} &nbsp;·&nbsp; Stock: {int(_r2.get('stock',0) or 0)} u{_kit_badge}
+  </div>
+</div>""", unsafe_allow_html=True)
+                    with _cb2:
+                        _vis_opts = ["publico", "borrador", "pausado"]
+                        _vis_idx  = _vis_opts.index(_vis2) if _vis2 in _vis_opts else 1
+                        _new_vis  = st.selectbox("", _vis_opts, index=_vis_idx,
+                                                 key=f"vis_{_r2['sku']}_{lid}",
+                                                 format_func=lambda x: _VIS_LABEL[x])
+                        if _new_vis != _vis2:
+                            if st.button("Guardar", key=f"vis_save_{_r2['sku']}_{lid}",
+                                         use_container_width=True):
+                                with engine.begin() as _cn2:
+                                    _cn2.execute(
+                                        text("UPDATE products SET visibilidad=:v WHERE sku=:s"),
+                                        {"v": _new_vis, "s": _r2["sku"]}
+                                    )
+                                get_productos_capa2.clear()
+                                _cp_tienda.clear()
+                                st.success("Visibilidad actualizada")
+                                st.rerun()
+                    if _is_kit:
+                        with st.expander(f"🧩 Componentes ({len(_kc_this)})"):
+                            if _kc_this.empty:
+                                st.caption("Sin componentes registrados.")
+                            else:
+                                for _, _kc_r in _kc_this.iterrows():
+                                    _kcp = float(_kc_r.get("comp_price", 0) or 0) * int(_kc_r.get("cantidad", 1))
+                                    st.markdown(
+                                        f"<div style='font-size:0.78rem;color:#C9D1D9;padding:5px 0;"
+                                        f"border-bottom:1px solid #21262D;'>"
+                                        f"<span style='font-family:monospace;color:#58A6FF;'>"
+                                        f"{_kc_r.get('component_sku','')}</span>"
+                                        f" — {_kc_r.get('comp_name','')} "
+                                        f"× {int(_kc_r.get('cantidad',1))}"
+                                        f" = <b style='color:#10B981;'>${_kcp:,.0f}</b></div>",
+                                        unsafe_allow_html=True
+                                    )
+                                _kit_total = float(
+                                    (_kc_this["comp_price"].fillna(0) * _kc_this["cantidad"].fillna(1)).sum()
+                                )
+                                st.markdown(
+                                    f"<div style='font-size:0.8rem;font-weight:700;color:#E6EDF3;"
+                                    f"text-align:right;margin-top:6px;'>"
+                                    f"Total componentes: ${_kit_total:,.0f}</div>",
+                                    unsafe_allow_html=True
+                                )
+                    st.markdown("<div style='height:4px;'></div>", unsafe_allow_html=True)
+
+            # ── Formulario nuevo Tipo B ──────────────────────────────────
+            st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
+            with st.expander("➕ Agregar nuevo producto (Tipo B — Propio de Línea)"):
+                with st.form(f"form_tipob_{lid}"):
+                    st.markdown("<div style='font-size:0.72rem;color:#8B949E;margin-bottom:10px;'>Tipo B: producto propio de tu línea. Quedará en borrador hasta que vos lo publiques.</div>", unsafe_allow_html=True)
+                    _fc1, _fc2 = st.columns(2)
+                    with _fc1:
+                        _fn   = st.text_input("Nombre *", placeholder="Ej: Porta auriculares gaming")
+                        _fsku = st.text_input("SKU *", placeholder=f"Ej: {lid[:3].upper()}-001")
+                        _fcat = st.text_input("Categoría", placeholder="Ej: Accesorios")
+                    with _fc2:
+                        _fp   = st.number_input("Precio de venta *", min_value=0.0, step=100.0, format="%.0f")
+                        _fstk = st.number_input("Stock inicial", min_value=0, step=1, value=1)
+                        _fpeso= st.number_input("Peso aprox. (gr)", min_value=0.0, step=10.0, format="%.0f",
+                                                help="Solo referencia; no afecta el precio en Tipo B.")
+                    _fvis = st.radio(
+                        "Publicar como",
+                        ["borrador", "publico"],
+                        format_func=lambda x: "Borrador (solo yo lo veo)" if x == "borrador" else "Publico (visible en mi pagina web)",
+                        horizontal=True
+                    )
+                    _submitted_b = st.form_submit_button("Agregar producto", use_container_width=True)
+
+                    if _submitted_b:
+                        _errs = []
+                        if not _fn.strip():
+                            _errs.append("El nombre es obligatorio.")
+                        if not _fsku.strip():
+                            _errs.append("El SKU es obligatorio.")
+                        if _fp <= 0:
+                            _errs.append("El precio debe ser mayor a 0.")
+                        _ip_hit = [kw for kw in IP_RESTRINGIDA if kw in _fn.lower()]
+                        if _ip_hit:
+                            _errs.append(f"Nombre no permitido: contiene '{_ip_hit[0]}' (IP restringida).")
+                        if _errs:
+                            for _e in _errs:
+                                st.error(_e)
+                        else:
+                            try:
+                                with engine.begin() as _cn3:
+                                    _cn3.execute(text("""
+                                        INSERT INTO products
+                                            (sku, name, price, weight_gr, stock,
+                                             client_id, activo, tipo_producto, visibilidad, categoria)
+                                        VALUES
+                                            (:sku, :name, :price, :wg, :stk,
+                                             :cid, 1, 'linea_propio', :vis, :cat)
+                                    """), {
+                                        "sku":   _fsku.strip().upper(),
+                                        "name":  _fn.strip(),
+                                        "price": float(_fp),
+                                        "wg":    float(_fpeso),
+                                        "stk":   int(_fstk),
+                                        "cid":   lid,
+                                        "vis":   _fvis,
+                                        "cat":   _fcat.strip() or None,
+                                    })
+                                get_productos_capa2.clear()
+                                _cp_tienda.clear()
+                                _vis_label = "Publico" if _fvis == "publico" else "Borrador"
+                                st.success(f"'{_fn.strip()}' agregado como {_vis_label}.")
+                                st.rerun()
+                            except Exception as _ex3:
+                                st.error(f"Error al guardar: {_ex3}")
+
+            # ── Formulario nuevo Kit Tipo D ──────────────────────────────
+            st.markdown("<div style='height:4px;'></div>", unsafe_allow_html=True)
+            with st.expander("🧩 Crear Kit Mixto (Tipo D — varios componentes)"):
+                st.markdown("<div style='font-size:0.72rem;color:#8B949E;margin-bottom:10px;'>Tipo D: kit que agrupa productos existentes. El precio se calcula de la suma de componentes pero podés ajustarlo.</div>", unsafe_allow_html=True)
+
+                # Carga de productos disponibles (fuera del form = live price update)
+                try:
+                    _kf_prods = pd.read_sql(
+                        "SELECT sku, name, price, client_id FROM products WHERE activo=1 ORDER BY name",
+                        engine
+                    )
+                except Exception:
+                    _kf_prods = pd.DataFrame()
+
+                _kf_opts = ["(ninguno)"] + (_kf_prods["sku"].tolist() if not _kf_prods.empty else [])
+
+                def _kf_label(x):
+                    if x == "(ninguno)" or _kf_prods.empty:
+                        return "(ninguno)"
+                    r = _kf_prods[_kf_prods["sku"] == x]
+                    if r.empty:
+                        return x
+                    row = r.iloc[0]
+                    return f"{row['sku']} — {row['name']}  ${float(row['price']):,.0f}"
+
+                st.markdown("<div style='font-size:0.72rem;font-weight:700;color:#58A6FF;margin-bottom:6px;'>COMPONENTES (hasta 5)</div>", unsafe_allow_html=True)
+                _kf_live = []
+                for _ki in range(5):
+                    _kfc1, _kfc2 = st.columns([5, 1])
+                    with _kfc1:
+                        _kf_sku_i = st.selectbox(
+                            f"#{_ki+1}",
+                            _kf_opts,
+                            format_func=_kf_label,
+                            key=f"kf_sku_{_ki}_{lid}",
+                            label_visibility="collapsed"
+                        )
+                    with _kfc2:
+                        _kf_qty_i = st.number_input(
+                            "x",
+                            min_value=1, value=1,
+                            key=f"kf_qty_{_ki}_{lid}",
+                            label_visibility="collapsed"
+                        )
+                    if _kf_sku_i != "(ninguno)":
+                        _kf_live.append({"sku": _kf_sku_i, "cantidad": int(_kf_qty_i), "orden": _ki})
+
+                # Precio automático en vivo
+                _kf_auto = 0.0
+                if _kf_live and not _kf_prods.empty:
+                    for _kfc in _kf_live:
+                        _pr = _kf_prods[_kf_prods["sku"] == _kfc["sku"]]
+                        if not _pr.empty:
+                            _kf_auto += float(_pr.iloc[0]["price"]) * _kfc["cantidad"]
+
+                if _kf_live:
+                    st.markdown(
+                        f"<div style='background:#0D2E10;border-radius:8px;padding:8px 14px;"
+                        f"border:1px solid #1a4a20;margin:8px 0;'>"
+                        f"<span style='color:#3FB950;font-weight:700;'>Precio calculado: ${_kf_auto:,.0f}</span>"
+                        f" &nbsp;·&nbsp; {len(_kf_live)} componente(s) seleccionado(s)</div>",
+                        unsafe_allow_html=True
+                    )
+
+                with st.form(f"form_kit_{lid}"):
+                    _kn1, _kn2 = st.columns(2)
+                    with _kn1:
+                        _kf_name    = st.text_input("Nombre del kit *", placeholder="Ej: Set Gaming Completo")
+                        _kf_sku_inp = st.text_input("SKU *", placeholder=f"{lid[:3].upper()}-KIT-001")
+                        _kf_cat     = st.text_input("Categoría", value="Kit")
+                    with _kn2:
+                        _kf_price = st.number_input(
+                            "Precio final *", min_value=0.0, step=100.0, format="%.0f",
+                            help=f"Calculado de componentes: ${_kf_auto:,.0f}. Podés ajustarlo."
+                        )
+                        _kf_stk = st.number_input("Stock inicial", min_value=0, value=1, step=1)
+                    _kf_vis = st.radio(
+                        "Publicar como",
+                        ["borrador", "publico"],
+                        format_func=lambda x: "Borrador (solo yo lo veo)" if x == "borrador" else "Publico",
+                        horizontal=True
+                    )
+                    _kf_submit = st.form_submit_button("Crear Kit", use_container_width=True)
+
+                    if _kf_submit:
+                        # Leer componentes del session_state (están fuera del form)
+                        _kf_comps_s = []
+                        for _ki2 in range(5):
+                            _ks2 = st.session_state.get(f"kf_sku_{_ki2}_{lid}", "(ninguno)")
+                            _kq2 = int(st.session_state.get(f"kf_qty_{_ki2}_{lid}", 1))
+                            if _ks2 != "(ninguno)":
+                                _kf_comps_s.append({"sku": _ks2, "cantidad": _kq2, "orden": _ki2})
+
+                        _kerrs = []
+                        if not _kf_name.strip():
+                            _kerrs.append("El nombre es obligatorio.")
+                        if not _kf_sku_inp.strip():
+                            _kerrs.append("El SKU es obligatorio.")
+                        if _kf_price <= 0:
+                            _kerrs.append("El precio debe ser mayor a 0.")
+                        if len(_kf_comps_s) < 2:
+                            _kerrs.append("Un kit necesita al menos 2 componentes.")
+                        _ip_k = [kw for kw in IP_RESTRINGIDA if kw in _kf_name.lower()]
+                        if _ip_k:
+                            _kerrs.append(f"Nombre no permitido: '{_ip_k[0]}' (IP restringida).")
+
+                        if _kerrs:
+                            for _e in _kerrs:
+                                st.error(_e)
+                        else:
+                            try:
+                                _kit_sku_clean = _kf_sku_inp.strip().upper()
+                                with engine.begin() as _kconn:
+                                    _kconn.execute(text("""
+                                        INSERT INTO products
+                                            (sku, name, price, weight_gr, stock,
+                                             client_id, activo, tipo_producto, visibilidad, categoria)
+                                        VALUES
+                                            (:sku, :name, :price, 0, :stk,
+                                             :cid, 1, 'kit_mixto', :vis, :cat)
+                                    """), {
+                                        "sku":   _kit_sku_clean,
+                                        "name":  _kf_name.strip(),
+                                        "price": float(_kf_price),
+                                        "stk":   int(_kf_stk),
+                                        "cid":   lid,
+                                        "vis":   _kf_vis,
+                                        "cat":   _kf_cat.strip() or "Kit",
+                                    })
+                                    for _kci in _kf_comps_s:
+                                        _kconn.execute(text("""
+                                            INSERT INTO kit_components
+                                                (kit_sku, component_sku, cantidad, orden)
+                                            VALUES (:kit, :comp, :qty, :ord)
+                                        """), {
+                                            "kit":  _kit_sku_clean,
+                                            "comp": _kci["sku"],
+                                            "qty":  _kci["cantidad"],
+                                            "ord":  _kci["orden"],
+                                        })
+                                get_productos_capa2.clear()
+                                _cp_tienda.clear()
+                                st.success(
+                                    f"Kit '{_kf_name.strip()}' creado con "
+                                    f"{len(_kf_comps_s)} componentes — ${float(_kf_price):,.0f}"
+                                )
+                                st.rerun()
+                            except Exception as _ke:
+                                st.error(f"Error al crear el kit: {_ke}")
+
+        def _render_export_btn(lid, lnom):
+            from utils.lineas import PAGINAS_SOCIOS
+            if not PAGINAS_SOCIOS.get(lid):
+                return
+            st.markdown("<div style='height:16px;'></div>", unsafe_allow_html=True)
+            st.markdown(
+                "<div style='font-size:0.6rem;font-weight:700;letter-spacing:2px;"
+                "text-transform:uppercase;color:#58A6FF;margin-bottom:8px;'>EXPORTAR A WEB</div>",
+                unsafe_allow_html=True,
+            )
+            if st.button(f"📤 Exportar catálogo web — {lnom}", key=f"export_{lid}", use_container_width=True):
+                try:
+                    from utils.exports import exportar_catalogo_json
+                    import json as _json
+                    catalog, out_path = exportar_catalogo_json(lid)
+                    n3d = len(catalog["productos_3d"])
+                    nl  = len(catalog["productos_linea"])
+                    nk  = len(catalog["kits"])
+                    st.success(
+                        f"Exportado: {n3d} prod. 3D · {nl} de línea · {nk} kits\n"
+                        f"`{out_path}`"
+                    )
+                    st.download_button(
+                        "⬇️ Descargar JSON",
+                        data=_json.dumps(catalog, ensure_ascii=False, indent=2),
+                        file_name=f"{catalog['slug']}-catalog.json",
+                        mime="application/json",
+                        key=f"dl_{lid}",
+                    )
+                    st.caption(
+                        "Subí este archivo a la carpeta `exports/` del repo GitHub "
+                        "para actualizar la página web."
+                    )
+                except Exception as _ex_exp:
+                    st.error(f"Error al exportar: {_ex_exp}")
+
+        if role == "socio_multi" and len(lineas_activas) > 1:
+            _ltt_names = [
+                f"{LINEAS.get(l,{}).get('emoji','●')} {LINEAS.get(l,{}).get('nombre',l)}"
+                for l in lineas_activas
+            ]
+            _ltt_tabs = st.tabs(_ltt_names)
+            for _ltt, _ltid in zip(_ltt_tabs, lineas_activas):
+                _ltcfg = LINEAS.get(_ltid, {"nombre": _ltid, "emoji": "●", "color": "#6366F1"})
+                with _ltt:
+                    _tienda_linea(_ltid, _ltcfg["nombre"], _ltcfg["color"])
+                    _render_export_btn(_ltid, _ltcfg["nombre"])
+        else:
+            _tienda_linea(uid, hdr_nombre, hdr_color)
+            _render_export_btn(uid, hdr_nombre)
 
     # ══ TAB MIKE ══
     with _t_mike:

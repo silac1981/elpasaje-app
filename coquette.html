@@ -375,6 +375,7 @@ footer{padding:20px 56px;background:var(--ink);border-top:1px solid rgba(154,112
     <div class="nav-pill" onclick="showSec('quince')">Mis Quince</div>
     <div class="nav-pill" onclick="showSec('perfumes')">Perfumes</div>
     <div class="nav-pill" onclick="showSec('alianzas')">Alianzas</div>
+    <div class="nav-pill" onclick="document.getElementById('s-tienda').scrollIntoView({behavior:'smooth'})">Tienda</div>
   </div>
   <a href="index.html" class="nav-back">El universo</a>
 </nav>
@@ -885,6 +886,22 @@ footer{padding:20px 56px;background:var(--ink);border-top:1px solid rgba(154,112
   </div>
   </div>
 </section>
+<!-- ══ TIENDA DE OLIVIA — Capa 2 dinámica ══ -->
+<div class="sep-gold"></div>
+<section id="s-tienda" style="background:var(--ivory);padding:64px 80px">
+  <div class="sec-head reveal" style="margin-bottom:32px">
+    <div class="eye" style="color:#B5606E;margin-bottom:10px">La selección de Olivia · Capa 2</div>
+    <h2 style="font-family:'Cormorant Garamond',serif;font-size:clamp(2rem,3.5vw,3rem);font-weight:300;color:var(--ink)">
+      Más que objetos 3D. <em style="font-style:italic;color:var(--rose)">Un universo.</em>
+    </h2>
+    <p style="font-family:'Raleway',sans-serif;font-size:.85rem;color:#3A1828;margin-top:12px;line-height:1.8;max-width:520px">
+      Olivia no solo diseña — también curada. Encontrás acá lo que ella elige: perfumes, esencias y combos regalo pensados por ella.
+    </p>
+  </div>
+  <div id="tienda-coquette-container">
+    <div style="text-align:center;padding:48px;color:#9A8080;font-family:'Raleway',sans-serif;font-size:.78rem">Cargando tienda...</div>
+  </div>
+</section>
 <div class="sep-gold"></div>
 <section id="proceso">
   <div class="proc-in">
@@ -1150,6 +1167,61 @@ async function callIA(tipo){
 </div>
 
 <script>
+// ── Capa 2 dinámica — Tienda de Olivia ──────────────────────────────────────
+(async function loadTiendaCoquette() {
+  const container = document.getElementById('tienda-coquette-container');
+  if (!container) return;
+  const PLACEHOLDER = '<div style="text-align:center;padding:48px;color:#9A8080;font-family:Raleway,sans-serif;font-size:.78rem">Catálogo próximamente 🎀</div>';
+  try {
+    const r = await fetch('./exports/coquette-catalog.json?v=' + Date.now());
+    if (!r.ok) { container.innerHTML = PLACEHOLDER; return; }
+    const data = await r.json();
+    let html = '';
+
+    if (data.productos_linea && data.productos_linea.length > 0) {
+      html += `<div style="font-size:.52rem;letter-spacing:6px;text-transform:uppercase;color:#B5606E;font-weight:700;margin-bottom:24px;display:flex;align-items:center;gap:12px"><span style="width:18px;height:1px;background:#B5606E;display:inline-block"></span>Productos de línea</div>`;
+      html += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-bottom:48px">`;
+      for (const p of data.productos_linea) {
+        const precio = p.price != null ? `$${Number(p.price).toLocaleString('es-AR')}` : 'Consultar';
+        const stockBadge = (p.stock||0) > 0
+          ? `<span style="color:#3A7C44;font-size:.62rem;font-weight:700">● ${p.stock} disponibles</span>`
+          : `<span style="color:#9A3B2A;font-size:.62rem">Sin stock</span>`;
+        html += `<div style="background:var(--chalk,#fff);border:1px solid rgba(120,85,0,.2);padding:22px;font-family:'Raleway',sans-serif">
+          <div style="font-size:.58rem;letter-spacing:2px;text-transform:uppercase;color:#9A7010;margin-bottom:6px">${p.sku||''}</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:700;color:#160208;line-height:1.2;margin-bottom:6px">${p.name}</div>
+          ${p.description ? `<div style="font-size:.76rem;color:#3A1828;line-height:1.65;margin-bottom:12px">${p.description}</div>` : ''}
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:auto">
+            <span style="font-family:'Cormorant Garamond',serif;font-size:1.25rem;font-weight:700;color:#7A5500">${precio}</span>
+            ${stockBadge}
+          </div>
+        </div>`;
+      }
+      html += `</div>`;
+    }
+
+    if (data.kits && data.kits.length > 0) {
+      html += `<div style="height:1px;background:linear-gradient(to right,transparent,rgba(120,85,0,.3),transparent);margin:0 0 40px"></div>`;
+      html += `<div style="font-size:.52rem;letter-spacing:6px;text-transform:uppercase;color:#8A6070;font-weight:700;margin-bottom:24px;display:flex;align-items:center;gap:12px"><span style="width:18px;height:1px;background:#8A6070;display:inline-block"></span>Ideas regalo</div>`;
+      html += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px">`;
+      for (const k of data.kits) {
+        const comps = (k.componentes||[]).map(c => `<span style="font-size:.7rem;color:rgba(245,235,240,.55)">· ${c.nombre} ×${c.cantidad}</span>`).join(' ');
+        html += `<div style="background:#1A0D10;border:1px solid rgba(120,85,0,.25);padding:26px">
+          <div style="font-size:.55rem;letter-spacing:3px;text-transform:uppercase;color:#9A7010;margin-bottom:10px">KIT REGALO</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:700;color:#F5EBF0;line-height:1.2;margin-bottom:10px">${k.nombre}</div>
+          ${k.descripcion ? `<div style="font-size:.75rem;color:rgba(245,235,240,.45);line-height:1.6;margin-bottom:12px">${k.descripcion}</div>` : ''}
+          <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:16px">${comps}</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:300;color:#C9A84C">$${Number(k.precio).toLocaleString('es-AR')}</div>
+        </div>`;
+      }
+      html += `</div>`;
+    }
+
+    container.innerHTML = html || PLACEHOLDER;
+  } catch(e) {
+    container.innerHTML = PLACEHOLDER;
+  }
+})();
+
 // Mostrar banner al scrollear más de 300px
 window.addEventListener('scroll', function(){
   const banner = document.getElementById('back-banner');
