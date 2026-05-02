@@ -263,61 +263,71 @@ PRODUCTS_AVIATION = [
     ("AVP-013", "aviation", "pla_seda_gris","Hub Organizador USB",       "Soporte para hub USB y cables de carga.",                       "Tech",   "Gris Acero",       4500, 95,  48, 4),
 ]
 
-# (sku, client_id, material_id, name, description, categoria, color, price, weight_gr, tiempo_min, stock)
+# (sku, client_id, material_id, name, description, categoria, color, price, weight_gr, tiempo_min, stock, activo)
 PRODUCTS_SOCIOS = [
-    # ── COQUETTE (olivia_coquette) ──────────────────────────
-    ("COQ-MON-001","olivia_coquette","pla_rosa",   "Mono Textil Silk",         "Mono artesanal impresion 3D acabado seda",                  "accesorios","#F9A8D4",1500, 22,  35, 5),
-    ("COQ-MON-002","olivia_coquette","pla_rosa",   "Monedero Silk Coquette",   "Monedero 3D cierre magnetico acabado silk",                 "accesorios","#F9A8D4",2800, 60,  90, 3),
-    ("COQ-LLA-001","olivia_coquette","pla_rosa",   "Llavero Peonia",           "Llavero floral detalle fino",                               "accesorios","#F9A8D4",1200, 15,  25, 8),
-    ("COQ-ARG-001","olivia_coquette","pla_rosa",   "Argolla Coquette",         "Aro decorativo 3D personalizable",                         "joyeria",   "#F9A8D4",1800, 20,  30, 4),
-    ("COQ-PRE-001","olivia_coquette","pla_rosa",   "Prendedor Floral",         "Prendedor 3D estilo romantico",                            "accesorios","#F9A8D4",1400, 18,  28, 6),
-    ("COQ-CAJ-001","olivia_coquette","pla_rosa",   "Cajita Corazon",           "Cajita regalo 3D acabado mate",                            "regaleria", "#F9A8D4",2200, 45,  65, 3),
-    ("COQ-XVA-001","olivia_coquette","pla_rosa",   "Kit Quinceanyera",         "Set 3 piezas personalizado XV anios",                      "especiales","#F9A8D4",4500, 120, 180,2),
-    # ── SPORT (francisco_sport) ─────────────────────────────
-    ("FZ-CAP-001", "francisco_sport","pla_negro",  "Cap-Hanger Pro",           "Soporte aerodinamico para gorras no deforma la visera",     "deportivo", "#F97316",1800, 45,  60, 4),
-    ("FZ-PFX-001", "francisco_sport","pla_negro",  "Parche Flexible",          "Aplique 3D para mochila/campera personalizable",            "identidad", "#F97316",900,  25,  35, 10),
-    ("FZ-GMR-001", "francisco_sport","pla_negro",  "Aplique Gamer",            "Soporte auriculares sello El Pasaje escritorio gamer",      "gamer",     "#F97316",1200, 30,  45, 6),
-    ("FZ-TRO-001", "francisco_sport","pla_negro",  "Trofeo Mini",              "Trofeo impreso personalizable nombre y deporte",            "trofeos",   "#F97316",2200, 65,  90, 3),
-    ("FZ-NUM-001", "francisco_sport","pla_negro",  "Numero de Camiseta",       "Numero 3D rigido para camiseta o mochila",                  "identidad", "#F97316",600,  12,  18, 20),
-    ("FZ-ORC-001", "francisco_sport","pla_negro",  "Organizador Cancha",       "Soporte pizarron tactico mini para escritorio",             "entrenamiento","#F97316",3900,95, 130,2),
-    # ── CORE TECH (constantino_tech) ────────────────────────
-    ("CT-SIM-001", "constantino_tech","petg_gris", "Soporte Instrumento Medicion","Base calibres micrometros laboratorio escuela",          "educativo", "#64748B",2400, 70,  95, 4),
-    ("CT-GAB-001", "constantino_tech","petg_gris", "Gabinete Microelectronica","Carcasa Arduino/ESP32/RaspberryPi",                         "electronica","#64748B",3800, 100, 140,3),
-    ("CT-ORG-001", "constantino_tech","petg_gris", "Organizador Anti-Estatico","Bandeja componentes electronicos anti-ESD",                 "electronica","#64748B",4200, 110, 155,2),
-    ("CT-KAI-001", "constantino_tech","petg_gris", "Organizador Kaizen",       "Sistema modular 5S estacion de trabajo",                   "productividad","#64748B",5500,150,210,2),
-    ("CT-CUB-001", "constantino_tech","petg_gris", "Cubo Infinito Magnetico",  "Cubo articulado 8 segmentos imanes integrados",             "juguete",   "#64748B",3800, 90,  125,3),
-    ("CT-RPI-001", "constantino_tech","petg_gris", "Case Raspberry Pi 5",      "Carcasa ventilada RPi5 soporte activo",                     "electronica","#64748B",4500, 120, 165,2),
-    # ── PHARMA DELUX (pharma_delux) ─────────────────────────
-    ("PD-ORG-001", "pharma_delux",   "pla_blanco", "Organizador Consultorio",  "Soporte instrumental medico escritorio consultorio",        "medico",    "#FBBF24",5200, 140, 195,2),
-    ("PD-ORL-001", "pharma_delux",   "pla_blanco", "Organizador con Logo Lab", "Organizador con logo laboratorio farmaceutico",             "medico",    "#FBBF24",6000, 155, 215,2),
-    ("PD-PAS-001", "pharma_delux",   "pla_blanco", "Porta-Pastillas Semanal",  "Pastillero 7 compartimentos etiquetado",                   "salud",     "#FBBF24",1800, 50,  70, 8),
-    ("PD-MUE-001", "pharma_delux",   "pla_blanco", "Muestrero Medico",         "Soporte tarjetas muestras medicas escritorio",              "medico",    "#FBBF24",2800, 75,  105,4),
-    ("PD-SER-001", "pharma_delux",   "pla_blanco", "Soporte Seringa",          "Porta-jeringas organizador tecnico",                       "medico",    "#FBBF24",3800, 100, 140,3),
-    ("PD-GIF-001", "pharma_delux",   "pla_blanco", "Gift Set Laboratorio",     "Kit 3 piezas personalizado para laboratorio",               "gift",      "#FBBF24",4500, 125, 175,2),
-    # ── OASIS DEL ESTERO (oasis_del_estero) ─────────────────
-    ("OE-MAC-001", "oasis_del_estero","pla_blanco","Maceta Modular",           "Maceta geometrica minimalista drenaje integrado apilable",  "hogar",     "#34D399",1200, 55,  75, 6),
-    ("OE-MAC-002", "oasis_del_estero","pla_blanco","Maceta Colgante",          "Sistema sujecion integrado balcon/ventana",                 "hogar",     "#34D399",1500, 65,  90, 5),
-    ("OE-ID-001",  "oasis_del_estero","pla_blanco","Identificador Planta",     "Tag nombre planta personalizable resistente al agua",       "jardin",    "#34D399",400,  10,  15, 25),
-    ("OE-REG-001", "oasis_del_estero","pla_blanco","Regadera Decorativa Mini", "Regadera impresa 3D ornamental",                           "jardin",    "#34D399",800,  35,  50, 8),
-    ("OE-SOP-001", "oasis_del_estero","pla_blanco","Soporte Macetas Pared",    "Rack impreso 3 macetas en linea para pared",                "hogar",     "#34D399",2200, 90,  125,3),
-    ("OE-FAU-001", "oasis_del_estero","pla_blanco","Figura Fauna Local",       "Animal chaquenio impreso decorativo coleccionable",         "arte",      "#34D399",2800, 80,  115,4),
-    # ── OASIS ANIMAL (oasis_animal) ─────────────────────────
-    ("OAS-LLA-001","oasis_animal",   "pla_negro",  "Llavero Perrito Globo",     "Llavero 3D perro globo detalle fino acabado mate",          "accesorios","#F472B6",1000, 18,  25, 30),
-    ("OAS-TAG-001","oasis_animal",   "pla_negro",  "Guardian Tag",              "Identificador mascota resistente agua personalizable",      "identificacion","#F472B6",800, 15, 20, 20),
-    ("OAS-COM-001","oasis_animal",   "pla_negro",  "Comedero Diseno Patita",    "Soporte comedero cuenco forma patita — talla S/M",          "mascotas",  "#F472B6",9000, 320, 180,5),
-    ("OAS-COM-002","oasis_animal",   "pla_negro",  "Comedero Diseno Huesito",   "Soporte comedero cuenco forma huesito — talla S/M",         "mascotas",  "#F472B6",9000, 320, 180,5),
-    ("OAS-EST-001","oasis_animal",   "pla_negro",  "Estacion Evolutiva Base",   "Modulo inicial comedero/juguete expandible por niveles",    "mascotas",  "#F472B6",8000, 180, 240,4),
-    ("OAS-EST-002","oasis_animal",   "pla_negro",  "Estacion Evolutiva Alto",   "Modulo alto expansion estacion evolutiva — nivel 2",        "mascotas",  "#F472B6",10000,280, 360,3),
-    ("OAS-JOY-001","oasis_animal",   "pla_rosa",   "Pet Jewelry Coquette",      "Joyeria 3D para mascotas linea colaboracion Coquette",      "joyeria",   "#F472B6",4500,  8,  45, 10),
-    ("OAS-LIT-001","oasis_animal",   "pla_blanco", "Memory Litophany",          "Litofania personalizada foto de tu mascota luz trasera",    "memoria",   "#F472B6",35000,120, 960,2),
-    ("OAS-TRV-001","oasis_animal",   "pla_negro",  "Travel Kit Ergonomico",     "Kit viaje mascota: bowl plegable + clip + tag todo en uno", "viaje",     "#F472B6",12000,200, 280,3),
-    ("OAS-B2B-VKH-001","oasis_animal","pla_negro", "Bandeja Decorativa Organica","Bandeja organica 3D decoracion B2B VK-Home",               "b2b",       "#F472B6",15000,350, 300,3),
-    ("OAS-B2B-VKH-002","oasis_animal","pla_negro", "Soporte Aromatico",         "Soporte aromatico difusor 3D B2B VK-Home",                 "b2b",       "#F472B6",12000,280, 240,3),
-    # ── VKHOME (vkhome_cliente) ──────────────────────────────
-    ("VKH-ORG-001","vkhome_cliente", "pla_blanco", "Organizador Escritorio VK","Set modular escritorio hogar-oficina 3 piezas",             "hogar",     "#A78BFA",3500, 95,  135,3),
-    ("VKH-POT-001","vkhome_cliente", "pla_blanco", "Porta-Cables VK",          "Organizador cables escritorio adhesivo",                    "hogar",     "#A78BFA",1200, 30,  45, 8),
-    ("VKH-COC-001","vkhome_cliente", "pla_blanco", "Soporte Cocina VK",        "Soporte utensilios cocina imantado",                       "cocina",    "#A78BFA",2800, 75,  105,4),
-    ("VKH-DEC-001","vkhome_cliente", "pla_blanco", "Marco Foto 3D",            "Marco fotografico geometrico personalizable",               "deco",      "#A78BFA",2200, 60,  85, 4),
+    # ── COQUETTE (olivia_coquette) — catálogo provisional, a confirmar con Olivia ──
+    ("COQ-MON-001","olivia_coquette","pla_rosa",  "Mono Textil Silk",          "Mono artesanal impresion 3D acabado seda",                  "accesorios","#F9A8D4",1500,  22,  35, 5, 1),
+    ("COQ-MON-002","olivia_coquette","pla_rosa",  "Monedero Silk Coquette",    "Monedero 3D cierre magnetico acabado silk",                 "accesorios","#F9A8D4",2800,  60,  90, 3, 1),
+    ("COQ-LLA-001","olivia_coquette","pla_rosa",  "Llavero Peonia",            "Llavero floral detalle fino",                               "accesorios","#F9A8D4",1200,  15,  25, 8, 1),
+    ("COQ-ARG-001","olivia_coquette","pla_rosa",  "Argolla Coquette",          "Aro decorativo 3D personalizable",                         "joyeria",   "#F9A8D4",1800,  20,  30, 4, 1),
+    ("COQ-PRE-001","olivia_coquette","pla_rosa",  "Prendedor Floral",          "Prendedor 3D estilo romantico",                            "accesorios","#F9A8D4",1400,  18,  28, 6, 1),
+    ("COQ-CAJ-001","olivia_coquette","pla_rosa",  "Cajita Corazon",            "Cajita regalo 3D acabado mate",                            "regaleria", "#F9A8D4",2200,  45,  65, 3, 1),
+    ("COQ-XVA-001","olivia_coquette","pla_rosa",  "Kit Quinceanyera",          "Set 3 piezas personalizado XV anios",                      "especiales","#F9A8D4",4500, 120, 180, 2, 1),
+    # ── F-ZONE (francisco_sport) — Naranja #F97316 / Cyan #22D3EE ────────────────
+    ("FZ-CAP-001", "francisco_sport","pla_negro", "Cap-Hanger Pro",            "Soporte aerodinamico gorras, no deforma la visera",         "deportivo", "#F97316",1800,  45,  60, 4, 1),
+    ("FZ-PFX-001", "francisco_sport","pla_negro", "Parche Flexible",           "Aplique 3D para mochila/campera personalizable",            "identidad", "#F97316", 900,  25,  35,10, 1),
+    ("FZ-GMR-001", "francisco_sport","pla_negro", "Aplique Gamer",             "Soporte auriculares sello El Pasaje, escritorio gamer",     "gamer",     "#22D3EE",1200,  30,  45, 6, 1),
+    ("FZ-TRO-001", "francisco_sport","pla_negro", "Trofeo Mini",               "Trofeo impreso personalizable nombre y deporte",            "trofeos",   "#F97316",2200,  65,  90, 3, 1),
+    ("FZ-NUM-001", "francisco_sport","pla_negro", "Numero de Camiseta",        "Numero 3D rigido para camiseta o mochila",                  "identidad", "#F97316", 600,  12,  18,20, 1),
+    ("FZ-ORC-001", "francisco_sport","pla_negro", "Organizador Cancha",        "Soporte pizarron tactico mini para escritorio",             "entrenamiento","#F97316",3900, 95, 130, 2, 1),
+    ("FZ-SGB-U",   "francisco_sport","pla_negro", "Soporte Gaming Bicolor",    "Soporte gaming multicolor K2 Plus CFS, diseno propio Fer",  "gamer",     "#22D3EE",12000,1161, 350, 1, 1),
+    # ── CORE TECH (constantino_tech) — catálogo provisional ─────────────────────
+    ("CT-SIM-001", "constantino_tech","petg_gris","Soporte Instrumento Medicion","Base calibres micrometros laboratorio escuela",           "educativo", "#64748B",2400,  70,  95, 4, 1),
+    ("CT-GAB-001", "constantino_tech","petg_gris","Gabinete Microelectronica",  "Carcasa Arduino/ESP32/RaspberryPi",                        "electronica","#64748B",3800, 100, 140, 3, 1),
+    ("CT-ORG-001", "constantino_tech","petg_gris","Organizador Anti-Estatico",  "Bandeja componentes electronicos anti-ESD",                "electronica","#64748B",4200, 110, 155, 2, 1),
+    ("CT-KAI-001", "constantino_tech","petg_gris","Organizador Kaizen",         "Sistema modular 5S estacion de trabajo",                   "productividad","#64748B",5500,150, 210, 2, 1),
+    ("CT-CUB-001", "constantino_tech","petg_gris","Cubo Infinito Magnetico",    "Cubo articulado 8 segmentos imanes integrados",            "juguete",   "#64748B",3800,  90, 125, 3, 1),
+    ("CT-RPI-001", "constantino_tech","petg_gris","Case Raspberry Pi 5",        "Carcasa ventilada RPi5 soporte activo",                    "electronica","#64748B",4500, 120, 165, 2, 1),
+    # ── PHARMA DeLux (pharma_delux) — Verde #166534 ──────────────────────────────
+    ("PD-ORG-001", "pharma_delux",   "pla_blanco","Organizador Consultorio",   "Soporte instrumental medico escritorio consultorio",        "medico",    "#166534",5200, 140, 195, 2, 1),
+    ("PD-ORL-001", "pharma_delux",   "pla_blanco","Organizador con Logo Lab",  "Organizador con logo laboratorio farmaceutico",             "medico",    "#166534",6000, 155, 215, 2, 1),
+    ("PD-PAS-001", "pharma_delux",   "pla_blanco","Porta-Pastillas Semanal",   "Pastillero 7 compartimentos etiquetado",                   "salud",     "#166534",1800,  50,  70, 8, 1),
+    ("PD-MUE-001", "pharma_delux",   "pla_blanco","Muestrero Medico",          "Soporte tarjetas muestras medicas escritorio",              "medico",    "#166534",2800,  75, 105, 4, 1),
+    ("PD-SER-001", "pharma_delux",   "pla_blanco","Soporte Seringa",           "Porta-jeringas organizador tecnico",                       "medico",    "#166534",3800, 100, 140, 3, 1),
+    ("PD-GIF-001", "pharma_delux",   "pla_blanco","Gift Set Laboratorio",      "Kit 3 piezas personalizado para laboratorio",               "gift",      "#166534",4500, 125, 175, 2, 1),
+    # ── OASIS DEL ESTERO (oasis_del_estero) — catálogo oficial Mayo 2026 ─────────
+    # Diseño propio Fer en Fusion 360 — canal principal: VK-Home (Agustina)
+    ("OE-BRR-S","oasis_del_estero","pla_negro",   "Bandeja Organica Redonda S","Bandeja redonda organica S, 2 patas, diseno Fer",           "hogar",     "#4CAF50",6500,  629, 190, 1, 1),
+    ("OE-BRR-M","oasis_del_estero","pla_negro",   "Bandeja Organica Redonda M","Bandeja redonda organica M, 3 patas, negro",               "hogar",     "#4CAF50",9900,  957, 290, 1, 1),
+    ("OE-BOV-S","oasis_del_estero","pla_negro",   "Bandeja Oval S",            "Bandeja oval S, diseno propio Fer Fusion 360",             "hogar",     "#4CAF50",8500,  822, 250, 1, 1),
+    ("OE-BOV-M","oasis_del_estero","pla_negro",   "Bandeja Oval M",            "Bandeja oval M, diseno propio Fer Fusion 360",             "hogar",     "#4CAF50",14000,1354, 410, 1, 1),
+    ("OE-BOV-L","oasis_del_estero","pla_negro",   "Bandeja Oval L",            "Bandeja oval L, por pedido, diseno Fer",                   "hogar",     "#4CAF50",19900,1925, 580, 0, 1),
+    ("OE-BAS-S","oasis_del_estero","pla_negro",   "Bandeja Asimetrica S",      "Bandeja organica asimetrica S, diseno propio Fer",         "hogar",     "#4CAF50",9900,  957, 290, 1, 1),
+    ("OE-BAS-M","oasis_del_estero","pla_negro",   "Bandeja Asimetrica M",      "Bandeja organica asimetrica M, diseno propio Fer",         "hogar",     "#4CAF50",15900,1538, 460, 1, 1),
+    ("OE-SAR-U","oasis_del_estero","pla_negro",   "Soporte Aromatico Circular","Soporte aromatico circular, por pedido",                   "hogar",     "#4CAF50",8000,  774, 230, 0, 1),
+    ("OE-BDA-U","oasis_del_estero","pla_negro",   "Bandeja Damero 35x32",      "En diseno con Agustina — NO publicar hasta definir precio","hogar",     "#4CAF50",0,      900, 270, 0, 0),
+    # ── OASIS ANIMAL (oasis_animal) — catálogo oficial Mayo 2026 — Rosa #F472B6 ──
+    # 10% de ventas al refugio solidario
+    ("OA-LPG-U","oasis_animal","pla_negro",       "Llavero Perrito Globo",     "Llavero 3D perro globo acabado mate, precio mayorista El Pasaje","accesorios","#F472B6",1000,  97,  30,30, 1),
+    ("OA-GTG-U","oasis_animal","pla_negro",       "Guardian Tag QR Emergencia","Tag QR datos emergencia mascota, producto de entrada",      "identificacion","#F472B6",800, 77,  25, 0, 1),
+    ("OA-SCP-U","oasis_animal","pla_negro",       "Soporte Comedero Patita",   "Soporte comedero con cuenco forma patita, talla S/M",       "mascotas",  "#F472B6",9000,  871, 260, 0, 1),
+    ("OA-SCH-U","oasis_animal","pla_negro",       "Soporte Comedero Huesito",  "Soporte comedero con cuenco forma huesito, talla S/M",      "mascotas",  "#F472B6",9000,  871, 260, 0, 1),
+    ("OA-EEI-U","oasis_animal","pla_negro",       "Estacion Evolutiva Inicial","Modulo inicial comedero/juguete expandible por niveles",    "mascotas",  "#F472B6",8000,  774, 230, 0, 1),
+    ("OA-EEA-U","oasis_animal","pla_negro",       "Estacion Evolutiva Alto",   "Modulo alto expansion estacion evolutiva nivel 2",          "mascotas",  "#F472B6",10000, 968, 290, 0, 1),
+    ("OA-MLI-U","oasis_animal","pla_blanco",      "Memory Litophany",          "Litofania personalizada foto mascota, 16hs de impresion",   "memoria",   "#F472B6",35000,3386, 960, 0, 1),
+    ("OA-KIT-E","oasis_animal","pla_negro",       "Kit Bienvenida Esencial",   "Guardian Tag + Bandeja Oval S + Tarjeta + Guia 7 dias",     "kits",      "#F472B6",15000, 900, 280, 0, 1),
+    ("OA-KIT-C","oasis_animal","pla_negro",       "Kit Bienvenida Completo",   "Esencial + Llavero Perrito + Soporte Comedero + Snack",     "kits",      "#F472B6",28000,1000, 350, 0, 1),
+    ("OA-KIT-P","oasis_animal","pla_negro",       "Kit Bienvenida Premium",    "Completo + Estacion Evolutiva + Caja nombre + Certificado", "kits",      "#F472B6",45000,2000, 600, 0, 1),
+    # ── VKHOME (vkhome_cliente) — canal B2B Agustina ─────────────────────────────
+    ("VKH-ORG-001","vkhome_cliente","pla_blanco",  "Organizador Escritorio VK","Set modular escritorio hogar-oficina 3 piezas",             "hogar",     "#A78BFA",3500,  95, 135, 3, 1),
+    ("VKH-POT-001","vkhome_cliente","pla_blanco",  "Porta-Cables VK",          "Organizador cables escritorio adhesivo",                   "hogar",     "#A78BFA",1200,  30,  45, 8, 1),
+    ("VKH-COC-001","vkhome_cliente","pla_blanco",  "Soporte Cocina VK",        "Soporte utensilios cocina imantado",                       "cocina",    "#A78BFA",2800,  75, 105, 4, 1),
+    ("VKH-DEC-001","vkhome_cliente","pla_blanco",  "Marco Foto 3D",            "Marco fotografico geometrico personalizable",              "deco",      "#A78BFA",2200,  60,  85, 4, 1),
+    # ── MAGNITUD 19 (admin — línea madre Alejandra) — Negro/Oro #1E3A8A / #C9A84C ─
+    # B2B industrial: carpinteros, reformadoras de cocina, estudios de arquitectura
+    ("M19-TKN-S","admin",          "pla_negro",   "Tirador Knurling S",        "Tirador cilindrico knurling S, prototipo B2B carpinteria",  "tiradores", "#C9A84C",2500,  242,  75, 1, 1),
+    ("M19-TKN-M","admin",          "pla_negro",   "Tirador Knurling M",        "Tirador cilindrico knurling M, prototipo B2B carpinteria",  "tiradores", "#C9A84C",3500,  339, 100, 1, 1),
+    ("M19-PMR-U","admin",          "pla_negro",   "Pies de Mueble Redondos x4","Pies mueble redondos x4, en desarrollo, no publicar",      "pies",      "#C9A84C",0,       0,   0, 0, 0),
 ]
 
 _TENANT_COLS = ("id","name","email","pwd","tel","tipo","sector","fecha","activo",
@@ -374,9 +384,9 @@ def init_schema():
             conn.execute(text("""
                 INSERT OR IGNORE INTO products
                 (sku,client_id,material_id,name,description,categoria,color,
-                 price,weight_gr,tiempo_impresion_min,stock)
-                VALUES (:sku,:cid,:mid,:name,:desc,:cat,:color,:price,:weight,:tiempo,:stock)
-            """), dict(zip(["sku","cid","mid","name","desc","cat","color","price","weight","tiempo","stock"], row)))
+                 price,weight_gr,tiempo_impresion_min,stock,activo)
+                VALUES (:sku,:cid,:mid,:name,:desc,:cat,:color,:price,:weight,:tiempo,:stock,:activo)
+            """), dict(zip(["sku","cid","mid","name","desc","cat","color","price","weight","tiempo","stock","activo"], row)))
 
         # ── Migraciones para installs existentes ──────────────
         _migrations = [
@@ -397,13 +407,14 @@ def init_schema():
             except Exception:
                 pass  # columna ya existe
 
-        # ── Corrección de productos Oasis Animal ya seeded con datos incorrectos ──
+        # ── Limpiar SKUs incorrectos de iteraciones anteriores ─────────────────────
         conn.execute(text("""
-            UPDATE products SET
-                material_id='pla_negro', name='Comedero Diseno Patita',
-                description='Soporte comedero cuenco forma patita — talla S/M',
-                price=9000, weight_gr=320, tiempo_impresion_min=180
-            WHERE sku='OAS-COM-001'
+            DELETE FROM products WHERE sku IN (
+                'OE-MAC-001','OE-MAC-002','OE-ID-001','OE-REG-001','OE-SOP-001','OE-FAU-001',
+                'OAS-LLA-001','OAS-TAG-001','OAS-COM-001','OAS-COM-002','OAS-EST-001',
+                'OAS-EST-002','OAS-JOY-001','OAS-LIT-001','OAS-TRV-001',
+                'OAS-B2B-VKH-001','OAS-B2B-VKH-002'
+            )
         """))
 
         # ── Actualizar password de vkhome si tiene valor legacy ──
