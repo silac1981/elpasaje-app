@@ -125,6 +125,18 @@ LINEAS = {
     "agustina":         {"nombre": "Agustina",           "color": "#6366F1", "emoji": "✨"},
 }
 COSTO_KG_DEFAULT = 2350.0
+_BASE_PAGES = "https://silac1981.github.io/elpasaje-app"
+PAGINAS_SOCIOS = {
+    "olivia_coquette":  "coquette",
+    "francisco_sport":  "sport",
+    "constantino_tech": "core-tech",
+    "pharma_delux":     "pharma-delux",
+    "oasis_animal":     "oasis-animal",
+    "oasis_del_estero": "oasis-estero",
+    "aviation":         "aero-tech",
+    "vkhome_cliente":   None,
+    "agustina":         None,
+}
 
 def get_linea(cid):
     return LINEAS.get(cid, {"nombre": cid, "color": "#6B7280", "emoji": "📦"})
@@ -1195,6 +1207,25 @@ elif menu == "📈 Mi Panel":
     _margen_avg = prod["margen_pct"].mean() if not prod.empty else 0
     _mg_color   = "#10B981" if _margen_avg>=50 else ("#F59E0B" if _margen_avg>=25 else "#EF4444")
 
+    # ── Banner link a página web ──────────────────────────────
+    _page_slug_s = PAGINAS_SOCIOS.get(uid if role != "socio_multi" else lineas_activas[0] if len(lineas_activas)==1 else uid)
+    if _page_slug_s:
+        _page_url_s = f"{_BASE_PAGES}/{_page_slug_s}.html"
+        st.markdown(f"""<a href="{_page_url_s}" target="_blank" style="text-decoration:none;">
+<div style="background:linear-gradient(90deg,#161B22,{hdr_color}22);border-radius:12px;
+     padding:12px 20px;border:1px solid {hdr_color}44;margin-bottom:12px;
+     display:flex;align-items:center;gap:12px;">
+  <span style="font-size:1.2rem;">🌐</span>
+  <div>
+    <div style="font-size:0.72rem;font-weight:700;color:{hdr_color};letter-spacing:1px;">TU PÁGINA WEB</div>
+    <div style="font-size:0.78rem;color:#8B949E;margin-top:1px;">{_page_url_s}</div>
+  </div>
+  <div style="margin-left:auto;background:{hdr_color}22;color:{hdr_color};padding:6px 16px;
+       border-radius:99px;font-size:0.7rem;font-weight:700;border:1px solid {hdr_color}44;">
+    Abrir →
+  </div>
+</div></a>""", unsafe_allow_html=True)
+
     _sk1,_sk2,_sk3,_sk4,_sk5 = st.columns(5)
     for _sc,_sv,_sl,_ss,_scolor in [
         (_sk1, f"${_cap_stock:,.0f}",  "💰 Stock",           "valor precio venta",        hdr_color),
@@ -1469,50 +1500,163 @@ elif menu == "🛒 Cargar Pedido":
     role = st.session_state["role"]
     if role == "socio_multi":
         lineas_activas = st.session_state.get("linea_filtro", get_lineas_usuario(uid))
-        cfg = LINEAS.get(uid, {"nombre": "Mis Líneas", "emoji": "✨"})
+        cfg = LINEAS.get(uid, {"nombre": "Mis Líneas", "emoji": "✨", "color": "#6366F1"})
     else:
         lineas_activas = [uid]
         cfg = get_linea(uid)
-    st.markdown(f"<div class='main-header'><h1>🛒 Nuevo Pedido · {cfg['nombre']}</h1><p>Solicita produccion a Fer de forma digital</p></div>", unsafe_allow_html=True)
+
+    _cp_color = cfg.get("color","#6366F1")
+
+    # ── Tema oscuro en Cargar Pedido ──────────────────────────
+    st.markdown(f"""<style>
+.stApp,[data-testid="stAppViewContainer"],[data-testid="stMain"]{{background-color:#0D1117!important}}
+.stTabs [data-baseweb="tab-list"]{{background:#161B22!important;border-radius:12px!important;padding:4px!important}}
+.stTabs [data-baseweb="tab"]{{color:#8B949E!important;font-weight:600!important;border-radius:8px!important}}
+.stTabs [aria-selected="true"]{{background:#21262D!important;color:#F0F6FC!important}}
+[data-testid="stFileUploaderDropzone"]{{background:#161B22!important;border-color:{_cp_color}44!important}}
+.stMarkdown p,.stMarkdown span{{color:#C9D1D9!important}}
+.stMarkdown strong,.stMarkdown b{{color:#F0F6FC!important}}
+.stSelectbox label,.stTextInput label,.stTextArea label,.stNumberInput label,.stDateInput label,.stFileUploader label{{color:#8B949E!important;font-weight:500!important}}
+[data-testid="stAlert"] p,[data-testid="stAlert"] div{{color:#C9D1D9!important}}
+[data-testid="stAlert"]{{background:#1a2332!important;border-color:#30363D!important}}
+details{{background:#161B22!important;border:1px solid #21262D!important;border-radius:12px!important}}
+</style>""", unsafe_allow_html=True)
+
+    # ── Header ───────────────────────────────────────────────
+    st.markdown(f"""
+<div style='background:linear-gradient(135deg,{_cp_color}dd,{_cp_color}88);
+     border-radius:20px;padding:20px 28px;margin-bottom:16px;border:1px solid {_cp_color}44;'>
+  <div style='font-size:0.65rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,0.7);'>EL PASAJE 3D STUDIO</div>
+  <div style='font-size:1.6rem;font-weight:800;color:white;margin-top:4px;'>🛒 Nuevo Pedido · {cfg['nombre']}</div>
+  <div style='font-size:0.78rem;color:rgba(255,255,255,0.65);margin-top:4px;'>Solicitá producción a Fer — quedará registrado en el sistema</div>
+</div>""", unsafe_allow_html=True)
+
+    # ── Cargar productos ──────────────────────────────────────
     with engine.connect() as _conn:
         _frames = [
             pd.read_sql(
-                text("SELECT name, sku, client_id FROM products WHERE client_id=:uid AND activo=1 ORDER BY name"),
+                text("SELECT name, sku, price, weight_gr, descripcion, categoria, color, client_id FROM products WHERE client_id=:uid AND activo=1 ORDER BY name"),
                 _conn, params={"uid": lid}
             ) for lid in lineas_activas
         ]
     prods_socio = pd.concat(_frames, ignore_index=True) if _frames else pd.DataFrame()
+
     if prods_socio.empty:
-        st.info("Todavía no tenés productos cargados en tu línea. Pedile a Alejandra que los agregue.")
+        st.markdown("<div style='background:#161B22;border-radius:12px;padding:20px;border:1px solid #21262D;text-align:center;color:#8B949E;'>Sin productos cargados todavía. Contactá a Alejandra para agregarlos.</div>", unsafe_allow_html=True)
         st.stop()
-    if role == "socio_multi" and len(lineas_activas) > 1:
-        prods_socio["display"] = prods_socio.apply(
-            lambda r: f"[{LINEAS.get(r['client_id'],{}).get('nombre', r['client_id'])}] {r['name']}", axis=1
-        )
-    else:
-        prods_socio["display"] = prods_socio["name"]
-    producto_display = st.selectbox("Producto", prods_socio["display"].tolist())
-    cantidad = st.number_input("Cantidad", min_value=1, max_value=100, value=1)
-    notas    = st.text_area("Notas para Fer (color, urgencia, etc.)", height=80)
-    if st.button("Confirmar Pedido", type="primary"):
-        sel_row     = prods_socio[prods_socio["display"] == producto_display].iloc[0]
-        linea_pedido = sel_row["client_id"]
-        with engine.connect() as conn:
-            result = conn.execute(
-                text("INSERT INTO orders (client_id, status, date, notas, color_pedido) VALUES (:cid, 'Pendiente', :fecha, :notas, '')"),
-                {"cid": linea_pedido, "fecha": datetime.now().isoformat(), "notas": notas.strip()}
+
+    # ── Selección visual de producto ──────────────────────────
+    st.markdown("<div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#58A6FF;margin-bottom:12px;'>SELECCIONÁ UN PRODUCTO</div>", unsafe_allow_html=True)
+
+    if "cp_sel_sku" not in st.session_state:
+        st.session_state["cp_sel_sku"] = None
+
+    _cp_cols = st.columns(3)
+    for _cpi, (_, _cpr) in enumerate(prods_socio.iterrows()):
+        _is_sel = st.session_state["cp_sel_sku"] == _cpr["sku"]
+        _cpc    = LINEAS.get(_cpr["client_id"],{}).get("color","#6366F1")
+        _sel_style = f"border:2px solid {_cpc};background:#1C2128;" if _is_sel else "border:1px solid #21262D;background:#161B22;"
+        _sel_badge = f"<div style='background:{_cpc};color:white;font-size:0.6rem;font-weight:700;padding:2px 8px;border-radius:99px;display:inline-block;margin-bottom:6px;'>✓ SELECCIONADO</div>" if _is_sel else ""
+        with _cp_cols[_cpi % 3]:
+            st.markdown(f"""<div style='{_sel_style}border-radius:14px;padding:14px;margin-bottom:8px;cursor:pointer;'>
+{_sel_badge}
+<div style='font-size:0.6rem;color:{_cpc};font-weight:700;letter-spacing:1px;text-transform:uppercase;'>{_cpr['sku']}</div>
+<div style='font-size:0.88rem;font-weight:700;color:#E6EDF3;margin-top:3px;'>{_cpr['name']}</div>
+<div style='font-size:0.68rem;color:#8B949E;margin-top:2px;'>{_cpr.get('categoria','') or ''}</div>
+<div style='margin-top:8px;font-size:1rem;font-weight:800;color:{_cpc};'>${float(_cpr['price']):,.0f}</div>
+<div style='font-size:0.65rem;color:#6B7280;'>{float(_cpr.get('weight_gr',0) or 0):.0f} g · {_cpr.get('descripcion','')[:50] if _cpr.get('descripcion') else ''}</div>
+</div>""", unsafe_allow_html=True)
+            if st.button("Seleccionar", key=f"cpbtn_{_cpr['sku']}", use_container_width=True,
+                         type="primary" if _is_sel else "secondary"):
+                st.session_state["cp_sel_sku"] = _cpr["sku"]
+                st.rerun()
+
+    _sel_sku = st.session_state.get("cp_sel_sku")
+    _sel_prod = prods_socio[prods_socio["sku"] == _sel_sku].iloc[0] if _sel_sku and not prods_socio[prods_socio["sku"]==_sel_sku].empty else None
+
+    if _sel_prod is None:
+        st.markdown("<div style='background:#0D1B2E;border-radius:10px;padding:12px 18px;border:1px solid #1B2D4A;margin-top:8px;'><span style='color:#58A6FF;font-size:0.82rem;'>👆 Seleccioná un producto de los cards de arriba para continuar</span></div>", unsafe_allow_html=True)
+        st.stop()
+
+    st.markdown("<div style='border-top:1px solid #21262D;margin:20px 0;'></div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#58A6FF;margin-bottom:12px;'>DETALLE DEL PEDIDO · {_sel_prod['name'].upper()}</div>", unsafe_allow_html=True)
+
+    # ── Formulario de detalle ─────────────────────────────────
+    _fd1, _fd2 = st.columns(2)
+    with _fd1:
+        _cp_qty = st.number_input("Cantidad de unidades", min_value=1, max_value=50, value=1, key="cp_qty")
+        _cp_fecha = st.date_input("Fecha de entrega deseada (opcional)", value=None, key="cp_fecha")
+    with _fd2:
+        _cp_color_txt = st.text_input("Color o material preferido (ej: Rosa, Negro mate, PETG gris)", key="cp_color")
+        _cp_urgente = st.checkbox("🔴 Urgente", key="cp_urgente", help="Ferr lo prioriza en la cola")
+
+    _cp_notas = st.text_area(
+        "Notas adicionales para Fer (medidas especiales, acabado, packaging, etc.)",
+        placeholder="Ej: Necesito el moño con cinta integrada, para regalo de 15 años este viernes...",
+        height=90, key="cp_notas"
+    )
+
+    # ── Subir referencias / archivos ──────────────────────────
+    st.markdown("<div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#58A6FF;margin-top:16px;margin-bottom:8px;'>REFERENCIAS E IMÁGENES (opcional)</div>", unsafe_allow_html=True)
+    _cp_files = st.file_uploader(
+        "Subí fotos de referencia, bocetos, archivos STL, PDFs o cualquier cosa que le ayude a Fer",
+        type=["png","jpg","jpeg","pdf","stl","3mf","dxf","svg","docx","txt"],
+        accept_multiple_files=True,
+        key="cp_files"
+    )
+    if _cp_files:
+        _fnames = [f.name for f in _cp_files]
+        st.markdown(f"<div style='background:#0D2818;border-radius:8px;padding:8px 14px;border:1px solid #238636;'><span style='color:#3FB950;font-size:0.8rem;'>📎 {len(_cp_files)} archivo{'s' if len(_cp_files)>1 else ''} adjunto{'s' if len(_cp_files)>1 else ''}: {', '.join(_fnames)}</span></div>", unsafe_allow_html=True)
+
+    # ── Resumen del pedido antes de confirmar ─────────────────
+    _total_est = float(_sel_prod["price"]) * _cp_qty
+    st.markdown(f"""
+<div style='background:#161B22;border-radius:14px;padding:16px 20px;border:1px solid {_cp_color}44;
+     border-left:4px solid {_cp_color};margin-top:16px;margin-bottom:16px;'>
+  <div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:{_cp_color};margin-bottom:8px;'>RESUMEN DEL PEDIDO</div>
+  <div style='font-size:0.9rem;font-weight:700;color:#E6EDF3;'>{_cp_qty}x {_sel_prod['name']}</div>
+  <div style='font-size:0.75rem;color:#8B949E;margin-top:2px;'>{_cp_color_txt or "Color por defecto"} · {("🔴 URGENTE" if _cp_urgente else "Sin urgencia")}</div>
+  <div style='font-size:1.2rem;font-weight:800;color:{_cp_color};margin-top:8px;'>${_total_est:,.0f}</div>
+</div>""", unsafe_allow_html=True)
+
+    if st.button("✅ Confirmar Pedido", type="primary", use_container_width=True, key="cp_submit"):
+        # Construir notas completas
+        _notas_full = []
+        if _cp_color_txt: _notas_full.append(f"Color/material: {_cp_color_txt}")
+        if _cp_urgente:   _notas_full.append("🔴 URGENTE")
+        if _cp_notas.strip(): _notas_full.append(_cp_notas.strip())
+        if _cp_files:     _notas_full.append(f"Archivos adjuntos: {', '.join(f.name for f in _cp_files)}")
+        _notas_str = " | ".join(_notas_full)
+        _fecha_str = _cp_fecha.isoformat() if _cp_fecha else None
+        _archivos_str = ", ".join(f.name for f in _cp_files) if _cp_files else None
+
+        linea_pedido = _sel_prod["client_id"]
+        with engine.connect() as _conn2:
+            result = _conn2.execute(
+                text("""INSERT INTO orders (client_id, status, date, notas, color_pedido,
+                                           fecha_entrega_solicitada, referencia_archivo)
+                        VALUES (:cid, 'Pendiente', :fecha, :notas, :color,
+                                :entrega, :archivos)"""),
+                {"cid": linea_pedido, "fecha": datetime.now().isoformat(),
+                 "notas": _notas_str, "color": _cp_color_txt or "",
+                 "entrega": _fecha_str, "archivos": _archivos_str}
             )
-            order_id  = result.lastrowid
-            prod_data = pd.read_sql(
-                text("SELECT sku, price FROM products WHERE name=:nombre AND client_id=:cid"),
-                conn, params={"nombre": sel_row["name"], "cid": linea_pedido}
+            order_id = result.lastrowid
+            prod_q = pd.read_sql(
+                text("SELECT price FROM products WHERE sku=:sku"),
+                _conn2, params={"sku": _sel_sku}
             )
-            conn.execute(
+            _conn2.execute(
                 text("INSERT INTO order_items (order_id, product_sku, cantidad, precio_unitario) VALUES (:oid, :sku, :qty, :precio)"),
-                {"oid": order_id, "sku": prod_data["sku"].iloc[0], "qty": cantidad, "precio": float(prod_data["price"].iloc[0])}
+                {"oid": order_id, "sku": _sel_sku, "qty": _cp_qty,
+                 "precio": float(prod_q["price"].iloc[0]) if not prod_q.empty else float(_sel_prod["price"])}
             )
-            conn.commit()
-        st.success(f"✅ Pedido registrado: {cantidad}x {sel_row['name']}")
+            _conn2.commit()
+
+        st.session_state.pop("cp_sel_sku", None)
+        st.success(f"✅ Pedido #{order_id} enviado a Fer — {_cp_qty}x {_sel_prod['name']} · ${_total_est:,.0f}")
+        if _cp_urgente:
+            st.warning("🔴 Marcado como urgente — Fer lo verá al tope de su cola.")
         st.balloons()
 
 
