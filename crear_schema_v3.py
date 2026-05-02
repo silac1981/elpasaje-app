@@ -298,17 +298,18 @@ PRODUCTS_SOCIOS = [
     ("PD-MUE-001", "pharma_delux",   "pla_blanco","Muestrero Medico",          "Soporte tarjetas muestras medicas escritorio",              "medico",    "#166534",2800,  75, 105, 4, 1),
     ("PD-SER-001", "pharma_delux",   "pla_blanco","Soporte Seringa",           "Porta-jeringas organizador tecnico",                       "medico",    "#166534",3800, 100, 140, 3, 1),
     ("PD-GIF-001", "pharma_delux",   "pla_blanco","Gift Set Laboratorio",      "Kit 3 piezas personalizado para laboratorio",               "gift",      "#166534",4500, 125, 175, 2, 1),
-    # ── OASIS DEL ESTERO (oasis_del_estero) — catálogo oficial Mayo 2026 ─────────
-    # Diseño propio Fer en Fusion 360 — canal principal: VK-Home (Agustina)
-    ("OE-BRR-S","oasis_del_estero","pla_negro",   "Bandeja Organica Redonda S","Bandeja redonda organica S, 2 patas, diseno Fer",           "hogar",     "#4CAF50",6500,  629, 190, 1, 1),
-    ("OE-BRR-M","oasis_del_estero","pla_negro",   "Bandeja Organica Redonda M","Bandeja redonda organica M, 3 patas, negro",               "hogar",     "#4CAF50",9900,  957, 290, 1, 1),
-    ("OE-BOV-S","oasis_del_estero","pla_negro",   "Bandeja Oval S",            "Bandeja oval S, diseno propio Fer Fusion 360",             "hogar",     "#4CAF50",8500,  822, 250, 1, 1),
-    ("OE-BOV-M","oasis_del_estero","pla_negro",   "Bandeja Oval M",            "Bandeja oval M, diseno propio Fer Fusion 360",             "hogar",     "#4CAF50",14000,1354, 410, 1, 1),
-    ("OE-BOV-L","oasis_del_estero","pla_negro",   "Bandeja Oval L",            "Bandeja oval L, por pedido, diseno Fer",                   "hogar",     "#4CAF50",19900,1925, 580, 0, 1),
-    ("OE-BAS-S","oasis_del_estero","pla_negro",   "Bandeja Asimetrica S",      "Bandeja organica asimetrica S, diseno propio Fer",         "hogar",     "#4CAF50",9900,  957, 290, 1, 1),
-    ("OE-BAS-M","oasis_del_estero","pla_negro",   "Bandeja Asimetrica M",      "Bandeja organica asimetrica M, diseno propio Fer",         "hogar",     "#4CAF50",15900,1538, 460, 1, 1),
-    ("OE-SAR-U","oasis_del_estero","pla_negro",   "Soporte Aromatico Circular","Soporte aromatico circular, por pedido",                   "hogar",     "#4CAF50",8000,  774, 230, 0, 1),
-    ("OE-BDA-U","oasis_del_estero","pla_negro",   "Bandeja Damero 35x32",      "En diseno con Agustina — NO publicar hasta definir precio","hogar",     "#4CAF50",0,      900, 270, 0, 0),
+    # ── OASIS DEL ESTERO (oasis_del_estero) — línea de Federico, catálogo pendiente ──
+    # ── VKHOME (vkhome_cliente) — catálogo oficial VK-Home Agustina, Mayo 2026 ──────
+    # Diseño propio Fer en Fusion 360 — canal de ventas: VK-Home
+    ("OE-BRR-S","vkhome_cliente","pla_negro",   "Bandeja Organica Redonda S","Bandeja redonda organica S, 2 patas bola, diseno Fer",     "bandejas patitas",   "#A78BFA", 6500,  629, 190, 1, 1),
+    ("OE-BRR-M","vkhome_cliente","pla_negro",   "Bandeja Organica Redonda M","Bandeja redonda organica M, 3 patas bola, diseno Fer",     "bandejas patitas",   "#A78BFA", 9900,  957, 290, 1, 1),
+    ("OE-BOV-S","vkhome_cliente","pla_negro",   "Bandeja Oval S",            "Bandeja oval S, diseno propio Fer Fusion 360",             "bandejas ovaladas",  "#A78BFA", 8500,  822, 250, 1, 1),
+    ("OE-BOV-M","vkhome_cliente","pla_negro",   "Bandeja Oval M",            "Bandeja oval M, diseno propio Fer Fusion 360",             "bandejas ovaladas",  "#A78BFA",14000, 1354, 410, 1, 1),
+    ("OE-BOV-L","vkhome_cliente","pla_negro",   "Bandeja Oval L",            "Bandeja oval L, por pedido, diseno Fer",                   "bandejas ovaladas",  "#A78BFA",19900, 1925, 580, 0, 1),
+    ("OE-BAS-S","vkhome_cliente","pla_negro",   "Bandeja Asimetrica S",      "Bandeja organica asimetrica S, diseno propio Fer",         "bandejas asimetricas","#A78BFA", 9900,  957, 290, 1, 1),
+    ("OE-BAS-M","vkhome_cliente","pla_negro",   "Bandeja Asimetrica M",      "Bandeja organica asimetrica M, diseno propio Fer",         "bandejas asimetricas","#A78BFA",15900, 1538, 460, 1, 1),
+    ("OE-SAR-U","vkhome_cliente","pla_negro",   "Soporte Aromatico Circular","Soporte aromatico circular, por pedido",                   "accesorios",         "#A78BFA", 8000,  774, 230, 0, 1),
+    ("OE-BDA-U","vkhome_cliente","pla_negro",   "Bandeja Damero 35x32",      "En diseno con Agustina — precio a confirmar",             "bandejas",           "#A78BFA",    0,  900, 270, 0, 0),
     # ── OASIS ANIMAL (oasis_animal) — catálogo oficial Mayo 2026 — Rosa #F472B6 ──
     # 10% de ventas al refugio solidario
     ("OA-LPG-U","oasis_animal","pla_negro",       "Llavero Perrito Globo",     "Llavero 3D perro globo acabado mate, precio mayorista El Pasaje","accesorios","#F472B6",1000,  97,  30,30, 1),
@@ -321,11 +322,7 @@ PRODUCTS_SOCIOS = [
     ("OA-KIT-E","oasis_animal","pla_negro",       "Kit Bienvenida Esencial",   "Guardian Tag + Bandeja Oval S + Tarjeta + Guia 7 dias",     "kits",      "#F472B6",15000, 900, 280, 0, 1),
     ("OA-KIT-C","oasis_animal","pla_negro",       "Kit Bienvenida Completo",   "Esencial + Llavero Perrito + Soporte Comedero + Snack",     "kits",      "#F472B6",28000,1000, 350, 0, 1),
     ("OA-KIT-P","oasis_animal","pla_negro",       "Kit Bienvenida Premium",    "Completo + Estacion Evolutiva + Caja nombre + Certificado", "kits",      "#F472B6",45000,2000, 600, 0, 1),
-    # ── VKHOME (vkhome_cliente) — canal B2B Agustina ─────────────────────────────
-    ("VKH-ORG-001","vkhome_cliente","pla_blanco",  "Organizador Escritorio VK","Set modular escritorio hogar-oficina 3 piezas",             "hogar",     "#A78BFA",3500,  95, 135, 3, 1),
-    ("VKH-POT-001","vkhome_cliente","pla_blanco",  "Porta-Cables VK",          "Organizador cables escritorio adhesivo",                   "hogar",     "#A78BFA",1200,  30,  45, 8, 1),
-    ("VKH-COC-001","vkhome_cliente","pla_blanco",  "Soporte Cocina VK",        "Soporte utensilios cocina imantado",                       "cocina",    "#A78BFA",2800,  75, 105, 4, 1),
-    ("VKH-DEC-001","vkhome_cliente","pla_blanco",  "Marco Foto 3D",            "Marco fotografico geometrico personalizable",              "deco",      "#A78BFA",2200,  60,  85, 4, 1),
+    # ── VKHOME (vkhome_cliente) — los productos OE-* de oasis_del_estero son su catálogo ─
     # ── MAGNITUD 19 (admin — línea madre Alejandra) — Negro/Oro #1E3A8A / #C9A84C ─
     # B2B industrial: carpinteros, reformadoras de cocina, estudios de arquitectura
     ("M19-TKN-S","admin",          "pla_negro",   "Tirador Knurling S",        "Tirador cilindrico knurling S, prototipo B2B carpinteria",  "tiradores", "#C9A84C",2500,  242,  75, 1, 1),
@@ -437,6 +434,24 @@ def init_schema():
         ))
         conn.execute(text(
             "INSERT OR IGNORE INTO tenant_lineas (tenant_id, linea_id) VALUES ('oasis_animal', 'vkhome_cliente')"
+        ))
+
+        # ── VKH catálogo real: mover OE-* de oasis_del_estero → vkhome_cliente ──
+        # y actualizar categorías al catálogo oficial Mayo 2026
+        conn.execute(text(
+            "UPDATE products SET client_id='vkhome_cliente', color='#A78BFA' WHERE client_id='oasis_del_estero' AND sku LIKE 'OE-%'"
+        ))
+        for _sku, _cat in [
+            ("OE-BRR-S","bandejas patitas"), ("OE-BRR-M","bandejas patitas"),
+            ("OE-BOV-S","bandejas ovaladas"),("OE-BOV-M","bandejas ovaladas"),("OE-BOV-L","bandejas ovaladas"),
+            ("OE-BAS-S","bandejas asimetricas"),("OE-BAS-M","bandejas asimetricas"),
+            ("OE-SAR-U","accesorios"),        ("OE-BDA-U","bandejas"),
+        ]:
+            conn.execute(text("UPDATE products SET categoria=:cat WHERE sku=:sku"),
+                         {"cat": _cat, "sku": _sku})
+        # ── Borrar placeholders VKH-* falsos ──
+        conn.execute(text(
+            "DELETE FROM products WHERE sku IN ('VKH-ORG-001','VKH-POT-001','VKH-COC-001','VKH-DEC-001')"
         ))
 
         conn.commit()
