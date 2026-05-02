@@ -435,17 +435,35 @@ def render():
                 st.markdown("<div style='background:#161B22;border-radius:12px;padding:20px;border:1px dashed #30363D;text-align:center;color:#8B949E;margin-bottom:16px;'>Todavía no tenés productos propios en Capa 2.<br>Usá el formulario de abajo para agregar el primero.</div>", unsafe_allow_html=True)
             else:
                 st.markdown("<div style='font-size:0.62rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#58A6FF;margin-bottom:10px;'>TUS PRODUCTOS</div>", unsafe_allow_html=True)
-                for _, _r2 in df_c2.iterrows():
-                    _vis2  = _r2.get("visibilidad", "borrador") or "borrador"
-                    _vc2   = _VIS_COLOR.get(_vis2, "#6B7280")
-                    _vl2   = _VIS_LABEL.get(_vis2, _vis2)
-                    _tipo2 = (_r2.get("tipo_producto", "linea_propio") or "linea_propio").replace("_", " ").title()
-                    _is_kit = (_r2.get("tipo_producto") or "") == "kit_mixto"
-                    _kc_this = _df_kc_all[_df_kc_all["kit_sku"] == _r2["sku"]] if not _df_kc_all.empty else pd.DataFrame()
-                    _kit_badge = f" · {len(_kc_this)} componentes" if _is_kit else ""
-                    _ca2, _cb2 = st.columns([3, 1])
-                    with _ca2:
-                        st.markdown(f"""
+                df_c2["_cat"] = df_c2["categoria"].fillna("Sin categoría").replace("", "Sin categoría")
+                for _cat in sorted(df_c2["_cat"].unique()):
+                    _df_cat = df_c2[df_c2["_cat"] == _cat]
+                    _n_cat  = len(_df_cat)
+                    with st.expander(f"📦 {_cat}  ·  {_n_cat} producto{'s' if _n_cat != 1 else ''}", expanded=True):
+                        for _, _r2 in _df_cat.iterrows():
+                            _vis2  = _r2.get("visibilidad", "borrador") or "borrador"
+                            _vc2   = _VIS_COLOR.get(_vis2, "#6B7280")
+                            _vl2   = _VIS_LABEL.get(_vis2, _vis2)
+                            _tipo2 = (_r2.get("tipo_producto", "linea_propio") or "linea_propio").replace("_", " ").title()
+                            _is_kit  = (_r2.get("tipo_producto") or "") == "kit_mixto"
+                            _kc_this = _df_kc_all[_df_kc_all["kit_sku"] == _r2["sku"]] if not _df_kc_all.empty else pd.DataFrame()
+                            _kit_badge = f" · {len(_kc_this)} componentes" if _is_kit else ""
+                            _img_url = str(_r2.get("imagen_url") or "").strip()
+                            _cimg, _cinfo = st.columns([1, 6])
+                            with _cimg:
+                                if _img_url.startswith("http") or _img_url.startswith("data:"):
+                                    st.image(_img_url, width=80)
+                                else:
+                                    st.markdown(
+                                        "<div style='width:80px;height:80px;background:#21262D;"
+                                        "border-radius:10px;display:flex;align-items:center;"
+                                        "justify-content:center;font-size:2rem;'>📦</div>",
+                                        unsafe_allow_html=True,
+                                    )
+                            with _cinfo:
+                                _ca2, _cb2 = st.columns([3, 1])
+                                with _ca2:
+                                    st.markdown(f"""
 <div style='background:#161B22;border-radius:12px;padding:14px 18px;
      border:1px solid #21262D;border-left:3px solid {_vc2};'>
   <div style='display:flex;align-items:center;gap:8px;flex-wrap:wrap;'>
@@ -459,79 +477,78 @@ def render():
     SKU: {_r2.get('sku','')} &nbsp;·&nbsp; Precio: ${float(_r2.get('price',0) or 0):,.0f} &nbsp;·&nbsp; Stock: {int(_r2.get('stock',0) or 0)} u{_kit_badge}
   </div>
 </div>""", unsafe_allow_html=True)
-                    with _cb2:
-                        _vis_opts = ["publico", "borrador", "pausado"]
-                        _vis_idx  = _vis_opts.index(_vis2) if _vis2 in _vis_opts else 1
-                        _new_vis  = st.selectbox("", _vis_opts, index=_vis_idx,
-                                                 key=f"vis_{_r2['sku']}_{lid}",
-                                                 format_func=lambda x: _VIS_LABEL[x])
-                        if _new_vis != _vis2:
-                            if st.button("Guardar", key=f"vis_save_{_r2['sku']}_{lid}",
-                                         use_container_width=True):
-                                with engine.begin() as _cn2:
-                                    _cn2.execute(
-                                        text("UPDATE products SET visibilidad=:v WHERE sku=:s"),
-                                        {"v": _new_vis, "s": _r2["sku"]}
-                                    )
-                                get_productos_capa2.clear()
-                                _cp_tienda.clear()
-                                st.success("Visibilidad actualizada")
-                                st.rerun()
-                    if _is_kit:
-                        with st.expander(f"🧩 Componentes ({len(_kc_this)})"):
-                            if _kc_this.empty:
-                                st.caption("Sin componentes registrados.")
-                            else:
-                                for _, _kc_r in _kc_this.iterrows():
-                                    _kcp = float(_kc_r.get("comp_price", 0) or 0) * int(_kc_r.get("cantidad", 1))
+                                with _cb2:
+                                    _vis_opts = ["publico", "borrador", "pausado"]
+                                    _vis_idx  = _vis_opts.index(_vis2) if _vis2 in _vis_opts else 1
+                                    _new_vis  = st.selectbox("", _vis_opts, index=_vis_idx,
+                                                             key=f"vis_{_r2['sku']}_{lid}",
+                                                             format_func=lambda x: _VIS_LABEL[x])
+                                    if _new_vis != _vis2:
+                                        if st.button("Guardar", key=f"vis_save_{_r2['sku']}_{lid}",
+                                                     use_container_width=True):
+                                            with engine.begin() as _cn2:
+                                                _cn2.execute(
+                                                    text("UPDATE products SET visibilidad=:v WHERE sku=:s"),
+                                                    {"v": _new_vis, "s": _r2["sku"]}
+                                                )
+                                            get_productos_capa2.clear()
+                                            _cp_tienda.clear()
+                                            st.success("Visibilidad actualizada")
+                                            st.rerun()
+                            if _is_kit:
+                                with st.expander(f"🧩 Componentes ({len(_kc_this)})"):
+                                    if _kc_this.empty:
+                                        st.caption("Sin componentes registrados.")
+                                    else:
+                                        for _, _kc_r in _kc_this.iterrows():
+                                            _kcp = float(_kc_r.get("comp_price", 0) or 0) * int(_kc_r.get("cantidad", 1))
+                                            st.markdown(
+                                                f"<div style='font-size:0.78rem;color:#C9D1D9;padding:5px 0;"
+                                                f"border-bottom:1px solid #21262D;'>"
+                                                f"<span style='font-family:monospace;color:#58A6FF;'>"
+                                                f"{_kc_r.get('component_sku','')}</span>"
+                                                f" — {_kc_r.get('comp_name','')} "
+                                                f"× {int(_kc_r.get('cantidad',1))}"
+                                                f" = <b style='color:#10B981;'>${_kcp:,.0f}</b></div>",
+                                                unsafe_allow_html=True
+                                            )
+                                        _kit_total = float(
+                                            (_kc_this["comp_price"].fillna(0) * _kc_this["cantidad"].fillna(1)).sum()
+                                        )
+                                        st.markdown(
+                                            f"<div style='font-size:0.8rem;font-weight:700;color:#E6EDF3;"
+                                            f"text-align:right;margin-top:6px;'>"
+                                            f"Total componentes: ${_kit_total:,.0f}</div>",
+                                            unsafe_allow_html=True
+                                        )
+
+                            if _vis2 != "pausado":
+                                _is_ip_wa = any(kw in (_r2.get("name", "") or "").lower() for kw in IP_RESTRINGIDA)
+                                if _is_ip_wa:
                                     st.markdown(
-                                        f"<div style='font-size:0.78rem;color:#C9D1D9;padding:5px 0;"
-                                        f"border-bottom:1px solid #21262D;'>"
-                                        f"<span style='font-family:monospace;color:#58A6FF;'>"
-                                        f"{_kc_r.get('component_sku','')}</span>"
-                                        f" — {_kc_r.get('comp_name','')} "
-                                        f"× {int(_kc_r.get('cantidad',1))}"
-                                        f" = <b style='color:#10B981;'>${_kcp:,.0f}</b></div>",
-                                        unsafe_allow_html=True
+                                        "<div style='font-size:0.72rem;color:#9CA3AF;padding:4px 2px;'>"
+                                        "🔒 Solo uso interno</div>",
+                                        unsafe_allow_html=True,
                                     )
-                                _kit_total = float(
-                                    (_kc_this["comp_price"].fillna(0) * _kc_this["cantidad"].fillna(1)).sum()
-                                )
-                                st.markdown(
-                                    f"<div style='font-size:0.8rem;font-weight:700;color:#E6EDF3;"
-                                    f"text-align:right;margin-top:6px;'>"
-                                    f"Total componentes: ${_kit_total:,.0f}</div>",
-                                    unsafe_allow_html=True
-                                )
+                                elif not _wa_configured:
+                                    st.caption("⚠️ Configurá el número de WhatsApp de tu línea en ⚙️ Mi Línea")
+                                else:
+                                    _wa_lnk = _wa_link_producto(
+                                        _r2.get("name", ""), _r2.get("sku", ""),
+                                        float(_r2.get("price", 0) or 0), lid, engine,
+                                    )
+                                    _wa_txt_u = (
+                                        f"Hola! Me interesa el {_r2.get('name','')} "
+                                        f"(SKU: {_r2.get('sku','')}) — "
+                                        f"${float(_r2.get('price', 0) or 0):,.0f} ¿Está disponible?"
+                                    )
+                                    _wa_c1, _wa_c2 = st.columns(2)
+                                    with _wa_c1:
+                                        st.link_button("📲 WhatsApp", url=_wa_lnk, use_container_width=True)
+                                    with _wa_c2:
+                                        st.code(_wa_txt_u, language=None)
 
-                    # ── Links de WhatsApp por producto ──────────────────
-                    if _vis2 != "pausado":
-                        _is_ip_wa = any(kw in (_r2.get("name", "") or "").lower() for kw in IP_RESTRINGIDA)
-                        if _is_ip_wa:
-                            st.markdown(
-                                "<div style='font-size:0.72rem;color:#9CA3AF;padding:4px 2px;'>"
-                                "🔒 Solo uso interno</div>",
-                                unsafe_allow_html=True,
-                            )
-                        elif not _wa_configured:
-                            st.caption("⚠️ Configurá el número de WhatsApp de tu línea en ⚙️ Mi Línea")
-                        else:
-                            _wa_lnk = _wa_link_producto(
-                                _r2.get("name", ""), _r2.get("sku", ""),
-                                float(_r2.get("price", 0) or 0), lid, engine,
-                            )
-                            _wa_txt_u = (
-                                f"Hola! Me interesa el {_r2.get('name','')} "
-                                f"(SKU: {_r2.get('sku','')}) — "
-                                f"${float(_r2.get('price', 0) or 0):,.0f} ¿Está disponible?"
-                            )
-                            _wa_c1, _wa_c2 = st.columns(2)
-                            with _wa_c1:
-                                st.link_button("📲 WhatsApp", url=_wa_lnk, use_container_width=True)
-                            with _wa_c2:
-                                st.code(_wa_txt_u, language=None)
-
-                    st.markdown("<div style='height:4px;'></div>", unsafe_allow_html=True)
+                            st.markdown("<div style='height:4px;'></div>", unsafe_allow_html=True)
 
             # ── Formulario nuevo Tipo B ──────────────────────────────────
             st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
