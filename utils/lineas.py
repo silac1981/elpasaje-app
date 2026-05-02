@@ -68,11 +68,14 @@ def get_linea(cid: str) -> dict:
 @st.cache_data(ttl=60)
 def get_productos_capa2(client_id: str) -> pd.DataFrame:
     """Retorna productos de Capa 2 (Tipo B/C/D) de una línea, excluyendo propio_3d."""
-    with engine.connect() as conn:
-        return pd.read_sql(
-            text("SELECT * FROM products WHERE client_id=:cid AND tipo_producto != 'propio_3d'"),
-            conn, params={"cid": client_id}
-        )
+    try:
+        with engine.connect() as conn:
+            return pd.read_sql(
+                text("SELECT * FROM products WHERE client_id=:cid AND tipo_producto != 'propio_3d'"),
+                conn, params={"cid": client_id}
+            )
+    except Exception:
+        return pd.DataFrame()
 
 
 @st.cache_data(ttl=60)

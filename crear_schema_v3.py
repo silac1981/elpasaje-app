@@ -402,6 +402,10 @@ def init_schema():
             "ALTER TABLE orders ADD COLUMN canal_origen TEXT",
             "ALTER TABLE senales_mercado ADD COLUMN segmento_detectado TEXT",
             "ALTER TABLE senales_mercado ADD COLUMN oportunidad TEXT",
+            # v4 — modelo dos capas
+            "ALTER TABLE products ADD COLUMN tipo_producto TEXT DEFAULT 'propio_3d'",
+            "ALTER TABLE products ADD COLUMN visibilidad TEXT DEFAULT 'publico'",
+            "ALTER TABLE products ADD COLUMN proveedor_ref TEXT",
         ]
         for _m in _migrations:
             try:
