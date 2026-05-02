@@ -397,7 +397,7 @@ details summary{color:#E6EDF3!important;padding:8px 12px!important}
     except Exception:
         _tenant_map = {}
     _pedidos_activos = _pedidos_all[_pedidos_all["status"].isin(["Pendiente","En Proceso"])] if not _pedidos_all.empty else pd.DataFrame()
-    tab_panel, tab_fab, tab_mats, tab_cola, tab_mike = st.tabs(["🛠️ Mi Panel", "📦 Cargar Fabricacion", "🧵 Materiales", "📋 Cola de Pedidos", "🤖 Mike"])
+    tab_panel, tab_fab, tab_mats, tab_cola, tab_mike, tab_stats = st.tabs(["🛠️ Mi Panel", "📦 Cargar Fabricacion", "🧵 Materiales", "📋 Cola de Pedidos", "🤖 Mike", "💹 Finanzas CFO"])
 
     # ══════════════════════════════════════════════════════
     # TAB 1 — MI PANEL PRODUCCION
@@ -777,6 +777,228 @@ details summary{color:#E6EDF3!important;padding:8px 12px!important}
             if st.button("Limpiar chat", key="mike_clear"):
                 st.session_state["mike_history"] = []
                 st.rerun()
+
+    # ══════════════════════════════════════════════════════
+    # TAB 6 — FINANZAS CFO
+    # ══════════════════════════════════════════════════════
+    with tab_stats:
+        st.markdown("<div style='margin-bottom:8px;font-size:0.65rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#58A6FF;'>RESUMEN FINANCIERO · TALLER</div>", unsafe_allow_html=True)
+
+        # ── Cargar datos financieros ──────────────────────────
+        try:
+            _df_ingresos = pd.read_sql("""
+                SELECT strftime('%Y-%m', o.date) AS mes,
+                       SUM(oi.precio_unitario * oi.cantidad) AS facturado,
+                       COUNT(DISTINCT o.id) AS pedidos
+                FROM orders o
+                JOIN order_items oi ON oi.order_id = o.id
+                WHERE o.status = 'Listo'
+                GROUP BY mes ORDER BY mes DESC LIMIT 12
+            """, engine)
+        except Exception:
+            _df_ingresos = pd.DataFrame(columns=["mes","facturado","pedidos"])
+
+        try:
+            _df_costo_mat = pd.read_sql("""
+                SELECT strftime('%Y-%m', pl.fecha_fin) AS mes,
+                       SUM(pl.gramos_usados * m.cost_kg / 1000.0) AS costo_mat,
+                       SUM(pl.gramos_usados) AS gramos_total
+                FROM production_log pl
+                JOIN materials m ON m.material_id = pl.material_id
+                WHERE pl.fecha_fin IS NOT NULL
+                GROUP BY mes ORDER BY mes DESC LIMIT 12
+            """, engine)
+        except Exception:
+            _df_costo_mat = pd.DataFrame(columns=["mes","costo_mat","gramos_total"])
+
+        try:
+            _overhead_total = pd.read_sql("SELECT SUM(monto_mensual) AS total FROM overhead WHERE activo=1", engine).iloc[0]["total"] or 0
+            _df_overhead = pd.read_sql("SELECT concepto, monto_mensual, categoria FROM overhead WHERE activo=1 ORDER BY monto_mensual DESC", engine)
+        except Exception:
+            _overhead_total = 0
+            _df_overhead = pd.DataFrame()
+
+        try:
+            _df_margen_prod = pd.read_sql("""
+                SELECT p.sku, p.name, t.name AS socio, p.price,
+                       p.weight_gr, m.cost_kg,
+                       p.price - (p.weight_gr * m.cost_kg / 1000.0) AS margen_bruto,
+                       CASE WHEN p.price > 0 THEN
+                            ((p.price - (p.weight_gr * m.cost_kg / 1000.0)) / p.price * 100)
+                       ELSE 0 END AS pct_margen
+                FROM products p
+                JOIN tenants t ON t.id = p.client_id
+                LEFT JOIN materials m ON m.material_id = p.material_id
+                WHERE p.activo = 1 AND p.price > 0
+                ORDER BY margen_bruto DESC
+            """, engine)
+        except Exception:
+            _df_margen_prod = pd.DataFrame()
+
+        try:
+            _df_por_socio = pd.read_sql("""
+                SELECT t.name AS socio, o.client_id,
+                       COUNT(DISTINCT o.id) AS n_pedidos,
+                       SUM(oi.precio_unitario * oi.cantidad) AS facturado
+                FROM orders o
+                JOIN order_items oi ON oi.order_id = o.id
+                JOIN tenants t ON t.id = o.client_id
+                WHERE o.status = 'Listo'
+                GROUP BY o.client_id ORDER BY facturado DESC
+            """, engine)
+        except Exception:
+            _df_por_socio = pd.DataFrame()
+
+        try:
+            _df_stock_inv = pd.read_sql("""
+                SELECT name, tipo, stock_gr, cost_kg,
+                       ROUND(stock_gr * cost_kg / 1000.0, 0) AS valor_stock
+                FROM materials WHERE activo=1 ORDER BY valor_stock DESC
+            """, engine)
+        except Exception:
+            _df_stock_inv = pd.DataFrame()
+
+        _fac_total   = float(_df_ingresos["facturado"].sum()) if not _df_ingresos.empty else 0
+        _cost_mat_total = float(_df_costo_mat["costo_mat"].sum()) if not _df_costo_mat.empty else 0
+        _margen_bruto = _fac_total - _cost_mat_total - _overhead_total
+        _n_ped_listo = int(_df_ingresos["pedidos"].sum()) if not _df_ingresos.empty else 0
+
+        # ── KPIs financieros ──────────────────────────────────
+        _fk1, _fk2, _fk3, _fk4 = st.columns(4)
+        for _fc, _fv, _fl, _fs, _fcolor in [
+            (_fk1, f"${_fac_total:,.0f}",    "💰 Facturación Total",    f"{_n_ped_listo} pedidos completados", "#3FB950"),
+            (_fk2, f"${_cost_mat_total:,.0f}","🧵 Costo Materiales",     "consumo registrado en log",          "#F59E0B"),
+            (_fk3, f"${_overhead_total:,.0f}","⚙️ Overhead Mensual",     "costos fijos del taller",            "#58A6FF"),
+            (_fk4, f"${_margen_bruto:,.0f}",  "📈 Margen Bruto Est.",   "facturado − mat − overhead",         "#EF4444" if _margen_bruto < 0 else "#22C55E"),
+        ]:
+            with _fc:
+                st.markdown(f"<div style='background:#161B22;border-radius:14px;padding:20px 16px;border:1px solid #21262D;border-top:3px solid {_fcolor};text-align:center;margin-bottom:8px;'><div style='font-size:1.65rem;font-weight:800;color:{_fcolor};line-height:1;'>{_fv}</div><div style='font-size:0.75rem;font-weight:600;color:#C9D1D9;margin-top:8px;'>{_fl}</div><div style='font-size:0.64rem;color:#6B7280;margin-top:4px;'>{_fs}</div></div>", unsafe_allow_html=True)
+
+        st.markdown("<div style='margin-top:28px;margin-bottom:12px;font-size:0.65rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#58A6FF;'>📅 DETALLE MENSUAL</div>", unsafe_allow_html=True)
+
+        # ── Tabla mensual ─────────────────────────────────────
+        if not _df_ingresos.empty or not _df_costo_mat.empty:
+            _meses_all = sorted(set(
+                list(_df_ingresos["mes"].tolist() if not _df_ingresos.empty else []) +
+                list(_df_costo_mat["mes"].tolist() if not _df_costo_mat.empty else [])
+            ), reverse=True)[:6]
+            _rows_mes = []
+            for _m in _meses_all:
+                _fac = float(_df_ingresos[_df_ingresos["mes"]==_m]["facturado"].sum()) if not _df_ingresos.empty else 0
+                _ped = int(_df_ingresos[_df_ingresos["mes"]==_m]["pedidos"].sum()) if not _df_ingresos.empty else 0
+                _cm  = float(_df_costo_mat[_df_costo_mat["mes"]==_m]["costo_mat"].sum()) if not _df_costo_mat.empty else 0
+                _gr  = float(_df_costo_mat[_df_costo_mat["mes"]==_m]["gramos_total"].sum()) if not _df_costo_mat.empty else 0
+                _mg  = _fac - _cm - _overhead_total
+                _rows_mes.append({
+                    "Mes": _m,
+                    "Pedidos": _ped,
+                    "Facturado $": f"${_fac:,.0f}",
+                    "Costo Mat $": f"${_cm:,.0f}",
+                    "Overhead $": f"${_overhead_total:,.0f}",
+                    "Margen $": f"${_mg:,.0f}",
+                    "Gramos usados": f"{_gr:,.0f} g",
+                })
+            _df_mes_show = pd.DataFrame(_rows_mes)
+            st.dataframe(_df_mes_show, use_container_width=True, hide_index=True)
+        else:
+            st.info("Sin registros de ventas completadas todavía.")
+
+        # ── Por socio + por producto ──────────────────────────
+        _col_soc, _col_prod = st.columns(2)
+
+        with _col_soc:
+            st.markdown("<div style='margin-top:20px;margin-bottom:10px;font-size:0.65rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#58A6FF;'>🤝 FACTURACIÓN POR SOCIO</div>", unsafe_allow_html=True)
+            if not _df_por_socio.empty:
+                _fac_max = float(_df_por_socio["facturado"].max()) if _df_por_socio["facturado"].max() > 0 else 1
+                for _, _sr in _df_por_socio.iterrows():
+                    _pct = min(100, float(_sr["facturado"]) / _fac_max * 100)
+                    st.markdown(f"""<div style='background:#161B22;border-radius:10px;padding:12px 16px;margin-bottom:6px;border:1px solid #21262D;'>
+<div style='font-size:0.82rem;font-weight:700;color:#E6EDF3;margin-bottom:6px;'>{_sr['socio']} <span style='color:#6B7280;font-weight:400;font-size:0.72rem;'>· {int(_sr['n_pedidos'])} pedidos</span></div>
+<div style='background:#21262D;border-radius:4px;height:6px;margin-bottom:4px;'><div style='background:#3FB950;height:6px;border-radius:4px;width:{_pct:.0f}%;'></div></div>
+<div style='font-size:0.88rem;font-weight:700;color:#3FB950;'>${float(_sr['facturado']):,.0f}</div>
+</div>""", unsafe_allow_html=True)
+            else:
+                st.caption("Sin ventas completadas registradas.")
+
+        with _col_prod:
+            st.markdown("<div style='margin-top:20px;margin-bottom:10px;font-size:0.65rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#58A6FF;'>🏆 TOP PRODUCTOS POR MARGEN</div>", unsafe_allow_html=True)
+            if not _df_margen_prod.empty:
+                _top10 = _df_margen_prod.head(10)
+                _mg_max = float(_top10["margen_bruto"].max()) if _top10["margen_bruto"].max() > 0 else 1
+                for _, _pr in _top10.iterrows():
+                    _pct = max(0, min(100, float(_pr["margen_bruto"]) / _mg_max * 100))
+                    _mc = "#22C55E" if float(_pr["pct_margen"]) >= 50 else ("#F59E0B" if float(_pr["pct_margen"]) >= 25 else "#EF4444")
+                    st.markdown(f"""<div style='background:#161B22;border-radius:10px;padding:12px 16px;margin-bottom:6px;border:1px solid #21262D;'>
+<div style='font-size:0.78rem;font-weight:700;color:#E6EDF3;'>{_pr['name']} <span style='color:#6B7280;font-size:0.68rem;'>{_pr['sku']}</span></div>
+<div style='font-size:0.68rem;color:#8B949E;margin-bottom:5px;'>{_pr['socio']} · ${float(_pr['price']):,.0f} PVP</div>
+<div style='background:#21262D;border-radius:4px;height:5px;margin-bottom:4px;'><div style='background:{_mc};height:5px;border-radius:4px;width:{_pct:.0f}%;'></div></div>
+<div style='font-size:0.8rem;font-weight:700;color:{_mc};'>Margen ${float(_pr['margen_bruto']):,.0f} <span style='font-size:0.7rem;font-weight:400;'>({float(_pr['pct_margen']):.0f}%)</span></div>
+</div>""", unsafe_allow_html=True)
+            else:
+                st.caption("Sin datos de productos con material asignado.")
+
+        # ── Stock materiales + Overhead ───────────────────────
+        _col_mat2, _col_oh = st.columns(2)
+
+        with _col_mat2:
+            st.markdown("<div style='margin-top:20px;margin-bottom:10px;font-size:0.65rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#58A6FF;'>🧵 CAPITAL EN STOCK DE MATERIALES</div>", unsafe_allow_html=True)
+            if not _df_stock_inv.empty:
+                _inv_total = float(_df_stock_inv["valor_stock"].sum())
+                st.markdown(f"<div style='background:#161B22;border-radius:10px;padding:12px 16px;margin-bottom:10px;border:1px solid #21262D;border-left:3px solid #F59E0B;'><span style='color:#F59E0B;font-weight:700;font-size:0.9rem;'>Total invertido en stock: ${_inv_total:,.0f}</span></div>", unsafe_allow_html=True)
+                for _, _mr in _df_stock_inv.iterrows():
+                    _pct_s = min(100, float(_mr["valor_stock"]) / max(1, _inv_total) * 100)
+                    st.markdown(f"""<div style='background:#161B22;border-radius:8px;padding:10px 14px;margin-bottom:5px;border:1px solid #21262D;'>
+<div style='font-size:0.78rem;font-weight:600;color:#C9D1D9;'>{_mr['name']}</div>
+<div style='font-size:0.65rem;color:#6B7280;margin-bottom:4px;'>{_mr['stock_gr']:,.0f} g · ${float(_mr['cost_kg']):,.0f}/kg</div>
+<div style='background:#21262D;border-radius:3px;height:4px;margin-bottom:3px;'><div style='background:#F59E0B;height:4px;border-radius:3px;width:{_pct_s:.0f}%;'></div></div>
+<div style='font-size:0.75rem;color:#F59E0B;font-weight:700;'>${float(_mr['valor_stock']):,.0f}</div>
+</div>""", unsafe_allow_html=True)
+            else:
+                st.caption("Sin materiales activos.")
+
+        with _col_oh:
+            st.markdown("<div style='margin-top:20px;margin-bottom:10px;font-size:0.65rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#58A6FF;'>⚙️ OVERHEAD MENSUAL FIJO</div>", unsafe_allow_html=True)
+            if not _df_overhead.empty:
+                st.markdown(f"<div style='background:#161B22;border-radius:10px;padding:12px 16px;margin-bottom:10px;border:1px solid #21262D;border-left:3px solid #58A6FF;'><span style='color:#58A6FF;font-weight:700;font-size:0.9rem;'>Total mensual: ${_overhead_total:,.0f}</span></div>", unsafe_allow_html=True)
+                for _, _ohr in _df_overhead.iterrows():
+                    _pct_oh = min(100, float(_ohr["monto_mensual"]) / max(1, _overhead_total) * 100)
+                    _cat_color = {"Servicios":"#F59E0B","Maquinaria":"#EF4444","Infraestructura":"#58A6FF","Produccion":"#22C55E"}.get(_ohr.get("categoria",""), "#8B949E")
+                    st.markdown(f"""<div style='background:#161B22;border-radius:8px;padding:10px 14px;margin-bottom:5px;border:1px solid #21262D;'>
+<div style='font-size:0.78rem;font-weight:600;color:#C9D1D9;'>{_ohr['concepto']}</div>
+<div style='font-size:0.65rem;color:{_cat_color};margin-bottom:4px;'>{_ohr.get('categoria','')}</div>
+<div style='background:#21262D;border-radius:3px;height:4px;margin-bottom:3px;'><div style='background:{_cat_color};height:4px;border-radius:3px;width:{_pct_oh:.0f}%;'></div></div>
+<div style='font-size:0.75rem;color:#58A6FF;font-weight:700;'>${float(_ohr['monto_mensual']):,.0f}/mes</div>
+</div>""", unsafe_allow_html=True)
+            else:
+                st.caption("Sin overhead configurado.")
+
+        # ── Links a páginas de socios ─────────────────────────
+        st.markdown("<div style='margin-top:32px;margin-bottom:12px;font-size:0.65rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#58A6FF;'>🌐 PÁGINAS WEB DE SOCIOS</div>", unsafe_allow_html=True)
+        _BASE_URL = "https://silac1981.github.io/elpasaje-app"
+        _paginas = [
+            ("Oasis Animal",      "oasis-animal",  "#22C55E", "🐾"),
+            ("Oasis del Estero",  "oasis-estero",  "#10B981", "🌿"),
+            ("Core Tech",         "core-tech",     "#3B82F6", "⚙️"),
+            ("Coquette",          "coquette",      "#EC4899", "🎀"),
+            ("Sport",             "sport",         "#F59E0B", "🏃"),
+            ("Pharma DeLux",      "pharma-delux",  "#8B5CF6", "💊"),
+            ("Aero Tech",         "aero-tech",     "#06B6D4", "✈️"),
+            ("Melómano",          "melomano",      "#EF4444", "🎵"),
+            ("Luminis",           "luminis",       "#FBBF24", "💡"),
+            ("Vuelo Certero",     "vuelo-certero", "#14B8A6", "🎯"),
+            ("Magnitud 19",       "magnitud19",    "#6366F1", "🏭"),
+            ("El Pasaje",         "index",         "#F0F6FC", "🏠"),
+        ]
+        _pcols = st.columns(4)
+        for _pi, (_pname, _pslug, _pcolor, _picon) in enumerate(_paginas):
+            _purl = f"{_BASE_URL}/{_pslug}.html"
+            with _pcols[_pi % 4]:
+                st.markdown(f"""<a href="{_purl}" target="_blank" style='text-decoration:none;'>
+<div style='background:#161B22;border-radius:12px;padding:16px 14px;border:1px solid #21262D;border-left:3px solid {_pcolor};margin-bottom:8px;transition:all 0.2s;cursor:pointer;'>
+  <div style='font-size:1.3rem;line-height:1;'>{_picon}</div>
+  <div style='font-size:0.8rem;font-weight:700;color:#E6EDF3;margin-top:6px;'>{_pname}</div>
+  <div style='font-size:0.62rem;color:#6B7280;margin-top:2px;'>/{_pslug}.html</div>
+</div></a>""", unsafe_allow_html=True)
 
 elif menu == "🤝 Socios":
     st.markdown("<div class='main-header'><h1>🤝 Panel de Socios</h1><p>Ecosistema El Pasaje · Familia + B2B · Visión consolidada</p></div>", unsafe_allow_html=True)
