@@ -109,7 +109,8 @@ TABLAS = [
             fallo_impresion           INTEGER DEFAULT 0,
             motivo_fallo              TEXT,
             referencia_archivo        TEXT,
-            fecha_entrega_solicitada  TEXT
+            fecha_entrega_solicitada  TEXT,
+            canal_origen              TEXT
         )
     """),
 
@@ -398,6 +399,7 @@ def init_schema():
             "ALTER TABLE orders ADD COLUMN motivo_fallo TEXT",
             "ALTER TABLE orders ADD COLUMN referencia_archivo TEXT",
             "ALTER TABLE orders ADD COLUMN fecha_entrega_solicitada TEXT",
+            "ALTER TABLE orders ADD COLUMN canal_origen TEXT",
             "ALTER TABLE senales_mercado ADD COLUMN segmento_detectado TEXT",
             "ALTER TABLE senales_mercado ADD COLUMN oportunidad TEXT",
         ]

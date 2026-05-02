@@ -1764,6 +1764,26 @@ details{{background:#161B22!important;border:1px solid #21262D!important;border-
         height=90, key="cp_notas"
     )
 
+    # ── ¿Cómo nos conociste? ──────────────────────────────────
+    st.markdown("<div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#58A6FF;margin-top:16px;margin-bottom:8px;'>¿CÓMO NOS CONOCISTE?</div>", unsafe_allow_html=True)
+    _canal_icons = {
+        "Ya era cliente / familia": "👨‍👩‍👧",
+        "Instagram":                "📸",
+        "TikTok":                   "🎵",
+        "Recomendación personal":   "🤝",
+        "Presencial / evento":      "🏪",
+        "WhatsApp directo":         "💬",
+        "Otro":                     "💡",
+    }
+    _cp_canal = st.selectbox(
+        "Canal de origen del pedido",
+        list(_canal_icons.keys()),
+        index=0,
+        key="cp_canal",
+        label_visibility="collapsed"
+    )
+    st.markdown(f"<div style='background:#161B22;border-radius:8px;padding:8px 14px;border:1px solid #21262D;font-size:0.8rem;color:#8B949E;'>{_canal_icons[_cp_canal]} <b style='color:#C9D1D9;'>{_cp_canal}</b> — esto ayuda a saber por dónde llegan los pedidos</div>", unsafe_allow_html=True)
+
     # ── Subir referencias / archivos ──────────────────────────
     st.markdown("<div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#58A6FF;margin-top:16px;margin-bottom:8px;'>REFERENCIAS E IMÁGENES (opcional)</div>", unsafe_allow_html=True)
     _cp_files = st.file_uploader(
@@ -1783,7 +1803,7 @@ details{{background:#161B22!important;border:1px solid #21262D!important;border-
      border-left:4px solid {_cp_color};margin-top:16px;margin-bottom:16px;'>
   <div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:{_cp_color};margin-bottom:8px;'>RESUMEN DEL PEDIDO</div>
   <div style='font-size:0.9rem;font-weight:700;color:#E6EDF3;'>{_cp_qty}x {_sel_prod['name']}</div>
-  <div style='font-size:0.75rem;color:#8B949E;margin-top:2px;'>{_cp_color_txt or "Color por defecto"} · {("🔴 URGENTE" if _cp_urgente else "Sin urgencia")}</div>
+  <div style='font-size:0.75rem;color:#8B949E;margin-top:2px;'>{_cp_color_txt or "Color por defecto"} · {("🔴 URGENTE" if _cp_urgente else "Sin urgencia")} · {_canal_icons.get(_cp_canal,"")}{_cp_canal}</div>
   <div style='font-size:1.2rem;font-weight:800;color:{_cp_color};margin-top:8px;'>${_total_est:,.0f}</div>
 </div>""", unsafe_allow_html=True)
 
@@ -1794,6 +1814,7 @@ details{{background:#161B22!important;border:1px solid #21262D!important;border-
         if _cp_urgente:   _notas_full.append("🔴 URGENTE")
         if _cp_notas.strip(): _notas_full.append(_cp_notas.strip())
         if _cp_files:     _notas_full.append(f"Archivos adjuntos: {', '.join(f.name for f in _cp_files)}")
+        _notas_full.append(f"Canal origen: {_cp_canal}")
         _notas_str = " | ".join(_notas_full)
         _fecha_str = _cp_fecha.isoformat() if _cp_fecha else None
         _archivos_str = ", ".join(f.name for f in _cp_files) if _cp_files else None
@@ -1802,12 +1823,12 @@ details{{background:#161B22!important;border:1px solid #21262D!important;border-
         with engine.connect() as _conn2:
             result = _conn2.execute(
                 text("""INSERT INTO orders (client_id, status, date, notas, color_pedido,
-                                           fecha_entrega_solicitada, referencia_archivo)
+                                           fecha_entrega_solicitada, referencia_archivo, canal_origen)
                         VALUES (:cid, 'Pendiente', :fecha, :notas, :color,
-                                :entrega, :archivos)"""),
+                                :entrega, :archivos, :canal)"""),
                 {"cid": linea_pedido, "fecha": datetime.now().isoformat(),
                  "notas": _notas_str, "color": _cp_color_txt or "",
-                 "entrega": _fecha_str, "archivos": _archivos_str}
+                 "entrega": _fecha_str, "archivos": _archivos_str, "canal": _cp_canal}
             )
             order_id = result.lastrowid
             prod_q = pd.read_sql(
