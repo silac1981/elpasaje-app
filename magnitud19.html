@@ -277,6 +277,8 @@ footer{padding:16px 64px;background:rgba(0,0,0,.7);border-top:1px solid var(--br
   <div class="pasaje-txt">Tu precisión en el consultorio merece orden en tu mente.<br>Donde termina Pharma DeLux, <em>empieza Magnitud 19.</em></div>
   <a href="pharma-delux.html" class="pasaje-cta">Explorar Pharma DeLux →</a>
 </div>
+
+<div id="m19-catalog-json" class="sec sec-deep" style="display:none"></div>
 </div>
 
 <div id="tab-sensorial" class="tab-panel">
@@ -497,10 +499,57 @@ setTimeout(()=>{[["don-bar-1","don-val-1",62,50000],["don-bar-2","don-val-2",48,
 window.addEventListener("scroll",()=>{const b=document.getElementById("back-banner");if(window.scrollY>300){b.style.opacity="1";b.style.transform="translateX(0)";b.style.pointerEvents="auto"}else{b.style.opacity="0";b.style.transform="translateX(-10px)";b.style.pointerEvents="none"}});
 function switchTab(id,btn){document.querySelectorAll(".tab-panel").forEach(p=>p.classList.remove("active"));document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));document.getElementById("tab-"+id).classList.add("active");if(btn)btn.classList.add("active");window.scrollTo({top:0,behavior:"smooth"});document.querySelectorAll("#tab-"+id+" .reveal").forEach(el=>{if(!el.classList.contains("visible"))obs.observe(el)})}
 function setFn(el,texto){el.closest(".ia-fn-grid").querySelectorAll(".ia-fn").forEach(f=>f.classList.remove("active-fn"));el.classList.add("active-fn");const inp=el.closest(".ia-wrap").querySelector(".ia-inp");if(inp){inp.value=texto;inp.focus()}}
-const SYS=`Sos el Performance Advisor de Magnitud 19. NUNCA menciones TDAH como diagnóstico. Usá arquitectura cognitiva diferente, mentes de alto rendimiento.
-CATÁLOGO: Reloj Sol G2 $28k-35k, Placas Hápticas $8.500, Piedras Toque $6.200, Crystal Grid $7.800, Token Enfoque $12.500, Cubo Infinito $9.800, Engranajes Planetarios $14.500, Mecanismo Torque $11.000, Cerebro Externo 3D $13.000, Atril Vuelo de Hoy $9.500, Planner Magnitud $16.000, Bandejas Carga Cognitiva $11.500. WA: +54 11 6549-7234. Máximo 3 oraciones. Tono sofisticado.`;
+const SYS=`Sos el Performance Advisor de Magnitud 19 — El Pasaje 3D Studio. NUNCA menciones TDAH como diagnóstico. Usá: arquitectura cognitiva diferente, mentes de alto rendimiento, neurodivergencia, hiperfoco.
+Respaldo profesional: Aldana (psicopedagoga especialista en neurodiversidad) valida los productos de Fidgets y el Kit.
+CATÁLOGO OFICIAL (SKU | Producto | Precio):
+M19-FDE-S | Fidget Botones | $8.500 · M19-FDE-R | Fidget Rueda | $9.500 · M19-FDE-T | Fidget Texturas | $8.000 · M19-FCO-U | Fidget Corporal Reuniones | $6.500 · M19-KRS-U | Kit Regulación Sensorial Niños | $22.000 · M19-PNE-U | Porta-notebook ejecutivo | $18.000 · M19-BAN-U | Bandeja objetos | $12.000 · M19-ORD-U | Organizador modular | $15.000 · M19-STB-U | Stand tablet | $14.000
+VUELO CERTERO (Black Label): VC-QPR-U Quiver Pro $42.000 · VC-FJG-U Fletcher Jig $15.000 · VC-TBX-U Tournament Box ajedrez $55.000 · VC-PPT-U Porta-pelotas tenis $10.000 · VC-PRA-U Porta-raqueta $16.000
+HERRAJES B2B: M19-TKN-S Tirador Knurling S $2.500 · M19-TKN-M Tirador Knurling M $3.500
+Todo: entrega 48-72hs bajo pedido. WA: +54 11 6549-7234. Máximo 3 oraciones. Tono sofisticado.`;
 const FB=["Para reuniones largas, las Placas Hápticas Fractales en PLA Seda Bronce son el ancla más discreta — no hacen ruido, no se notan, organizan el sistema nervioso mientras la mente trabaja a plena potencia.","El Token de Enfoque con rodamiento real cambia la dinámica en entornos formales — la energía kinestésica pasa por un mecanismo silencioso que nadie ve.","Para arquitectura cognitiva diferente en el aula, el kit escolar con Placa Háptica pequeña es la entrada más suave: textura en la mano durante la clase, sin convertirse en distracción."];
 async function callIA(inputId,respId){const inp=document.getElementById(inputId),resp=document.getElementById(respId);if(!inp||!resp)return;const t=inp.value.trim();if(!t){inp.focus();return}resp.style.display="block";resp.textContent="···";try{const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:220,system:SYS,messages:[{role:"user",content:t}]})});const d=await r.json();resp.textContent=d.content?.[0]?.text||"Escribinos al WA."}catch(e){resp.textContent=FB[Math.floor(Math.random()*FB.length)]}}
+
+/* ── Catálogo dinámico desde EPCC ── */
+const _WA_NUM="541165497234";
+function _fmtP(n){return new Intl.NumberFormat('es-AR').format(n)}
+function _waLink(nom,sku,precio){return`https://wa.me/${_WA_NUM}?text=${encodeURIComponent(`Hola! Me interesa ${nom} (SKU: ${sku}) — $${_fmtP(precio)}. ¿Está disponible?`)}`}
+async function loadCatalogoM19(){
+  try{
+    const r=await fetch('./exports/magnitud19-catalog.json');
+    if(!r.ok)return;
+    const d=await r.json();
+    const prods=[...(d.productos_3d||[])].filter(p=>p.stock>0||true);
+    if(!prods.length)return;
+    const cats={};
+    prods.forEach(p=>{const c=p.categoria||'Otros';if(!cats[c])cats[c]=[];cats[c].push(p)});
+    const wrap=document.getElementById('m19-catalog-json');
+    if(!wrap)return;
+    let html=`<div style="margin-bottom:16px"><div style="font-size:.5rem;letter-spacing:5px;text-transform:uppercase;color:var(--oro);display:flex;align-items:center;gap:10px;margin-bottom:20px"><span style="width:18px;height:1px;background:var(--oro);display:inline-block"></span>CATÁLOGO ACTUALIZADO DESDE SISTEMA</div>`;
+    Object.entries(cats).forEach(([cat,items])=>{
+      html+=`<div style="margin-bottom:28px"><div style="font-size:.7rem;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--gris3);margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--brd)">${cat}</div>`;
+      html+=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1px;background:var(--brd)">`;
+      items.forEach(p=>{
+        const sc=p.stock>5?'var(--verde)':(p.stock>0?'#F59E0B':'#EF4444');
+        const stk=p.stock>0?`${p.stock} u`:'Bajo pedido';
+        html+=`<div style="background:var(--carbono);padding:22px 20px;transition:background .3s" onmouseenter="this.style.background='var(--acero)'" onmouseleave="this.style.background='var(--carbono)'">
+          <div style="font-size:.5rem;color:var(--gris2);letter-spacing:2px;margin-bottom:6px">${p.sku}</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:1rem;font-weight:600;color:var(--blanco);margin-bottom:6px">${p.name}</div>
+          <div style="font-size:.78rem;color:var(--gris3);line-height:1.5;margin-bottom:14px">${(p.description||'').substring(0,80)}</div>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:var(--oro)">$${_fmtP(p.price)}</span>
+            <span style="font-size:.6rem;color:${sc}">${stk}</span>
+          </div>
+          <a href="${_waLink(p.name,p.sku,p.price)}" target="_blank" style="display:inline-flex;align-items:center;gap:6px;margin-top:12px;font-size:.5rem;letter-spacing:3px;text-transform:uppercase;color:var(--gris);text-decoration:none;transition:color .2s" onmouseenter="this.style.color='var(--oro)'" onmouseleave="this.style.color='var(--gris)'">Consultar →</a>
+        </div>`;
+      });
+      html+=`</div></div>`;
+    });
+    html+=`</div>`;
+    wrap.innerHTML=html;
+    wrap.style.display='block';
+  }catch(e){}
+}
+loadCatalogoM19();
 </script>
 </body>
 </html>

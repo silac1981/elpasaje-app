@@ -6,7 +6,8 @@ from utils.db import engine
 
 # ── Configuración de líneas del ecosistema ────────────────────────────────────
 LINEAS = {
-    "admin":            {"nombre": "Administracion",          "color": "#1E3A8A", "emoji": "🏛️"},
+    "admin":            {"nombre": "Magnitud 19",             "color": "#B87333", "emoji": "⚡"},
+    "fer_produccion":   {"nombre": "Melómano",                "color": "#9C6B3C", "emoji": "🎵"},
     "oasis_animal":     {"nombre": "Oasis Animal",            "color": "#F472B6", "emoji": "🐾"},
     "oasis_del_estero": {"nombre": "Oasis del Estero",        "color": "#34D399", "emoji": "🌱"},
     "pharma_delux":     {"nombre": "Pharma DeLux",            "color": "#FBBF24", "emoji": "💊"},
@@ -21,6 +22,8 @@ LINEAS = {
 _BASE_PAGES = "https://silac1981.github.io/elpasaje-app"
 
 PAGINAS_SOCIOS = {
+    "admin":            "magnitud19",
+    "fer_produccion":   "melomano",
     "olivia_coquette":  "coquette",
     "francisco_sport":  "sport",
     "constantino_tech": "core-tech",

@@ -400,10 +400,164 @@ def _dash_main():
         )
 
 
+def _dash_m19():
+    """Tab ⚡ Magnitud 19 — panel de línea madre y Vuelo Certero."""
+    _LC = "#B87333"
+    st.markdown(
+        f"<div style='background:linear-gradient(135deg,{_LC}22,{_LC}08);border-radius:16px;"
+        f"padding:20px 28px;margin-bottom:16px;border:1px solid {_LC}33;'>"
+        f"<div style='font-size:0.58rem;font-weight:700;letter-spacing:4px;color:{_LC};text-transform:uppercase;'>EL PASAJE 3D STUDIO · LÍNEA MADRE</div>"
+        f"<div style='font-size:1.8rem;font-weight:800;color:#E6EDF3;margin-top:6px;'>⚡ Magnitud 19</div>"
+        f"<div style='font-size:0.78rem;color:rgba(240,236,228,0.6);margin-top:4px;'>Ancla tu mente. Expande tu vuelo.</div>"
+        f"</div>",
+        unsafe_allow_html=True,
+    )
+
+    from utils.pricing import cargar_productos
+    from utils.db import engine as _eng_m19
+    df_all = cargar_productos()
+    df_m19 = df_all[df_all["client_id"] == "admin"].copy()
+
+    if df_m19.empty:
+        st.warning("Sin productos para Magnitud 19 en la BD. Corrí migration_v8.py para el seed inicial.")
+        if st.button("▶ Correr migration_v8 ahora"):
+            try:
+                import migration_v8
+                migration_v8.run()
+                from utils.pricing import cargar_productos as _ccp
+                _ccp.clear()
+                st.success("migration_v8 OK — recargá la página.")
+                st.rerun()
+            except Exception as _e:
+                st.error(f"Error: {_e}")
+        return
+
+    # ── KPIs ──────────────────────────────────────────────────────────────────
+    _v_stock   = float(df_m19["valor_stock"].sum())
+    _n_prods   = len(df_m19[df_m19["activo"] == 1]) if "activo" in df_m19.columns else len(df_m19)
+    _n_cats    = df_m19["categoria"].nunique()
+    _n_cero    = int((df_m19["stock"] <= 0).sum())
+    _mk1, _mk2, _mk3, _mk4 = st.columns(4)
+    for _kc, _kv, _kl, _kcol in [
+        (_mk1, f"${_v_stock:,.0f}", "💰 Valor stock",       _LC),
+        (_mk2, str(_n_prods),       "📦 Productos activos", _LC),
+        (_mk3, str(_n_cats),        "🏷️ Categorías",        "#3B82F6"),
+        (_mk4, str(_n_cero),        "⚠️ Sin stock",         "#EF4444"),
+    ]:
+        with _kc:
+            st.markdown(
+                f"<div style='background:#161B22;border-radius:12px;padding:14px;border:1px solid #21262D;"
+                f"border-top:3px solid {_kcol};text-align:center;margin-bottom:12px;'>"
+                f"<div style='font-size:1.4rem;font-weight:800;color:{_kcol};line-height:1;'>{_kv}</div>"
+                f"<div style='font-size:0.58rem;color:#8B949E;margin-top:6px;text-transform:uppercase;letter-spacing:0.5px;'>{_kl}</div>"
+                f"</div>",
+                unsafe_allow_html=True,
+            )
+
+    # ── Catálogo por categoría ─────────────────────────────────────────────────
+    _cats = sorted(df_m19["categoria"].dropna().unique().tolist())
+    if _cats:
+        _ctabs = st.tabs(_cats)
+        for _ctab, _cat in zip(_ctabs, _cats):
+            with _ctab:
+                _df_cat = df_m19[df_m19["categoria"] == _cat].sort_values("price", ascending=False)
+                _ccols  = st.columns(3)
+                for _i, (_, _row) in enumerate(_df_cat.iterrows()):
+                    _stk  = int(_row.get("stock", 0) or 0)
+                    _sc   = "#10B981" if _stk > 5 else ("#F59E0B" if _stk > 0 else "#EF4444")
+                    _desc = str(_row.get("description", "") or "").strip()
+                    with _ccols[_i % 3]:
+                        st.markdown(
+                            f"<div style='background:#161B22;border-radius:12px;padding:16px;"
+                            f"border:1px solid #21262D;border-top:2px solid {_LC};margin-bottom:10px;'>"
+                            f"<div style='font-size:0.56rem;color:{_LC};letter-spacing:1px;text-transform:uppercase;font-weight:700;'>{_row.get('sku','')}</div>"
+                            f"<div style='font-size:0.9rem;font-weight:700;color:#E6EDF3;margin-top:4px;line-height:1.2;'>{_row['name']}</div>"
+                            f"<div style='font-size:0.7rem;color:#8B949E;margin-top:4px;line-height:1.4;'>{_desc[:80]}{'…' if len(_desc)>80 else ''}</div>"
+                            f"<div style='display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:10px;'>"
+                            f"<div style='background:#0D1117;border-radius:6px;padding:7px;text-align:center;'>"
+                            f"<div style='font-size:0.5rem;color:#8B949E;margin-bottom:1px;'>PRECIO</div>"
+                            f"<div style='font-size:0.82rem;font-weight:700;color:{_LC};'>${float(_row['price']):,.0f}</div></div>"
+                            f"<div style='background:#0D1117;border-radius:6px;padding:7px;text-align:center;'>"
+                            f"<div style='font-size:0.5rem;color:#8B949E;margin-bottom:1px;'>STOCK</div>"
+                            f"<div style='font-size:0.82rem;font-weight:700;color:{_sc};'>{_stk} u</div></div>"
+                            f"</div></div>",
+                            unsafe_allow_html=True,
+                        )
+                        try:
+                            from utils.whatsapp import link_producto as _wlp
+                            _wa_p = _wlp(str(_row["name"]), str(_row["sku"]), float(_row["price"]), "admin", _eng_m19)
+                            st.link_button("📲 Link WA", _wa_p, use_container_width=True)
+                        except Exception:
+                            pass
+
+    st.markdown("<div style='height:8px;border-top:1px solid #21262D;margin:16px 0;'></div>", unsafe_allow_html=True)
+
+    # ── Presupuestador rápido ──────────────────────────────────────────────────
+    st.markdown(
+        f"<div style='font-size:0.58rem;font-weight:700;letter-spacing:3px;color:{_LC};"
+        f"text-transform:uppercase;margin-bottom:12px;'>🧮 PRESUPUESTADOR RÁPIDO</div>",
+        unsafe_allow_html=True,
+    )
+    _prod_act = df_m19[df_m19["activo"] == 1][["sku", "name", "price"]].copy() if "activo" in df_m19.columns else df_m19[["sku", "name", "price"]].copy()
+    _prod_act["label"] = _prod_act.apply(lambda r: f"{r['name']} — ${float(r['price']):,.0f}", axis=1)
+    _sel_m19 = st.multiselect("Productos", options=_prod_act["label"].tolist(), key="m19_presup_sel", label_visibility="collapsed")
+    if _sel_m19:
+        _items_m19 = []
+        _total_m19 = 0.0
+        _qty_cols  = st.columns(min(len(_sel_m19), 3))
+        for _si, _lbl in enumerate(_sel_m19):
+            _rr = _prod_act[_prod_act["label"] == _lbl].iloc[0]
+            with _qty_cols[_si % 3]:
+                _qty = st.number_input(f"× {_rr['name'][:28]}", min_value=1, value=1, key=f"m19_qty_{_rr['sku']}")
+            _items_m19.append({"nombre": _rr["name"], "sku": _rr["sku"], "cantidad": _qty,
+                                "precio": float(_rr["price"]), "precio_reventa": 0.0})
+            _total_m19 += float(_rr["price"]) * _qty
+        st.markdown(
+            f"<div style='font-size:1.2rem;font-weight:800;color:{_LC};margin:10px 0;'>Total: ${_total_m19:,.0f}</div>",
+            unsafe_allow_html=True,
+        )
+        try:
+            from utils.whatsapp import link_presupuesto as _wlpresup, texto_presupuesto as _wtxt
+            _wa_url = _wlpresup(_items_m19, _total_m19, "admin", _eng_m19)
+            st.link_button("📲 Enviar presupuesto por WhatsApp", _wa_url, use_container_width=True)
+            with st.expander("Ver texto del presupuesto"):
+                st.code(_wtxt(_items_m19, _total_m19, linea_nombre="Magnitud 19"), language=None)
+        except Exception:
+            pass
+
+    st.markdown("<div style='height:8px;border-top:1px solid #21262D;margin:16px 0;'></div>", unsafe_allow_html=True)
+
+    # ── Exportación JSON para web ──────────────────────────────────────────────
+    st.markdown(
+        f"<div style='font-size:0.58rem;font-weight:700;letter-spacing:3px;color:{_LC};"
+        f"text-transform:uppercase;margin-bottom:12px;'>📤 EXPORTAR PARA WEB</div>",
+        unsafe_allow_html=True,
+    )
+    _exp_col1, _exp_col2 = st.columns(2)
+    with _exp_col1:
+        if st.button("📤 Exportar magnitud19-catalog.json", use_container_width=True):
+            try:
+                from utils.exports import exportar_catalogo_json
+                _, _path = exportar_catalogo_json("admin")
+                st.success(f"OK: {_path}")
+            except Exception as _e:
+                st.error(f"Error: {_e}")
+    with _exp_col2:
+        if st.button("📤 Exportar melomano-catalog.json", use_container_width=True):
+            try:
+                from utils.exports import exportar_catalogo_json
+                _, _path = exportar_catalogo_json("fer_produccion")
+                st.success(f"OK: {_path}")
+            except Exception as _e:
+                st.error(f"Error: {_e}")
+
+
 def render():
-    _tab_dash, _tab_mike = st.tabs(["📊 Dashboard", "🤖 Mike"])
+    _tab_dash, _tab_mike, _tab_m19 = st.tabs(["📊 Dashboard", "🤖 Mike", "⚡ Magnitud 19"])
     with _tab_dash:
         _dash_main()
     with _tab_mike:
         from modules.panel_mike import render as _mike_render
         _mike_render()
+    with _tab_m19:
+        _dash_m19()

@@ -345,6 +345,7 @@ footer{padding:18px 64px;background:rgba(0,0,0,.8);border-top:1px solid rgba(184
   </div>
 </div>
 
+<div id="mel-catalog-json" class="sec" style="display:none"></div>
 </div><!-- /inicio -->
 
 
@@ -739,30 +740,17 @@ function setFn(el,texto){
   if(inp){inp.value=texto;inp.focus()}
 }
 
-const SYS=`Sos el Acoustic Advisor de Melómano, la línea de accesorios 3D para audiófilos y coleccionistas de vinilo de El Pasaje 3D Studio. La línea fue diseñada por un perfeccionista del sonido que entiende que la vibración es el enemigo de la alta fidelidad.
+const SYS=`Sos el Acoustic Advisor de Melómano — la línea de accesorios 3D premium para audiófilos y coleccionistas de vinilo de El Pasaje 3D Studio. Diseñada por Fernando Peluffo, perfeccionista del sonido que aplica la lógica anti-vibración de la aviación al sancutario del audio.
 
-PRODUCTOS:
-MUNDO VINILO:
-- Soportes LP Wall-Art $2.800 u / $7.200 pack x3: exhibición en pared, diseño ondas sonoras o invisible
-- Turbine Feet $4.500 (x4): aisladores de vibración para giradiscos y bafles, geometría anti-resonancia
-- Now Playing $3.200: exhibidor para tapa del vinilo en reproducción, con iniciales
-- Caja de Púas $2.400: mecanismo de expulsión tipo peine para guitarristas
-- Maintenance Kit $3.800: organizador técnico para herramientas de limpieza de vinilo
-- Dioramas Icónicos: cotizar — maquetas de escenarios legendarios (Queen Live Aid, Beatles rooftop, etc.)
-- Aero-Core 45 RPM $1.600 (x2): adaptadores diseño álabes de turbina, PLA Seda alta densidad
+CATÁLOGO OFICIAL (SKU | Producto | Precio):
+MEL-VSO-U | Vinyl Sommelier — 27 divisores A-Z+# en CFS dorado | $67.000 · MEL-HWS-U | Heavyweight Stabilizer — peso de plato 320-350g, iniciales grabadas | $30.000 · MEL-ISQ-U | Iso-Spike Quartet — 4 desacoplantes PETG+TPU para parlantes | $27.000 · MEL-NPP-U | Now Playing Premium — exhibidor vinilo con base corcho, silueta personalizable | $23.000 · MEL-ADH-U | Audiophile Desk Hub — estación completa: auriculares+cartuchos+cables+stylus | $42.000 · MEL-SAU-U | Stand armónica y ukelele | $15.000 · MEL-PNB-U | Porta-notebook Negro/Cobre | $16.000
 
-MUNDO HI-FI:
-- Pista de Despegue $4.200 (+$500 con iniciales): soporte auriculares, base pesada, canaleta cable
-- Organizador de Cables $3.200: gestión de cableado de setup
-- Patas Anti-Vibración Bafles $5.200 (x4): para parlantes y monitores
-- Soporte DAC/Amplificador $4.800: plataforma elevadora con anti-vibración
-- Rack Organizador Hi-Fi: cotizar
+GAMA ANTERIOR (también disponible):
+Soportes LP Wall-Art $2.800 u / $7.200 pack x3 · Turbine Feet $4.500 (x4) · Now Playing básico $3.200 · Pista de Despegue $4.200 · Patas Anti-Vibración Bafles $5.200 · Soporte DAC/Amplificador $4.800
 
 PERSONALIZACIÓN: nombre, iniciales o texto en relieve en cualquier pieza.
-Pack Regalo Audiófilo: cotizar.
-
-Tono: apasionado del audio, técnico pero accesible, cálido. Máximo 3 oraciones. Siempre recomendá algo concreto.
-Contacto WA: +54 11 6549-7234.`;
+Todo por pedido: entrega 48-72hs. Contacto WA: +54 11 6549-7234.
+Tono: apasionado del audio, técnico pero accesible, cálido. Máximo 3 oraciones. Siempre recomendá algo concreto.`;
 
 const FB_def=[
   "Para un giradiscos que vibra la mesa, los Turbine Feet son el primer paso — la geometría interna disipa la resonancia antes de que llegue al tóner. La diferencia es inmediata y se escucha.",
@@ -783,6 +771,48 @@ async function callIA(inputId,respId){
     const d=await r.json();resp.textContent=d.content?.[0]?.text||"Escribinos al WA y te ayudamos."
   }catch(e){resp.textContent=FB_def[Math.floor(Math.random()*FB_def.length)]}
 }
+
+/* ── Catálogo dinámico desde EPCC ── */
+const _WA_MEL="541165497234";
+function _fmtPM(n){return new Intl.NumberFormat('es-AR').format(n)}
+function _waLinkM(nom,sku,precio){return`https://wa.me/${_WA_MEL}?text=${encodeURIComponent(`Hola! Me interesa ${nom} (SKU: ${sku}) — $${_fmtPM(precio)} ¿Está disponible?`)}`}
+async function loadCatalogoMel(){
+  try{
+    const r=await fetch('./exports/melomano-catalog.json');
+    if(!r.ok)return;
+    const d=await r.json();
+    const prods=(d.productos_3d||[]);
+    if(!prods.length)return;
+    const cats={};
+    prods.forEach(p=>{const c=p.categoria||'Colección';if(!cats[c])cats[c]=[];cats[c].push(p)});
+    const wrap=document.getElementById('mel-catalog-json');
+    if(!wrap)return;
+    let html=`<div style="margin-bottom:16px"><div style="font-size:.52rem;font-weight:500;letter-spacing:5px;text-transform:uppercase;color:var(--cobre);display:flex;align-items:center;gap:12px;margin-bottom:24px"><span style="width:20px;height:1px;background:var(--cobre);display:inline-block"></span>CATÁLOGO OFICIAL ACTUALIZADO</div>`;
+    Object.entries(cats).forEach(([cat,items])=>{
+      html+=`<div style="margin-bottom:32px"><div style="font-size:.6rem;font-weight:500;letter-spacing:4px;text-transform:uppercase;color:var(--gris3);margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid rgba(184,115,51,.2)">${cat}</div>`;
+      html+=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px">`;
+      items.forEach(p=>{
+        const sc=p.stock>5?'#10B981':(p.stock>0?'#F59E0B':'var(--gris2)');
+        const stk=p.stock>0?`${p.stock} u`:'Bajo pedido';
+        html+=`<div style="background:var(--carbono);border:1px solid rgba(184,115,51,.1);border-top:2px solid var(--cobre);padding:22px 20px;transition:all .3s" onmouseenter="this.style.borderColor='var(--cobre)';this.style.transform='translateY(-2px)'" onmouseleave="this.style.borderColor='rgba(184,115,51,.1)';this.style.transform='translateY(0)'">
+          <div style="font-size:.48rem;color:var(--gris);letter-spacing:2px;margin-bottom:6px">${p.sku}</div>
+          <div style="font-family:'Playfair Display',serif;font-size:1rem;font-weight:600;color:var(--blanco);margin-bottom:6px">${p.name}</div>
+          <div style="font-size:.78rem;font-weight:300;color:var(--gris3);line-height:1.55;margin-bottom:14px">${(p.description||'').substring(0,90)}</div>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--cobre)">$${_fmtPM(p.price)}</span>
+            <span style="font-size:.58rem;color:${sc}">${stk}</span>
+          </div>
+          <a href="${_waLinkM(p.name,p.sku,p.price)}" target="_blank" style="display:inline-flex;align-items:center;gap:6px;margin-top:12px;font-size:.52rem;font-weight:500;letter-spacing:3px;text-transform:uppercase;color:var(--gris);text-decoration:none;transition:color .2s" onmouseenter="this.style.color='var(--cobre)'" onmouseleave="this.style.color='var(--gris)'">Consultar →</a>
+        </div>`;
+      });
+      html+=`</div></div>`;
+    });
+    html+=`</div>`;
+    wrap.innerHTML=html;
+    wrap.style.display='block';
+  }catch(e){}
+}
+loadCatalogoMel();
 </script>
 </body>
 </html>
