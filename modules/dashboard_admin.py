@@ -314,7 +314,7 @@ def _dash_main():
                 "Producto":    st.column_config.TextColumn("Producto", disabled=True),
                 "Linea":       st.column_config.TextColumn("Línea",    disabled=True, width="small"),
                 "Tipo":        st.column_config.TextColumn("Tipo",     disabled=True, width="small"),
-                "Precio":      st.column_config.NumberColumn("Precio", disabled=True, format="$%d", width="small"),
+                "Precio":      st.column_config.NumberColumn("Precio", disabled=False, format="$%d", min_value=0, step=100, width="small"),
                 "Stock":       st.column_config.NumberColumn("Stock",  disabled=True, width="small"),
                 "Visibilidad": st.column_config.SelectboxColumn("Visibilidad", options=["publico","borrador","pausado"], width="small"),
                 "Activo":      st.column_config.CheckboxColumn("Activo", width="small"),
@@ -323,25 +323,45 @@ def _dash_main():
             use_container_width=True,
             key="gestion_editor"
         )
+        st.caption("💡 Podés editar Precio, Visibilidad y Activo directamente en la tabla. Guardá al final.")
 
-        if st.button("Guardar cambios", use_container_width=False):
+        if st.button("💾 Guardar cambios de precios / visibilidad", use_container_width=False, type="primary"):
             _changed_mask = (
                 (df_edited["Visibilidad"] != df_ed["Visibilidad"]) |
-                (df_edited["Activo"].astype(int) != df_ed["Activo"].astype(int))
+                (df_edited["Activo"].astype(int) != df_ed["Activo"].astype(int)) |
+                (df_edited["Precio"].fillna(0) != df_ed["Precio"].fillna(0))
             )
             _changed = df_edited[_changed_mask]
             if _changed.empty:
                 st.info("No hay cambios para guardar.")
             else:
+                _n_precio = 0
                 with engine.begin() as _cn_g:
                     for _, _cr_g in _changed.iterrows():
+                        _precio_nuevo = float(_cr_g["Precio"] or 0)
                         _cn_g.execute(
-                            text("UPDATE products SET visibilidad=:v, activo=:a WHERE sku=:s"),
-                            {"v": _cr_g["Visibilidad"], "a": int(_cr_g["Activo"]), "s": _cr_g["sku"]}
+                            text("UPDATE products SET visibilidad=:v, activo=:a, price=:p WHERE sku=:s"),
+                            {"v": _cr_g["Visibilidad"], "a": int(_cr_g["Activo"]),
+                             "p": _precio_nuevo, "s": _cr_g["sku"]}
                         )
+                        _old_row = df_ed[df_ed["sku"] == _cr_g["sku"]]
+                        if not _old_row.empty:
+                            _precio_ant = float(_old_row.iloc[0]["Precio"] or 0)
+                            if _precio_nuevo != _precio_ant:
+                                _cn_g.execute(
+                                    text("""INSERT INTO price_history
+                                            (product_sku, precio_anterior, precio_nuevo, motivo)
+                                            VALUES (:sku, :ant, :nvo, :mot)"""),
+                                    {"sku": _cr_g["sku"], "ant": _precio_ant,
+                                     "nvo": _precio_nuevo, "mot": "Admin"}
+                                )
+                                _n_precio += 1
                 from utils.pricing import cargar_productos as _cp_dash
                 _cp_dash.clear()
-                st.success(f"{len(_changed)} producto(s) actualizados.")
+                _msg = f"{len(_changed)} producto(s) guardados"
+                if _n_precio:
+                    _msg += f" · {_n_precio} precio(s) actualizado(s) con historial"
+                st.success(_msg)
                 st.rerun()
 
     # ── Revenue Sharing — Reglas activas ──────────────────────────

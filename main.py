@@ -18,98 +18,352 @@ st.set_page_config(
 
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Jost:wght@300;400;500&display=swap');
 
-/* ── APP ── */
-.stApp { background-color: #F0F2F6; }
+/* ══════════════════════════════════════════════════════
+   BASE — fondo negro, herencia de color claro
+   ══════════════════════════════════════════════════════ */
+.stApp,
+[data-testid="stAppViewContainer"],
+[data-testid="stMain"],
+.main  { background-color: #0e0e0e !important; color: #f0ece4 !important; }
+#MainMenu, footer, header { visibility: hidden; }
+.block-container { padding-top: 2rem !important; }
 
-/* ── SIDEBAR ── */
-[data-testid="stSidebar"] { background-color: #1a1a2e !important; }
-[data-testid="stSidebar"] * { color: #FFFFFF !important; }
-[data-testid="stSidebar"] p,
-[data-testid="stSidebar"] span,
-[data-testid="stSidebar"] label,
-[data-testid="stSidebar"] div { color: #FFFFFF !important; }
-[data-testid="stSidebar"] [data-baseweb="radio"] label p {
-    color: #FFFFFF !important; font-size: 0.9rem !important; font-weight: 500 !important;
+/* ══════════════════════════════════════════════════════
+   TEXTO GENÉRICO — cubre todos los casos de Streamlit
+   ══════════════════════════════════════════════════════ */
+.stApp p, .stApp li, .stApp h1, .stApp h2, .stApp h3,
+.stApp h4, .stApp h5, .stApp small, .stApp strong, .stApp em,
+.stApp td, .stApp th, .stApp caption,
+.stApp [class*="css"] { color: #f0ece4; }
+
+/* div sin inline-style: hereda; con inline-style: la inline gana */
+.stApp div { color: inherit; }
+
+/* Forzar en contenedores Streamlit específicos */
+[data-testid="stMarkdownContainer"] p,
+[data-testid="stMarkdownContainer"] li,
+[data-testid="stMarkdownContainer"] h1,
+[data-testid="stMarkdownContainer"] h2,
+[data-testid="stMarkdownContainer"] h3,
+[data-testid="stText"],
+[data-testid="stCaptionContainer"] { color: #f0ece4 !important; }
+
+.stMarkdown p, .stMarkdown li, .stMarkdown h1,
+.stMarkdown h2, .stMarkdown h3 { color: #f0ece4 !important; }
+
+/* Caption / ayuda */
+[data-testid="stCaptionContainer"],
+[data-testid="stCaptionContainer"] * { color: rgba(240,236,228,0.55) !important; }
+.stApp small { color: rgba(240,236,228,0.55) !important; }
+
+/* ══════════════════════════════════════════════════════
+   WIDGETS — labels y valores en claro
+   ══════════════════════════════════════════════════════ */
+/* Labels generales */
+[data-testid="stWidgetLabel"],
+[data-testid="stWidgetLabel"] *,
+.stTextInput label, .stNumberInput label,
+.stSelectbox label, .stTextArea label,
+.stCheckbox label, .stRadio label,
+.stMultiSelect label, .stSlider label,
+.stDateInput label, .stTimeInput label,
+.stFileUploader label {
+    color: rgba(184,115,51,0.85) !important;
+    font-family: 'Jost', sans-serif !important;
+    font-size: 10px !important;
+    letter-spacing: 1.5px !important;
+    text-transform: uppercase !important;
 }
-[data-testid="stSidebar"] [data-baseweb="radio"] [data-checked="true"] label p {
-    color: #C9A84C !important; font-weight: 700 !important;
+/* Radio / checkbox opciones */
+.stRadio p, .stRadio div, .stRadio span,
+.stCheckbox p, .stCheckbox div, .stCheckbox span {
+    color: #f0ece4 !important;
 }
-[data-testid="stSidebar"] .version-label { color: #94a3b8 !important; }
+/* Help tooltip */
+.stTooltipContent, .stTooltipContent * { color: #f0ece4 !important; }
+
+/* ── TEXT INPUT ── */
+.stTextInput input, .stTextInput textarea {
+    background: rgba(255,255,255,0.04) !important;
+    border: 0.5px solid rgba(184,115,51,0.3) !important;
+    border-radius: 4px !important;
+    color: #f0ece4 !important;
+    font-family: 'Jost', sans-serif !important;
+    font-size: 13px !important;
+}
+.stTextInput input:focus, .stTextInput textarea:focus {
+    border-color: #B87333 !important;
+    box-shadow: none !important;
+}
+/* TEXT AREA */
+.stTextArea textarea {
+    background: rgba(255,255,255,0.04) !important;
+    border: 0.5px solid rgba(184,115,51,0.3) !important;
+    color: #f0ece4 !important;
+}
+/* NUMBER INPUT */
+.stNumberInput input { color: #f0ece4 !important; background: rgba(255,255,255,0.04) !important; }
+.stNumberInput [data-baseweb="button"],
+.stNumberInput button { background: rgba(255,255,255,0.06) !important; color: #f0ece4 !important; }
+/* SELECT */
+.stSelectbox [data-baseweb="select"],
+.stSelectbox [data-baseweb="select"] div,
+.stSelectbox [data-baseweb="select"] span {
+    background: rgba(255,255,255,0.04) !important;
+    border-color: rgba(184,115,51,0.3) !important;
+    color: #f0ece4 !important;
+}
+/* SELECT DROPDOWN popup */
+[data-baseweb="popover"], [data-baseweb="menu"],
+[data-baseweb="menu"] * {
+    background: #1a1a1a !important;
+    color: #f0ece4 !important;
+}
+[data-baseweb="option"]:hover { background: rgba(184,115,51,0.2) !important; }
+/* MULTISELECT */
+.stMultiSelect [data-baseweb="select"],
+.stMultiSelect [data-baseweb="select"] * { background: rgba(255,255,255,0.04) !important; color: #f0ece4 !important; }
+[data-baseweb="tag"] { background: rgba(184,115,51,0.25) !important; }
+[data-baseweb="tag"] span { color: #f0ece4 !important; }
+
+/* ══════════════════════════════════════════════════════
+   BOTONES
+   ══════════════════════════════════════════════════════ */
+.stButton > button, .stDownloadButton > button,
+.stFormSubmitButton > button, .stLinkButton > a {
+    background: transparent !important;
+    border: 0.5px solid rgba(184,115,51,0.45) !important;
+    border-radius: 4px !important;
+    color: #B87333 !important;
+    font-family: 'Jost', sans-serif !important;
+    font-size: 11px !important;
+    font-weight: 500 !important;
+    letter-spacing: 2.5px !important;
+    text-transform: uppercase !important;
+    transition: all 0.2s !important;
+}
+.stButton > button:hover, .stDownloadButton > button:hover,
+.stFormSubmitButton > button:hover {
+    background: rgba(184,115,51,0.15) !important;
+    border-color: #B87333 !important;
+    color: #f0ece4 !important;
+}
+.stButton > button[kind="primary"],
+.stFormSubmitButton > button[kind="primary"] {
+    background: #B87333 !important;
+    color: #0e0e0e !important;
+    border-color: #B87333 !important;
+}
+.stButton > button[kind="primary"]:hover,
+.stFormSubmitButton > button[kind="primary"]:hover {
+    background: #cc8c45 !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   SIDEBAR
+   ══════════════════════════════════════════════════════ */
+[data-testid="stSidebar"] {
+    background: #111111 !important;
+    border-right: 0.5px solid rgba(184,115,51,0.15) !important;
+}
+[data-testid="stSidebar"] * { color: #f0ece4 !important; }
+[data-testid="stSidebar"] [data-baseweb="radio"] label p,
+[data-testid="stSidebar"] [data-baseweb="radio"] label span {
+    font-family: 'Jost', sans-serif !important;
+    font-size: 11px !important;
+    letter-spacing: 1.5px !important;
+    text-transform: uppercase !important;
+    color: rgba(240,236,228,0.55) !important;
+}
+[data-testid="stSidebar"] [data-checked="true"] label p,
+[data-testid="stSidebar"] [data-checked="true"] label span { color: #B87333 !important; }
 [data-testid="stSidebar"] button {
-    background: rgba(255,255,255,0.1) !important;
-    color: #FFFFFF !important;
-    border: 1px solid rgba(255,255,255,0.2) !important;
+    background: rgba(184,115,51,0.1) !important;
+    border: 0.5px solid rgba(184,115,51,0.3) !important;
+    color: rgba(240,236,228,0.8) !important;
 }
-[data-testid="stSidebar"] button:hover {
-    background: rgba(201,168,76,0.2) !important;
-    border-color: #C9A84C !important;
+[data-testid="stSidebar"] button:hover { background: rgba(184,115,51,0.22) !important; }
+[data-testid="stSidebar"] .stSelectbox [data-baseweb="select"],
+[data-testid="stSidebar"] .stSelectbox [data-baseweb="select"] * {
+    background: rgba(255,255,255,0.05) !important;
+    color: #f0ece4 !important;
 }
 
-/* ── CARDS ── */
-.metric-card { background: white; border-radius: 16px; padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.07); border-top: 5px solid; transition: transform 0.2s; height: 100%; }
-.metric-card:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(0,0,0,0.12); }
-.metric-title { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #6B7280; margin-bottom: 8px; }
-.metric-value { font-family: 'Cormorant Garamond', serif; font-size: 36px; font-weight: 700; color: #1a1a2e; line-height: 1; }
-.metric-sub   { font-size: 12px; color: #9CA3AF; margin-top: 6px; }
-
-/* ── HEADER ── */
-.main-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); color: white; padding: 28px 36px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); margin-bottom: 28px; }
-.main-header h1 { font-family: 'Cormorant Garamond', serif; font-size: 2.2rem; margin: 0; letter-spacing: 2px; color: white !important; }
-.main-header p  { font-family: 'Inter', sans-serif; font-size: 0.85rem; color: #94a3b8; margin: 6px 0 0; }
-
-/* ── TITULOS ── */
-.section-title { font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; color: #1a1a2e; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; margin: 28px 0 16px; }
-.stock-critico { background: #FEF2F2; border-left: 5px solid #EF4444; border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; }
-
-/* ── FORMULARIOS ── */
-.stExpander { background: white !important; }
-.stTextInput label, .stSelectbox label, .stTextArea label,
-.stCheckbox label, .stNumberInput label {
-    color: #1a1a2e !important; font-weight: 600 !important; font-size: 0.85rem !important;
+/* ══════════════════════════════════════════════════════
+   TABS
+   ══════════════════════════════════════════════════════ */
+.stTabs [data-baseweb="tab-list"] {
+    background: transparent !important;
+    border-bottom: 0.5px solid rgba(184,115,51,0.2) !important;
+    gap: 0 !important;
 }
-.stForm { background: white; border-radius: 16px; padding: 20px; }
-div[data-testid="stFormSubmitButton"] button { margin-top: 12px; }
-.stExpander details { background: white !important; }
-.stExpander summary p { color: #1a1a2e !important; font-weight: 600 !important; }
-.stMarkdown p, .stMarkdown span { color: #1a1a2e !important; }
-.stTabs [data-baseweb="tab"] { color: #1a1a2e !important; font-weight: 600; }
+.stTabs [data-baseweb="tab"] {
+    color: rgba(240,236,228,0.38) !important;
+    font-family: 'Jost', sans-serif !important;
+    font-size: 11px !important;
+    letter-spacing: 1.5px !important;
+    text-transform: uppercase !important;
+    background: transparent !important;
+    border-bottom: 2px solid transparent !important;
+}
+.stTabs [aria-selected="true"] {
+    color: #B87333 !important;
+    border-bottom: 2px solid #B87333 !important;
+    background: transparent !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   MÉTRICAS
+   ══════════════════════════════════════════════════════ */
+[data-testid="metric-container"] {
+    background: rgba(255,255,255,0.03) !important;
+    border: 0.5px solid rgba(184,115,51,0.15) !important;
+    border-radius: 6px !important;
+}
+[data-testid="stMetricLabel"], [data-testid="stMetricLabel"] * {
+    color: rgba(184,115,51,0.75) !important;
+    font-family: 'Jost', sans-serif !important;
+    font-size: 10px !important; letter-spacing: 2px !important;
+    text-transform: uppercase !important;
+}
+[data-testid="stMetricValue"], [data-testid="stMetricValue"] * {
+    color: #f0ece4 !important;
+    font-family: 'Cormorant Garamond', serif !important;
+    font-size: 26px !important;
+}
+[data-testid="stMetricDelta"], [data-testid="stMetricDelta"] * {
+    color: #f0ece4 !important; font-size: 0.78rem !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   ALERTAS / INFO / WARNING / ERROR / SUCCESS
+   ══════════════════════════════════════════════════════ */
+[data-testid="stAlert"] {
+    background: rgba(255,255,255,0.04) !important;
+    border-color: rgba(184,115,51,0.3) !important;
+    border-radius: 6px !important;
+}
+[data-testid="stAlert"] p,
+[data-testid="stAlert"] div,
+[data-testid="stAlert"] span,
+[data-testid="stAlert"] * { color: #f0ece4 !important; }
+
+/* ══════════════════════════════════════════════════════
+   EXPANDER
+   ══════════════════════════════════════════════════════ */
+.stExpander { background: rgba(255,255,255,0.02) !important; border-color: rgba(184,115,51,0.15) !important; }
+.stExpander details { background: rgba(255,255,255,0.02) !important; }
+.stExpander summary, .stExpander summary p,
+.stExpander summary span, .stExpander summary svg { color: #f0ece4 !important; }
+
+/* ══════════════════════════════════════════════════════
+   DATAFRAME / TABLA
+   ══════════════════════════════════════════════════════ */
+.stDataFrame, [data-testid="stDataFrame"],
+[data-testid="stDataFrame"] * {
+    background: rgba(255,255,255,0.02) !important;
+    color: #f0ece4 !important;
+}
+.stDataFrame th { background: rgba(184,115,51,0.12) !important; color: #B87333 !important; }
+
+/* ══════════════════════════════════════════════════════
+   CODE BLOCK
+   ══════════════════════════════════════════════════════ */
+.stCode, .stCode *, pre, code {
+    background: rgba(255,255,255,0.05) !important;
+    color: #f0ece4 !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   FORM
+   ══════════════════════════════════════════════════════ */
+[data-testid="stForm"] {
+    background: rgba(255,255,255,0.02) !important;
+    border: 0.5px solid rgba(184,115,51,0.12) !important;
+    border-radius: 6px !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   HEADINGS
+   ══════════════════════════════════════════════════════ */
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Cormorant Garamond', serif !important;
+    color: #f0ece4 !important;
+    font-weight: 300 !important;
+    letter-spacing: 2px !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   CUSTOM CLASSES (admin / inventario)
+   ══════════════════════════════════════════════════════ */
+.main-header {
+    background: linear-gradient(135deg,#1a0e00,#2a1a00) !important;
+    border: 0.5px solid rgba(184,115,51,0.3) !important;
+    border-radius: 8px !important;
+    padding: 28px 36px !important; margin-bottom: 28px !important;
+}
+.main-header h1, .main-header * { color: #f0ece4 !important; }
+.metric-card {
+    background: rgba(255,255,255,0.03) !important;
+    border: 0.5px solid rgba(184,115,51,0.15) !important;
+    border-radius: 6px !important; padding: 20px !important;
+}
+.metric-card * { color: #f0ece4 !important; }
+.section-title {
+    font-family: 'Cormorant Garamond', serif !important;
+    font-size: 1.4rem !important; color: #f0ece4 !important;
+    border-bottom: 0.5px solid rgba(184,115,51,0.2) !important;
+    padding-bottom: 6px !important; margin: 24px 0 14px !important;
+}
+.stock-critico { background: rgba(239,68,68,0.1) !important; border-left: 3px solid #EF4444 !important; }
+.stock-critico * { color: #f0ece4 !important; }
+
+/* ══════════════════════════════════════════════════════
+   FILE UPLOADER
+   ══════════════════════════════════════════════════════ */
+[data-testid="stFileUploaderDropzone"] {
+    background: rgba(255,255,255,0.03) !important;
+    border-color: rgba(184,115,51,0.3) !important;
+}
+[data-testid="stFileUploaderDropzone"] * { color: #f0ece4 !important; }
 </style>
 """, unsafe_allow_html=True)
 
 # ── DB + Schema init ───────────────────────────────────────────────────────
 from crear_schema_v3 import init_schema as _init_schema
 _init_schema()
+from migration_v7 import run as _migration_v7
+_migration_v7()
 
 # ── Autenticación ──────────────────────────────────────────────────────────
 if "auth" not in st.session_state:
     st.session_state.update({"auth": False, "user": None, "role": None, "uid": None})
 
 if not st.session_state["auth"]:
-    col1, col2, col3 = st.columns([1, 1.2, 1])
+    # Ocultar sidebar en la pantalla de login
+    st.markdown("<style>[data-testid='stSidebar']{display:none!important}</style>", unsafe_allow_html=True)
+    _, col2, _ = st.columns([1, 1.1, 1])
     with col2:
         st.markdown("""
-        <div style='text-align:center;background:white;border-radius:20px;padding:36px 40px 28px;box-shadow:0 20px 50px rgba(0,0,0,0.12);margin-top:60px;'>
-          <svg width="130" height="130" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg" style="display:block;margin:0 auto 16px;">
-            <circle cx="80" cy="80" r="74" fill="white"/>
-            <circle cx="80" cy="80" r="75" fill="none" stroke="#1a1a2e" stroke-width="3"/>
-            <circle cx="80" cy="80" r="67" fill="none" stroke="#C9A84C" stroke-width="2.5"/>
-            <circle cx="80" cy="80" r="59" fill="none" stroke="#1a1a2e" stroke-width="1.5"/>
-            <text x="80" y="97" font-family="Georgia,'Times New Roman',serif" font-size="42" font-weight="700" fill="#1a1a2e" text-anchor="middle" letter-spacing="-1">EP</text>
-            <polygon points="80,2 85,11 80,20 75,11"   fill="#C9A84C"/>
-            <polygon points="80,158 85,149 80,140 75,149" fill="#C9A84C"/>
-            <polygon points="158,80 149,85 140,80 149,75" fill="#C9A84C"/>
-            <polygon points="2,80 11,85 20,80 11,75"   fill="#C9A84C"/>
-            <circle cx="121" cy="39" r="3" fill="#C9A84C"/>
-            <circle cx="121" cy="121" r="3" fill="#C9A84C"/>
-            <circle cx="39"  cy="121" r="3" fill="#C9A84C"/>
-            <circle cx="39"  cy="39"  r="3" fill="#C9A84C"/>
-          </svg>
-          <div style='font-family:Cormorant Garamond,Georgia,serif;font-size:1.4rem;font-weight:700;letter-spacing:6px;color:#1a1a2e;text-transform:uppercase;'>El Pasaje</div>
-          <div style='font-size:0.6rem;font-weight:600;letter-spacing:4px;color:#C9A84C;text-transform:uppercase;margin-top:4px;'>3 D &nbsp; S T U D I O</div>
-        </div>
-        """, unsafe_allow_html=True)
+<div style="max-width:420px;margin:4vh auto 2rem;text-align:center;">
+  <div style="width:72px;height:72px;border-radius:50%;border:1.5px solid #B87333;
+              display:flex;align-items:center;justify-content:center;margin:0 auto 1.2rem;">
+    <span style="font-family:'Cormorant Garamond',Georgia,serif;font-size:22px;
+                 font-weight:600;color:#B87333;letter-spacing:2px;">EP</span>
+  </div>
+  <p style="font-family:'Cormorant Garamond',Georgia,serif;font-size:26px;font-weight:300;
+            color:#f0ece4;letter-spacing:7px;text-transform:uppercase;margin:0 0 4px;">El Pasaje</p>
+  <p style="font-size:10px;font-weight:300;color:#B87333;letter-spacing:5px;
+            text-transform:uppercase;margin:0 0 2rem;">3 D &nbsp; S T U D I O</p>
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:2rem;">
+    <div style="flex:1;height:0.5px;background:rgba(184,115,51,0.25);"></div>
+    <div style="width:6px;height:6px;background:#B87333;transform:rotate(45deg);opacity:0.6;"></div>
+    <div style="flex:1;height:0.5px;background:rgba(184,115,51,0.25);"></div>
+  </div>
+</div>""", unsafe_allow_html=True)
+
         email = st.text_input("Email", placeholder="tu@elpasaje.com")
         pwd   = st.text_input("Contrasena", type="password")
         if st.button("INGRESAR AL SISTEMA", use_container_width=True, type="primary"):
@@ -128,31 +382,49 @@ if not st.session_state["auth"]:
                 st.rerun()
             else:
                 st.error("Credenciales incorrectas")
+
         st.markdown("""
-        <div style='text-align:center;margin-top:16px;'>
-          <a href='https://wa.me/5491165497234' target='_blank'
-             style='display:inline-flex;align-items:center;gap:6px;text-decoration:none;
-                    color:#25D366;font-size:0.78rem;font-weight:500;'>
-            <svg width='16' height='16' viewBox='0 0 24 24' fill='#25D366'>
-              <path d='M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z'/>
-            </svg>
-            Consultas por WhatsApp
-          </a>
-        </div>
-        """, unsafe_allow_html=True)
+<div style="display:flex;justify-content:center;gap:6px;flex-wrap:wrap;
+            margin-top:1.5rem;padding-top:1.5rem;
+            border-top:0.5px solid rgba(184,115,51,0.1);">
+  <div style="width:6px;height:6px;border-radius:50%;background:#B87333;opacity:.5;"></div>
+  <div style="width:6px;height:6px;border-radius:50%;background:#9C6B3C;opacity:.5;"></div>
+  <div style="width:6px;height:6px;border-radius:50%;background:#FFB6C1;opacity:.5;"></div>
+  <div style="width:6px;height:6px;border-radius:50%;background:#F472B6;opacity:.5;"></div>
+  <div style="width:6px;height:6px;border-radius:50%;background:#166534;opacity:.5;"></div>
+  <div style="width:6px;height:6px;border-radius:50%;background:#1e3a5f;opacity:.5;"></div>
+  <div style="width:6px;height:6px;border-radius:50%;background:#F97316;opacity:.5;"></div>
+  <div style="width:6px;height:6px;border-radius:50%;background:#D4A574;opacity:.5;"></div>
+  <div style="width:6px;height:6px;border-radius:50%;background:#4ade80;opacity:.5;"></div>
+</div>
+<div style="text-align:center;margin-top:1.2rem;">
+  <a href="https://wa.me/5491165497234" target="_blank"
+     style="color:rgba(184,115,51,0.6);font-size:10px;letter-spacing:2px;
+            text-transform:uppercase;text-decoration:none;">
+    Consultas &nbsp;·&nbsp; WhatsApp
+  </a>
+</div>""", unsafe_allow_html=True)
     st.stop()
 
 # ── Sidebar ────────────────────────────────────────────────────────────────
 with st.sidebar:
-    linea_cfg = get_linea(st.session_state["uid"])
+    linea_cfg   = get_linea(st.session_state["uid"])
+    _sb_color   = linea_cfg["color"]
+    _sb_nombre  = linea_cfg["nombre"]
+    _sb_rol_map = {"admin": "Administración", "produccion": "Producción", "socio_multi": "Multi-Línea", "socio": "Socio"}
+    _sb_rol     = _sb_rol_map.get(st.session_state["role"], "Socio")
     st.markdown(f"""
-        <div style='text-align:center;padding:20px 0 10px;'>
-            <div style='font-size:2.5rem;'>{linea_cfg['emoji']}</div>
-            <div style='font-size:1rem;font-weight:600;margin-top:6px;'>{st.session_state['user']}</div>
-            <div style='font-size:0.75rem;color:#94a3b8;margin-top:2px;'>{"Administracion" if st.session_state["role"] == "admin" else ("Produccion" if st.session_state["role"] == "produccion" else "Socio")}</div>
-        </div>
-        <hr style='border-color:#ffffff22;margin:0 0 16px;'/>
-    """, unsafe_allow_html=True)
+<div style="padding:1.4rem 0 1rem;border-bottom:0.5px solid rgba(184,115,51,0.15);margin-bottom:1rem;">
+  <p style="font-family:'Cormorant Garamond',Georgia,serif;font-size:20px;font-weight:300;
+            color:#f0ece4;letter-spacing:4px;text-transform:uppercase;margin:0 0 4px;">EP</p>
+  <p style="font-size:10px;letter-spacing:2px;text-transform:uppercase;
+            color:{_sb_color};margin:0 0 8px;font-family:'Jost',sans-serif;">{_sb_nombre}</p>
+  <p style="font-family:'Cormorant Garamond',Georgia,serif;font-size:15px;font-weight:300;
+            color:rgba(240,236,228,0.75);letter-spacing:1px;margin:0;">
+    Bienvenida,&nbsp;{st.session_state['user']}</p>
+  <p style="font-size:9px;letter-spacing:2px;text-transform:uppercase;
+            color:rgba(184,115,51,0.45);margin:2px 0 0;font-family:'Jost',sans-serif;">{_sb_rol}</p>
+</div>""", unsafe_allow_html=True)
     if st.session_state["role"] == "admin":
         menu = st.radio("", ["📊 Dashboard Alejandra","📦 Inventario Pro","🛠️ Produccion (Fer)","🤝 Socios","👥 Clientes","🌱 Impacto Social"], label_visibility="collapsed")
     elif st.session_state["role"] == "produccion":

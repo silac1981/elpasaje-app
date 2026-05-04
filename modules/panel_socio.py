@@ -58,6 +58,8 @@ def render():
     _hoy_s = datetime.now().strftime("%Y-%m-%d")
     _mes_s = datetime.now().strftime("%Y-%m")
 
+    _FEMENINO_UIDS = {"oasis_animal", "agustina", "olivia_coquette"}
+    _saludo = "Bienvenida" if uid in _FEMENINO_UIDS else "Bienvenido"
     st.markdown(f"""
 <div style='background:linear-gradient(135deg,{hdr_color}dd,{hdr_color}88);
      border-radius:20px;padding:24px 32px;margin-bottom:4px;
@@ -66,7 +68,7 @@ def render():
        text-transform:uppercase;color:rgba(255,255,255,0.7);'>EL PASAJE 3D STUDIO · SOCIO</div>
   <div style='font-size:2rem;font-weight:800;color:white;margin-top:8px;'>{hdr_emoji} {hdr_nombre}</div>
   <div style='font-size:0.8rem;color:rgba(255,255,255,0.75);margin-top:4px;'>
-    Bienvenido/a, {st.session_state['user']} · {datetime.now().strftime('%A %d/%m/%Y')}
+    {_saludo}, {st.session_state['user']}! &nbsp;·&nbsp; {datetime.now().strftime('%A %d/%m/%Y')}
   </div>
 </div>""", unsafe_allow_html=True)
 
@@ -78,6 +80,7 @@ def render():
     try:
         _pedidos_s = pd.read_sql(f"""
             SELECT o.id, o.client_id, o.status, o.date, o.fecha_entrega_est, o.notas,
+                   o.canal_origen,
                    COALESCE(SUM(oi.cantidad * oi.precio_unitario), 0) AS total,
                    pag.estado AS pago_estado, pag.metodo AS pago_metodo
             FROM orders o
@@ -90,6 +93,7 @@ def render():
         try:
             _pedidos_s = pd.read_sql(f"""
                 SELECT o.id, o.client_id, o.status, o.date, o.fecha_entrega_est, o.notas,
+                       o.canal_origen,
                        COALESCE(SUM(oi.cantidad * oi.precio_unitario), 0) AS total
                 FROM orders o
                 LEFT JOIN order_items oi ON oi.order_id = o.id
@@ -98,6 +102,20 @@ def render():
             """, engine)
         except Exception:
             _pedidos_s = pd.DataFrame()
+
+    try:
+        _items_socio = pd.read_sql(f"""
+            SELECT oi.order_id, oi.product_sku, oi.cantidad, oi.precio_unitario,
+                   COALESCE(p.name, oi.product_sku) AS producto,
+                   p.imagen_url
+            FROM order_items oi
+            LEFT JOIN products p ON p.sku = oi.product_sku
+            JOIN orders o ON o.id = oi.order_id
+            WHERE o.client_id IN ('{_lid_str}')
+            ORDER BY oi.order_id, oi.id
+        """, engine)
+    except Exception:
+        _items_socio = pd.DataFrame()
 
     try:
         _hist_mes = pd.read_sql(f"""
@@ -137,7 +155,24 @@ def render():
     except Exception:
         _prec_hist = pd.DataFrame()
 
-    _cap_stock  = prod["valor_stock"].sum()
+    try:
+        _senales_sm = pd.read_sql(
+            "SELECT fecha, linea, producto, reaccion, segmento_detectado, oportunidad, canal "
+            "FROM senales_mercado ORDER BY fecha DESC LIMIT 20",
+            engine,
+        )
+        if not _senales_sm.empty:
+            _lineas_nombres = {LINEAS.get(l, {}).get("nombre", l) for l in lineas_activas}
+            _senales_sm = _senales_sm[
+                _senales_sm["linea"].isin(_lineas_nombres) |
+                _senales_sm["linea"].isin(lineas_activas)
+            ].reset_index(drop=True)
+    except Exception:
+        _senales_sm = pd.DataFrame()
+
+    _cap_stock  = float(prod["valor_stock"].sum()) if not prod.empty else 0
+    _gan_stock  = float(prod["ganancia_stock"].sum()) if not prod.empty and "ganancia_stock" in prod.columns else 0
+    _margen_avg = float(prod["margen_pct"].mean()) if not prod.empty and "margen_pct" in prod.columns else 0
     _n_skus     = len(prod[prod["activo"]==1]) if "activo" in prod.columns else len(prod)
     _n_activos  = len(_pedidos_s[_pedidos_s["status"].isin(["Pendiente","En Proceso"])]) if not _pedidos_s.empty else 0
     _n_listo    = len(_pedidos_s[_pedidos_s["status"]=="Listo"]) if not _pedidos_s.empty else 0
@@ -178,6 +213,57 @@ def render():
 
     # ══ TAB RESUMEN ══
     with _t_res:
+        # ── Pantalla partida para socio_multi con múltiples líneas ──
+        if role == "socio_multi" and len(lineas_activas) > 1:
+            st.markdown(
+                "<div style='font-size:0.6rem;font-weight:700;letter-spacing:2px;"
+                "text-transform:uppercase;color:#8B949E;margin-bottom:10px;'>"
+                "TUS LÍNEAS — elegí cuál querés ver o navegá el panel completo</div>",
+                unsafe_allow_html=True,
+            )
+            _lcard_cols = st.columns(len(lineas_activas))
+            for _lci, _lid_c in enumerate(lineas_activas):
+                _lcc  = LINEAS.get(_lid_c, {"nombre": _lid_c, "emoji": "●", "color": "#6366F1"})
+                _lcp  = prod[prod["client_id"] == _lid_c]
+                _lcp_stk   = float(_lcp["valor_stock"].sum()) if not _lcp.empty else 0
+                _lcp_n     = len(_lcp[_lcp["activo"] == 1]) if not _lcp.empty and "activo" in _lcp.columns else len(_lcp)
+                _lcp_ped   = len(_pedidos_s[(_pedidos_s["client_id"] == _lid_c) & (_pedidos_s["status"].isin(["Pendiente","En Proceso"]))]) if not _pedidos_s.empty else 0
+                _lcp_fac   = float(_pedidos_s[(_pedidos_s["client_id"] == _lid_c) & (_pedidos_s["status"].isin(["Listo","Entregado"]))]["total"].sum()) if not _pedidos_s.empty else 0
+                _lc_glow   = f"0 0 16px {_lcc['color']}44"
+                with _lcard_cols[_lci]:
+                    st.markdown(
+                        f"<div style='background:linear-gradient(135deg,{_lcc['color']}22,{_lcc['color']}08);"
+                        f"border-radius:16px;padding:18px 16px;border:1px solid {_lcc['color']}44;"
+                        f"box-shadow:{_lc_glow};margin-bottom:8px;'>"
+                        f"<div style='font-size:1.6rem;line-height:1;'>{_lcc['emoji']}</div>"
+                        f"<div style='font-size:1rem;font-weight:800;color:#E6EDF3;margin-top:6px;'>"
+                        f"{_lcc['nombre']}</div>"
+                        f"<div style='margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:6px;'>"
+                        f"<div style='background:#0D1117;border-radius:8px;padding:8px;text-align:center;'>"
+                        f"<div style='font-size:1.1rem;font-weight:800;color:{_lcc['color']};'>{_lcp_n}</div>"
+                        f"<div style='font-size:0.58rem;color:#555;text-transform:uppercase;letter-spacing:0.5px;margin-top:1px;'>productos</div></div>"
+                        f"<div style='background:#0D1117;border-radius:8px;padding:8px;text-align:center;'>"
+                        f"<div style='font-size:1.1rem;font-weight:800;color:#F59E0B;'>{_lcp_ped}</div>"
+                        f"<div style='font-size:0.58rem;color:#555;text-transform:uppercase;letter-spacing:0.5px;margin-top:1px;'>en producc.</div></div>"
+                        f"<div style='background:#0D1117;border-radius:8px;padding:8px;text-align:center;'>"
+                        f"<div style='font-size:0.85rem;font-weight:800;color:#10B981;'>${_lcp_stk:,.0f}</div>"
+                        f"<div style='font-size:0.58rem;color:#555;text-transform:uppercase;letter-spacing:0.5px;margin-top:1px;'>valor stock</div></div>"
+                        f"<div style='background:#0D1117;border-radius:8px;padding:8px;text-align:center;'>"
+                        f"<div style='font-size:0.85rem;font-weight:800;color:#3B82F6;'>${_lcp_fac:,.0f}</div>"
+                        f"<div style='font-size:0.58rem;color:#555;text-transform:uppercase;letter-spacing:0.5px;margin-top:1px;'>facturado</div></div>"
+                        f"</div></div>",
+                        unsafe_allow_html=True,
+                    )
+                    if st.button(
+                        f"Ver {_lcc['nombre']} →",
+                        key=f"res_ver_{_lid_c}",
+                        use_container_width=True,
+                    ):
+                        st.session_state["linea_filtro"] = [_lid_c]
+                        st.session_state["linea_sel"]    = _lcc["nombre"]
+                        st.rerun()
+            st.markdown("<div style='height:8px;border-top:1px solid #21262D;margin-bottom:12px;'></div>", unsafe_allow_html=True)
+
         _ra, _rb = st.columns([1.4, 1])
         with _ra:
             st.markdown("<div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#58A6FF;margin-bottom:10px;'>PEDIDOS ACTIVOS</div>", unsafe_allow_html=True)
@@ -186,10 +272,55 @@ def render():
                 st.markdown("<div style='background:#0D2818;border-radius:12px;padding:16px 20px;border:1px solid #238636;border-left:4px solid #3FB950;'><span style='color:#3FB950;font-weight:700;'>✅ Sin pedidos en curso</span><br><span style='color:#8B949E;font-size:0.8rem;'>Podés cargar un nuevo pedido desde el menú 🛒</span></div>", unsafe_allow_html=True)
             else:
                 for _, _pr in _pact.iterrows():
-                    _sc2    = _SC.get(_pr["status"], "#9CA3AF")
-                    _fecha2 = str(_pr["date"])[:10] if _pr["date"] else "—"
-                    _entrega2 = str(_pr.get("fecha_entrega_est","—") or "—")
-                    st.markdown(f"<div style='background:#161B22;border-radius:12px;padding:14px 18px;margin-bottom:8px;border-left:4px solid {_sc2};border:1px solid #21262D;'><div style='font-weight:700;font-size:0.95rem;color:#E6EDF3;'>Pedido #{int(_pr['id'])} <span style='background:{_sc2}22;color:{_sc2};border:1px solid {_sc2}44;border-radius:99px;padding:2px 10px;font-size:0.7rem;font-weight:600;margin-left:6px;'>{_pr['status']}</span></div><div style='font-size:0.75rem;color:#8B949E;margin-top:4px;'>Cargado: {_fecha2} · Entrega: {_entrega2}</div><div style='font-size:0.88rem;font-weight:700;color:{_sc2};margin-top:6px;'>${float(_pr['total']):,.0f}</div></div>", unsafe_allow_html=True)
+                    _sc2      = _SC.get(_pr["status"], "#9CA3AF")
+                    _fecha2   = str(_pr["date"])[:10] if _pr["date"] else "—"
+                    _entrega2 = str(_pr.get("fecha_entrega_est", "—") or "—")
+                    _oid_r    = int(_pr["id"])
+                    _res_items = (
+                        _items_socio[_items_socio["order_id"] == _oid_r]
+                        if not _items_socio.empty else pd.DataFrame()
+                    )
+                    _res_items_html = ""
+                    if not _res_items.empty:
+                        _rparts = [
+                            f"<span style='color:#F59E0B;font-weight:700;'>{int(_ri['cantidad'])}×</span>"
+                            f" <span style='color:#E6EDF3;'>{_ri['producto']}</span>"
+                            f"<span style='color:#6B7280;font-size:0.68rem;'> · ${float(_ri['precio_unitario']):,.0f}</span>"
+                            for _, _ri in _res_items.iterrows()
+                        ]
+                        _res_items_html = (
+                            "<div style='margin-top:7px;padding:7px 10px;background:#0D1117;"
+                            "border-radius:7px;border:1px solid #21262D;font-size:0.78rem;"
+                            "display:flex;flex-direction:column;gap:3px;'>"
+                            + "".join(f"<div>{p}</div>" for p in _rparts)
+                            + "</div>"
+                        )
+                    _not_r = (
+                        f"<div style='font-size:0.7rem;color:#8B949E;margin-top:5px;"
+                        f"padding:5px 8px;background:#161B22;border-radius:5px;"
+                        f"border:1px dashed #30363D;'><em>{_pr['notas']}</em></div>"
+                    ) if _pr.get("notas") else ""
+                    st.markdown(
+                        f"<div style='background:#161B22;border-radius:12px;padding:14px 18px;"
+                        f"margin-bottom:8px;border-left:4px solid {_sc2};border:1px solid #21262D;'>"
+                        f"<div style='display:flex;justify-content:space-between;align-items:flex-start;'>"
+                        f"<div style='flex:1;min-width:0;'>"
+                        f"<div style='font-weight:700;font-size:0.95rem;color:#E6EDF3;'>"
+                        f"Pedido #{_oid_r} "
+                        f"<span style='background:{_sc2}22;color:{_sc2};border:1px solid {_sc2}44;"
+                        f"border-radius:99px;padding:2px 10px;font-size:0.7rem;font-weight:600;"
+                        f"margin-left:6px;'>{_pr['status']}</span></div>"
+                        f"<div style='font-size:0.73rem;color:#8B949E;margin-top:3px;'>"
+                        f"📅 {_fecha2} &nbsp;·&nbsp; 🎯 entrega {_entrega2}</div>"
+                        f"{_res_items_html}"
+                        f"{_not_r}"
+                        f"</div>"
+                        f"<div style='font-size:1.3rem;font-weight:800;color:{_sc2};"
+                        f"margin-left:14px;white-space:nowrap;padding-top:2px;'>"
+                        f"${float(_pr['total']):,.0f}</div>"
+                        f"</div></div>",
+                        unsafe_allow_html=True,
+                    )
         with _rb:
             st.markdown("<div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#58A6FF;margin-bottom:10px;'>ESTADO DE TU CATÁLOGO</div>", unsafe_allow_html=True)
             if not prod.empty:
@@ -215,60 +346,324 @@ def render():
 
     # ══ TAB ESTADÍSTICAS ══
     with _t_stats:
-        _sa, _sb = st.columns(2)
-        with _sa:
-            st.markdown("<div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#58A6FF;margin-bottom:8px;'>FACTURACIÓN MENSUAL (pedidos listos)</div>", unsafe_allow_html=True)
-            if not _hist_mes.empty and len(_hist_mes) > 0:
-                _chart_df = _hist_mes.set_index("mes")[["facturado"]].rename(columns={"facturado":"Facturado $"})
-                st.bar_chart(_chart_df, color=hdr_color, height=220)
-                _meses_ord = _hist_mes.sort_values("mes")
-                if len(_meses_ord) >= 2:
-                    _fac_act = float(_meses_ord.iloc[-1]["facturado"])
-                    _fac_ant = float(_meses_ord.iloc[-2]["facturado"])
-                    _delta   = _fac_act - _fac_ant
-                    _delta_s = f"+${_delta:,.0f}" if _delta >= 0 else f"-${abs(_delta):,.0f}"
-                    st.metric("Este mes vs mes anterior", f"${_fac_act:,.0f}", _delta_s)
-            else:
-                st.info("Aún no hay pedidos completados para graficar.")
-        with _sb:
-            st.markdown("<div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#58A6FF;margin-bottom:8px;'>PRECIO POR PRODUCTO</div>", unsafe_allow_html=True)
-            if not prod.empty:
-                _pr_chart = prod.sort_values("price", ascending=False)[["name","price"]].head(12).copy()
-                _pr_chart["name"] = _pr_chart["name"].str[:22]
-                st.bar_chart(_pr_chart.set_index("name")[["price"]].rename(columns={"price":"Precio $"}), color=hdr_color, height=220)
-            else:
-                st.info("Sin productos para analizar.")
-        st.markdown("<div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#58A6FF;margin-top:20px;margin-bottom:10px;'>DISTRIBUCIÓN DE PEDIDOS</div>", unsafe_allow_html=True)
-        if not _pedidos_s.empty:
-            _dist_cols = st.columns(4)
-            for _dci, _dst in enumerate(["Pendiente","En Proceso","Listo","Cancelado"]):
-                _dn = len(_pedidos_s[_pedidos_s["status"]==_dst])
-                _dc = _SC[_dst]
-                with _dist_cols[_dci]:
-                    st.markdown(f"<div style='background:#161B22;border-radius:12px;padding:16px;border:1px solid #21262D;border-top:3px solid {_dc};text-align:center;'><div style='font-size:1.8rem;font-weight:800;color:{_dc};'>{_dn}</div><div style='font-size:0.7rem;color:#8B949E;margin-top:4px;'>{_dst}</div></div>", unsafe_allow_html=True)
-        if not _prec_hist.empty:
-            st.markdown("<div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#6B7280;margin-top:24px;margin-bottom:8px;'>HISTORIAL DE PRECIOS</div>", unsafe_allow_html=True)
-            _ph_show = _prec_hist.copy()
-            _ph_show["fecha"]          = _ph_show["fecha"].astype(str).str[:10]
-            _ph_show["precio_anterior"] = _ph_show["precio_anterior"].apply(lambda x: f"${x:,.0f}")
-            _ph_show["precio_nuevo"]    = _ph_show["precio_nuevo"].apply(lambda x: f"${x:,.0f}")
-            st.dataframe(
-                _ph_show[["fecha","producto","precio_anterior","precio_nuevo","motivo"]].rename(
-                    columns={"fecha":"Fecha","producto":"Producto","precio_anterior":"Precio Anterior",
-                             "precio_nuevo":"Precio Nuevo","motivo":"Motivo"}
-                ), use_container_width=True, hide_index=True
+        # ── Cálculos pre-tab ────────────────────────────────────────
+        _all_listo_s   = _pedidos_s[_pedidos_s["status"].isin(["Listo","Entregado"])] if not _pedidos_s.empty else pd.DataFrame()
+        _fac_total_all = float(_all_listo_s["total"].sum()) if not _all_listo_s.empty else 0
+        _n_completados = len(_all_listo_s)
+        _ticket_prom   = _fac_total_all / _n_completados if _n_completados > 0 else 0
+
+        _best_mes_val, _best_mes_nom = 0, "—"
+        if not _hist_mes.empty:
+            _bm_idx      = _hist_mes["facturado"].idxmax()
+            _best_mes_val = float(_hist_mes.loc[_bm_idx, "facturado"])
+            _best_mes_nom = str(_hist_mes.loc[_bm_idx, "mes"])
+
+        _mes_actual_fac, _mes_ant_fac, _growth_pct = 0.0, 0.0, 0.0
+        if not _hist_mes.empty:
+            _ms = _hist_mes.sort_values("mes")
+            _mes_actual_fac = float(_ms.iloc[-1]["facturado"])
+            if len(_ms) >= 2:
+                _mes_ant_fac = float(_ms.iloc[-2]["facturado"])
+                _growth_pct = (_mes_actual_fac - _mes_ant_fac) / _mes_ant_fac * 100 if _mes_ant_fac > 0 else 0
+
+        _top_prods = pd.DataFrame()
+        if not _items_socio.empty:
+            _top_prods = (
+                _items_socio
+                .assign(_ing=_items_socio["cantidad"] * _items_socio["precio_unitario"])
+                .groupby("producto")
+                .agg(unidades=("cantidad", "sum"), ingresos=("_ing", "sum"))
+                .sort_values("unidades", ascending=False)
+                .head(5).reset_index()
             )
-        if not _fab_socio.empty:
-            st.markdown("<div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#58A6FF;margin-top:20px;margin-bottom:8px;'>PRODUCTOS MÁS FABRICADOS</div>", unsafe_allow_html=True)
-            _vol_prod = _fab_socio.groupby("producto").agg(
-                fabricaciones=("resultado","count"),
-                gramos_total=("gramos_usados","sum")
-            ).sort_values("fabricaciones", ascending=False).head(8).reset_index()
-            st.dataframe(
-                _vol_prod.rename(columns={"producto":"Producto","fabricaciones":"Fabricaciones","gramos_total":"Gramos totales"})
-                .style.format({"Gramos totales":"{:.0f} g"}),
-                use_container_width=True, hide_index=True
+
+        _canales_df = pd.DataFrame()
+        if not _pedidos_s.empty and "canal_origen" in _pedidos_s.columns:
+            _cx = _pedidos_s[_pedidos_s["canal_origen"].notna() & (_pedidos_s["canal_origen"] != "")]
+            if not _cx.empty:
+                _canales_df = _cx.groupby("canal_origen").size().reset_index(name="n").sort_values("n", ascending=False)
+
+        _total_gramos_fab = float(_fab_socio["gramos_usados"].fillna(0).sum()) if not _fab_socio.empty else 0
+
+        # ── Helper: KPI neon card ────────────────────────────────────
+        def _neon_kpi(col, value, label, color, icon, sub=""):
+            _glow = f"0 0 14px {color}66, 0 0 28px {color}22"
+            _sub_h = f"<div style='font-size:0.68rem;color:#555;margin-top:3px;'>{sub}</div>" if sub else ""
+            with col:
+                st.markdown(
+                    f"<div style='background:#050508;border-radius:16px;padding:22px 14px;"
+                    f"border:1px solid {color}44;box-shadow:{_glow};text-align:center;margin-bottom:4px;'>"
+                    f"<div style='font-size:1.6rem;line-height:1;'>{icon}</div>"
+                    f"<div style='font-size:1.55rem;font-weight:900;color:{color};line-height:1.1;"
+                    f"margin-top:6px;text-shadow:0 0 10px {color}88;'>{value}</div>"
+                    f"<div style='font-size:0.6rem;font-weight:700;color:#444;text-transform:uppercase;"
+                    f"letter-spacing:1.5px;margin-top:7px;'>{label}</div>"
+                    f"{_sub_h}</div>",
+                    unsafe_allow_html=True,
+                )
+
+        # ── Fila 1: KPIs neon ────────────────────────────────────────
+        st.markdown(
+            "<div style='font-size:0.6rem;font-weight:700;letter-spacing:3px;color:#39FF14;"
+            "text-transform:uppercase;margin-bottom:12px;'>⚡ TUS NÚMEROS</div>",
+            unsafe_allow_html=True,
+        )
+        _ka, _kb, _kc, _kd = st.columns(4)
+        _neon_kpi(_ka, f"${_fac_total_all:,.0f}", "Total facturado", "#39FF14", "💰",
+                  f"{_n_completados} pedidos completados")
+        _neon_kpi(_kb, f"${_ticket_prom:,.0f}", "Ticket promedio", "#00FFFF", "🎯",
+                  "por pedido completado")
+        _neon_kpi(_kc, f"${_best_mes_val:,.0f}", "Mejor mes", "#FF10F0", "🏆", _best_mes_nom)
+        _gw_icon  = "📈" if _growth_pct >= 0 else "📉"
+        _gw_color = "#39FF14" if _growth_pct >= 0 else "#FF4444"
+        _gw_str   = f"+{_growth_pct:.0f}%" if _growth_pct >= 0 else f"{_growth_pct:.0f}%"
+        _neon_kpi(_kd, _gw_str, "vs mes anterior", _gw_color, _gw_icon, "tendencia mensual")
+
+        st.markdown("<div style='height:20px;'></div>", unsafe_allow_html=True)
+
+        # ── Fila 2: Gráfico mensual + Canales ───────────────────────
+        _sc1, _sc2 = st.columns([3, 2])
+        with _sc1:
+            st.markdown(
+                "<div style='font-size:0.6rem;font-weight:700;letter-spacing:2px;color:#00FFFF;"
+                "text-transform:uppercase;margin-bottom:8px;'>📊 FACTURACIÓN MENSUAL</div>",
+                unsafe_allow_html=True,
             )
+            if not _hist_mes.empty:
+                _chart_df = _hist_mes.sort_values("mes").set_index("mes")[["facturado"]].rename(
+                    columns={"facturado": "$ Facturado"}
+                )
+                st.bar_chart(_chart_df, color="#00FFFF", height=200)
+            else:
+                st.markdown(
+                    "<div style='background:#050508;border-radius:12px;padding:40px;text-align:center;"
+                    "border:1px dashed #222;color:#444;font-size:0.8rem;'>Sin pedidos completados aún</div>",
+                    unsafe_allow_html=True,
+                )
+        with _sc2:
+            st.markdown(
+                "<div style='font-size:0.6rem;font-weight:700;letter-spacing:2px;color:#FF10F0;"
+                "text-transform:uppercase;margin-bottom:8px;'>📡 DE DÓNDE VIENEN TUS CLIENTES</div>",
+                unsafe_allow_html=True,
+            )
+            _canal_colors_map = {
+                "Instagram":                "#E1306C",
+                "TikTok":                   "#00F2EA",
+                "Recomendación personal":   "#39FF14",
+                "WhatsApp directo":         "#25D366",
+                "WhatsApp":                 "#25D366",
+                "Ya era cliente / familia": "#FF10F0",
+                "Presencial / evento":      "#FFE600",
+                "Presencial":               "#FFE600",
+                "Otro":                     "#888",
+            }
+            if _canales_df.empty:
+                st.markdown(
+                    "<div style='color:#444;font-size:0.8rem;padding:12px;'>Sin datos de canal todavía.<br>"
+                    "<span style='font-size:0.7rem;'>Se registran al cargar pedidos.</span></div>",
+                    unsafe_allow_html=True,
+                )
+            else:
+                _canal_total_n = _canales_df["n"].sum()
+                for _, _cr in _canales_df.iterrows():
+                    _cc = _canal_colors_map.get(_cr["canal_origen"], "#888")
+                    _pct_c = int(_cr["n"] / _canal_total_n * 100) if _canal_total_n else 0
+                    st.markdown(
+                        f"<div style='margin-bottom:8px;'>"
+                        f"<div style='display:flex;justify-content:space-between;margin-bottom:3px;'>"
+                        f"<span style='font-size:0.78rem;color:#C9D1D9;'>{_cr['canal_origen']}</span>"
+                        f"<span style='font-size:0.75rem;font-weight:800;color:{_cc};'>"
+                        f"{int(_cr['n'])} · {_pct_c}%</span></div>"
+                        f"<div style='background:#0D0D12;border-radius:99px;height:5px;'>"
+                        f"<div style='background:{_cc};width:{_pct_c}%;height:5px;border-radius:99px;"
+                        f"box-shadow:0 0 6px {_cc}99;'></div></div></div>",
+                        unsafe_allow_html=True,
+                    )
+
+        st.markdown("<div style='height:20px;'></div>", unsafe_allow_html=True)
+
+        # ── Fila 3: Top productos + Pipeline ────────────────────────
+        _st1, _st2 = st.columns([3, 2])
+        with _st1:
+            st.markdown(
+                "<div style='font-size:0.6rem;font-weight:700;letter-spacing:2px;color:#FFE600;"
+                "text-transform:uppercase;margin-bottom:8px;'>🏅 TUS PRODUCTOS MÁS PEDIDOS</div>",
+                unsafe_allow_html=True,
+            )
+            if _top_prods.empty:
+                st.markdown(
+                    "<div style='color:#444;font-size:0.8rem;padding:12px;'>Aún sin items de pedidos.</div>",
+                    unsafe_allow_html=True,
+                )
+            else:
+                _max_u = float(_top_prods["unidades"].max())
+                _rank_c = ["#FFE600", "#C0C0C0", "#CD7F32", "#6B7280", "#444"]
+                for _ri, (_, _tp) in enumerate(_top_prods.iterrows()):
+                    _rc    = _rank_c[min(_ri, 4)]
+                    _bw    = int(_tp["unidades"] / _max_u * 100) if _max_u > 0 else 0
+                    _nom_t = str(_tp["producto"])[:32]
+                    st.markdown(
+                        f"<div style='margin-bottom:7px;padding:10px 14px;background:#050508;"
+                        f"border-radius:10px;border:1px solid {_rc}33;"
+                        f"box-shadow:0 0 8px {_rc}22;'>"
+                        f"<div style='display:flex;justify-content:space-between;align-items:center;'>"
+                        f"<div style='display:flex;align-items:center;gap:10px;'>"
+                        f"<span style='font-size:1rem;font-weight:900;color:{_rc};min-width:22px;'>#{_ri+1}</span>"
+                        f"<div><div style='font-size:0.82rem;color:#E6EDF3;font-weight:600;'>{_nom_t}</div>"
+                        f"<div style='font-size:0.65rem;color:#555;'>${float(_tp['ingresos']):,.0f} facturado</div></div>"
+                        f"</div>"
+                        f"<span style='font-size:1.1rem;font-weight:900;color:{_rc};"
+                        f"text-shadow:0 0 8px {_rc}88;'>{int(_tp['unidades'])} u</span></div>"
+                        f"<div style='margin-top:6px;background:#0D0D12;border-radius:99px;height:4px;'>"
+                        f"<div style='background:{_rc};width:{_bw}%;height:4px;border-radius:99px;"
+                        f"box-shadow:0 0 5px {_rc}99;'></div></div></div>",
+                        unsafe_allow_html=True,
+                    )
+        with _st2:
+            st.markdown(
+                "<div style='font-size:0.6rem;font-weight:700;letter-spacing:2px;color:#FF6B35;"
+                "text-transform:uppercase;margin-bottom:8px;'>🔄 ESTADO DEL PIPELINE</div>",
+                unsafe_allow_html=True,
+            )
+            _pipe_cfg = [
+                ("Pendiente",  "#FFE600", "⏳"),
+                ("En Proceso", "#00FFFF", "🖨️"),
+                ("Listo",      "#39FF14", "✅"),
+                ("Entregado",  "#FF10F0", "📦"),
+                ("Cancelado",  "#FF4444", "❌"),
+            ]
+            if not _pedidos_s.empty:
+                for _dst, _dc_n, _dc_e in _pipe_cfg:
+                    _dn2 = len(_pedidos_s[_pedidos_s["status"] == _dst])
+                    if _dn2 == 0 and _dst == "Cancelado":
+                        continue
+                    st.markdown(
+                        f"<div style='display:flex;align-items:center;justify-content:space-between;"
+                        f"background:#050508;border-radius:10px;padding:10px 14px;"
+                        f"border:1px solid {_dc_n}33;box-shadow:0 0 8px {_dc_n}22;margin-bottom:6px;'>"
+                        f"<span style='font-size:0.82rem;color:#C9D1D9;'>{_dc_e} {_dst}</span>"
+                        f"<span style='font-size:1.35rem;font-weight:900;color:{_dc_n};"
+                        f"text-shadow:0 0 8px {_dc_n}88;'>{_dn2}</span></div>",
+                        unsafe_allow_html=True,
+                    )
+
+            if _total_gramos_fab > 0:
+                st.markdown("<div style='height:10px;'></div>", unsafe_allow_html=True)
+                _kg = _total_gramos_fab / 1000
+                st.markdown(
+                    f"<div style='background:#050508;border-radius:12px;padding:14px;"
+                    f"border:1px solid #FF6B3544;box-shadow:0 0 10px #FF6B3522;text-align:center;'>"
+                    f"<div style='font-size:0.55rem;color:#555;text-transform:uppercase;letter-spacing:1.5px;'>"
+                    f"imprimimos para vos</div>"
+                    f"<div style='font-size:1.4rem;font-weight:900;color:#FF6B35;"
+                    f"text-shadow:0 0 8px #FF6B3588;margin-top:4px;'>{_kg:.2f} kg</div>"
+                    f"<div style='font-size:0.62rem;color:#444;margin-top:2px;'>de filamento 3D</div>"
+                    f"</div>",
+                    unsafe_allow_html=True,
+                )
+
+        st.markdown("<div style='height:12px;'></div>", unsafe_allow_html=True)
+
+        # ── Fila 4: Historial de precios (cards) + Producción ───────
+        _exp1, _exp2 = st.columns(2)
+        with _exp1:
+            if not _prec_hist.empty:
+                st.markdown(
+                    "<div style='font-size:0.6rem;font-weight:700;letter-spacing:2px;color:#FBBF24;"
+                    "text-transform:uppercase;margin-bottom:8px;'>💲 EVOLUCIÓN DE PRECIOS</div>",
+                    unsafe_allow_html=True,
+                )
+                for _, _ph in _prec_hist.iterrows():
+                    _pa  = float(_ph["precio_anterior"])
+                    _pn  = float(_ph["precio_nuevo"])
+                    _dlt = _pn - _pa
+                    _pct = (_dlt / _pa * 100) if _pa > 0 else 0
+                    _up  = _dlt >= 0
+                    _dc  = "#10B981" if _up else "#F59E0B"
+                    _arr = "▲" if _up else "▼"
+                    _sig = "+" if _up else ""
+                    _mot = str(_ph.get("motivo") or "")[:48]
+                    _fec = str(_ph["fecha"])[:10]
+                    st.markdown(
+                        f"<div style='background:#050508;border-radius:10px;padding:10px 14px;"
+                        f"border:1px solid {_dc}33;box-shadow:0 0 8px {_dc}11;margin-bottom:6px;'>"
+                        f"<div style='display:flex;justify-content:space-between;align-items:flex-start;'>"
+                        f"<div style='flex:1;min-width:0;'>"
+                        f"<div style='font-size:0.8rem;font-weight:700;color:#E6EDF3;'>{_ph['producto']}</div>"
+                        f"<div style='font-size:0.62rem;color:#555;margin-top:2px;'>{_fec} · {_mot}</div>"
+                        f"<div style='font-size:0.7rem;color:#8B949E;margin-top:4px;'>"
+                        f"<span style='text-decoration:line-through;'>${_pa:,.0f}</span>"
+                        f" <span style='color:#C9D1D9;font-weight:700;margin-left:4px;'>${_pn:,.0f}</span>"
+                        f"</div>"
+                        f"</div>"
+                        f"<div style='font-size:1.2rem;font-weight:900;color:{_dc};"
+                        f"text-shadow:0 0 8px {_dc}88;white-space:nowrap;margin-left:10px;padding-top:2px;'>"
+                        f"{_arr} {_sig}{_pct:.0f}%</div>"
+                        f"</div></div>",
+                        unsafe_allow_html=True,
+                    )
+        with _exp2:
+            if not _fab_socio.empty:
+                st.markdown(
+                    "<div style='font-size:0.6rem;font-weight:700;letter-spacing:2px;color:#FF6B35;"
+                    "text-transform:uppercase;margin-bottom:8px;'>🏭 PRODUCCIÓN POR PRODUCTO</div>",
+                    unsafe_allow_html=True,
+                )
+                _vol_prod = _fab_socio.groupby("producto").agg(
+                    fabricaciones=("resultado","count"),
+                    gramos_total=("gramos_usados","sum")
+                ).sort_values("fabricaciones", ascending=False).head(8).reset_index()
+                for _, _vp in _vol_prod.iterrows():
+                    _kg_vp = float(_vp["gramos_total"]) / 1000
+                    st.markdown(
+                        f"<div style='background:#050508;border-radius:8px;padding:8px 12px;"
+                        f"border:1px solid #FF6B3522;margin-bottom:5px;display:flex;"
+                        f"justify-content:space-between;align-items:center;'>"
+                        f"<div style='font-size:0.78rem;color:#C9D1D9;'>{_vp['producto']}</div>"
+                        f"<div style='text-align:right;'>"
+                        f"<div style='font-size:0.82rem;font-weight:800;color:#FF6B35;'>{int(_vp['fabricaciones'])}x</div>"
+                        f"<div style='font-size:0.62rem;color:#555;'>{_kg_vp:.2f} kg</div>"
+                        f"</div></div>",
+                        unsafe_allow_html=True,
+                    )
+
+        # ── Fila 5: Señales de mercado ───────────────────────────────
+        if not _senales_sm.empty:
+            st.markdown("<div style='height:12px;'></div>", unsafe_allow_html=True)
+            st.markdown(
+                "<div style='font-size:0.6rem;font-weight:700;letter-spacing:3px;color:#A855F7;"
+                "text-transform:uppercase;margin-bottom:10px;'>🔮 SEÑALES DE MERCADO</div>",
+                unsafe_allow_html=True,
+            )
+            for _, _sm in _senales_sm.iterrows():
+                _sm_fec  = str(_sm.get("fecha", ""))[:10]
+                _sm_prod = str(_sm.get("producto") or "")
+                _sm_reac = str(_sm.get("reaccion") or "")
+                _sm_seg  = str(_sm.get("segmento_detectado") or "")
+                _sm_op   = str(_sm.get("oportunidad") or "")
+                _sm_can  = str(_sm.get("canal") or "")
+                _seg_color = "#A855F7" if "B2B" in _sm_seg else ("#39FF14" if "Retail" in _sm_seg else "#00FFFF")
+                st.markdown(
+                    f"<div style='background:linear-gradient(135deg,#0D0D18,#150D20);"
+                    f"border-radius:12px;padding:14px 18px;border:1px solid #A855F744;"
+                    f"box-shadow:0 0 12px #A855F722;margin-bottom:8px;'>"
+                    f"<div style='display:flex;justify-content:space-between;align-items:flex-start;'>"
+                    f"<div style='flex:1;'>"
+                    f"<div style='display:flex;align-items:center;gap:8px;margin-bottom:4px;'>"
+                    f"<span style='font-size:0.85rem;font-weight:800;color:#E6EDF3;'>{_sm_prod}</span>"
+                    f"<span style='background:{_seg_color}22;color:{_seg_color};border:1px solid {_seg_color}44;"
+                    f"border-radius:99px;padding:1px 8px;font-size:0.6rem;font-weight:700;'>{_sm_seg}</span>"
+                    f"</div>"
+                    f"<div style='font-size:0.73rem;color:#A855F7;font-style:italic;'>✨ {_sm_reac}</div>"
+                    f"<div style='font-size:0.72rem;color:#C9D1D9;margin-top:5px;line-height:1.4;'>{_sm_op}</div>"
+                    f"</div>"
+                    f"<div style='text-align:right;margin-left:10px;'>"
+                    f"<div style='font-size:0.62rem;color:#555;'>{_sm_fec}</div>"
+                    f"<div style='font-size:0.65rem;color:#6B7280;margin-top:2px;'>{_sm_can}</div>"
+                    f"</div>"
+                    f"</div></div>",
+                    unsafe_allow_html=True,
+                )
 
     # ══ TAB PRODUCTOS ══
     with _t_prod:
@@ -283,15 +678,49 @@ def render():
                 _pstock_c  = "#10B981" if (_prow.get("stock",0) or 0) > 5 else ("#F59E0B" if (_prow.get("stock",0) or 0) > 0 else "#EF4444")
                 _peso_g    = int(_prow.get("weight_gr", 0) or 0)
                 with _pcols2[_pii % 3]:
-                    st.markdown(f"""<div style='background:#161B22;border-radius:14px;padding:16px;border:1px solid #21262D;margin-bottom:10px;border-top:3px solid {_plincolor};'>
-<div style='font-size:0.62rem;color:{_plincolor};font-weight:700;letter-spacing:1px;text-transform:uppercase;'>{_prow.get('sku','')} · {_peso_g}g</div>
-<div style='font-size:0.9rem;font-weight:700;color:#E6EDF3;margin-top:4px;line-height:1.2;'>{_prow['name']}</div>
-<div style='font-size:0.68rem;color:#8B949E;margin-top:2px;'>{_prow.get('categoria','') or ''}</div>
-<div style='margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:4px;'>
-  <div style='background:#0D1117;border-radius:6px;padding:8px 4px;text-align:center;'><div style='font-size:0.56rem;color:#8B949E;margin-bottom:2px;'>PRECIO</div><div style='font-size:0.84rem;font-weight:700;color:#E6EDF3;'>${_prow['price']:,.0f}</div></div>
-  <div style='background:#0D1117;border-radius:6px;padding:8px 4px;text-align:center;'><div style='font-size:0.56rem;color:#8B949E;margin-bottom:2px;'>STOCK</div><div style='font-size:0.84rem;font-weight:700;color:{_pstock_c};'>{int(_prow.get("stock",0) or 0)} u</div></div>
-</div>
-</div>""", unsafe_allow_html=True)
+                    _pdesc      = str(_prow.get("description", "") or "").strip()
+                    _pdesc_html = (
+                        f"<div style='font-size:0.72rem;color:#C9D1D9;margin-top:6px;"
+                        f"line-height:1.45;font-style:italic;border-top:1px solid #21262D;"
+                        f"padding-top:6px;'>{_pdesc}</div>"
+                    ) if _pdesc else ""
+                    _tipo_tp    = str(_prow.get("tipo_producto") or "")
+                    _tipo_label = {"propio_3d": "EP 3D", "linea_propio": "Propio",
+                                   "compartido": "Compartido", "kit_mixto": "Kit"}.get(_tipo_tp, "")
+                    _tipo_html  = (
+                        f"<span style='background:{_plincolor}22;color:{_plincolor};"
+                        f"border-radius:99px;padding:1px 7px;font-size:0.58rem;"
+                        f"font-weight:700;border:1px solid {_plincolor}44;'>{_tipo_label}</span>"
+                    ) if _tipo_label else ""
+                    _precio_p   = float(_prow.get("price", 0) or 0)
+                    _stk_p      = int(_prow.get("stock", 0) or 0)
+                    _lbl_precio = "PRECIO EP" if _tipo_tp == "propio_3d" else "PRECIO"
+                    _nums_html = (
+                        f"<div style='margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:4px;'>"
+                        f"<div style='background:#0D1117;border-radius:6px;padding:8px 4px;text-align:center;'>"
+                        f"<div style='font-size:0.56rem;color:#8B949E;margin-bottom:2px;'>{_lbl_precio}</div>"
+                        f"<div style='font-size:0.84rem;font-weight:700;color:{_plincolor};'>${_precio_p:,.0f}</div></div>"
+                        f"<div style='background:#0D1117;border-radius:6px;padding:8px 4px;text-align:center;'>"
+                        f"<div style='font-size:0.56rem;color:#8B949E;margin-bottom:2px;'>STOCK</div>"
+                        f"<div style='font-size:0.84rem;font-weight:700;color:{_pstock_c};'>{_stk_p} u</div></div>"
+                        f"</div>"
+                    )
+                    st.markdown(
+                        f"<div style='background:#161B22;border-radius:14px;padding:16px;"
+                        f"border:1px solid #21262D;margin-bottom:10px;border-top:3px solid {_plincolor};'>"
+                        f"<div style='display:flex;justify-content:space-between;align-items:flex-start;'>"
+                        f"<div style='font-size:0.62rem;color:{_plincolor};font-weight:700;"
+                        f"letter-spacing:1px;text-transform:uppercase;'>{_prow.get('sku','')} · {_peso_g}g</div>"
+                        f"{_tipo_html}</div>"
+                        f"<div style='font-size:0.9rem;font-weight:700;color:#E6EDF3;margin-top:4px;"
+                        f"line-height:1.2;'>{_prow['name']}</div>"
+                        f"<div style='font-size:0.68rem;color:#8B949E;margin-top:2px;'>"
+                        f"{_prow.get('categoria','') or ''}</div>"
+                        f"{_pdesc_html}"
+                        f"{_nums_html}"
+                        f"</div>",
+                        unsafe_allow_html=True,
+                    )
 
         if role == "socio_multi" and len(lineas_activas) > 1:
             _ltab_names = [
@@ -320,52 +749,148 @@ def render():
     # ══ TAB PEDIDOS ══
     with _t_ped:
         _show_badge = role == "socio_multi" and len(lineas_activas) > 1
+        _canal_icons_ped = {
+            "Ya era cliente / familia": "👨‍👩‍👧",
+            "Instagram":                "📸",
+            "TikTok":                   "🎵",
+            "Recomendación personal":   "🤝",
+            "Presencial / evento":      "🏪",
+            "Presencial":               "🏪",
+            "WhatsApp directo":         "💬",
+            "WhatsApp":                 "💬",
+            "Otro":                     "💡",
+        }
+        _pago_badge_map = {
+            "pendiente":  ("💳 Pago pendiente", "#9CA3AF"),
+            "acreditado": ("✅ Pago acreditado", "#10B981"),
+            "devuelto":   ("↩️ Devuelto",        "#EF4444"),
+        }
         if _pedidos_s.empty:
             st.info("Todavía no tenés pedidos registrados.")
         else:
-            _pf_est = st.selectbox("Filtrar por estado", ["Todos","Pendiente","En Proceso","Listo","Cancelado"], key="ped_filtro_socio")
-            _pf_df  = _pedidos_s if _pf_est=="Todos" else _pedidos_s[_pedidos_s["status"]==_pf_est]
+            _pf_est = st.selectbox(
+                "Filtrar por estado",
+                ["Todos", "Pendiente", "En Proceso", "Listo", "Entregado", "Cancelado"],
+                key="ped_filtro_socio",
+            )
+            _pf_df = _pedidos_s if _pf_est == "Todos" else _pedidos_s[_pedidos_s["status"] == _pf_est]
             if _pf_df.empty:
                 st.info(f"Sin pedidos en estado {_pf_est}.")
-            _pago_badge_map = {
-                "pendiente":  ("💳 Pendiente", "#9CA3AF"),
-                "acreditado": ("✅ Acreditado", "#10B981"),
-                "devuelto":   ("↩️ Devuelto",   "#EF4444"),
-            }
-            for _, _pr2 in _pf_df.iterrows():
-                _sc3   = _SC.get(_pr2["status"], "#9CA3AF")
-                _lnom2 = LINEAS.get(_pr2["client_id"],{}).get("nombre","")
-                _lcol2 = LINEAS.get(_pr2["client_id"],{}).get("color", hdr_color)
-                _fec2  = str(_pr2["date"])[:10] if _pr2["date"] else "—"
-                _ent2  = str(_pr2.get("fecha_entrega_est","—") or "—")
-                _not2  = f"<div style='font-size:0.75rem;color:#8B949E;margin-top:4px;'><em>{_pr2['notas']}</em></div>" if _pr2.get("notas") else ""
-                _badge2 = f"<span style='background:{_lcol2}22;color:{_lcol2};border:1px solid {_lcol2}44;border-radius:99px;padding:2px 9px;font-size:0.68rem;font-weight:600;margin-left:8px;'>{_lnom2}</span>" if _show_badge else ""
-                _pest2 = None
-                if "pago_estado" in _pedidos_s.columns:
-                    _raw_pest = _pr2.get("pago_estado")
-                    if _raw_pest is not None and not pd.isna(_raw_pest):
-                        _pest2 = str(_raw_pest)
-                if _pest2:
-                    _pb_txt, _pb_col = _pago_badge_map.get(_pest2, (_pest2, "#9CA3AF"))
-                    _pago_badge2 = f"<span style='background:{_pb_col}22;color:{_pb_col};border:1px solid {_pb_col}44;border-radius:99px;padding:2px 9px;font-size:0.68rem;font-weight:600;margin-left:8px;'>{_pb_txt}</span>"
-                else:
-                    _pago_badge2 = ""
-                st.markdown(
-                    f"<div style='background:#161B22;border-radius:14px;padding:16px 20px;margin-bottom:10px;"
-                    f"border-left:4px solid {_sc3};border:1px solid #21262D;'>"
-                    f"<div style='display:flex;justify-content:space-between;align-items:center;'>"
-                    f"<div><span style='font-weight:800;font-size:1rem;color:#E6EDF3;'>#{int(_pr2['id'])}</span>"
-                    f"<span style='background:{_sc3}22;color:{_sc3};border:1px solid {_sc3}44;"
-                    f"border-radius:99px;padding:2px 10px;font-size:0.7rem;font-weight:700;margin-left:8px;'>{_pr2['status']}</span>"
-                    f"{_badge2}{_pago_badge2}"
-                    f"<div style='font-size:0.72rem;color:#8B949E;margin-top:5px;'>📅 {_fec2} → entrega {_ent2}</div>"
-                    f"{_not2}</div>"
-                    f"<div style='font-family:Cormorant Garamond,serif;font-size:1.5rem;font-weight:700;color:#E6EDF3;'>${float(_pr2['total']):,.0f}</div>"
-                    f"</div></div>",
-                    unsafe_allow_html=True
-                )
-            _tot_fac = float(_pedidos_s[_pedidos_s["status"]=="Listo"]["total"].sum())
-            st.markdown(f"<div style='background:#0D1B2E;border-radius:10px;padding:12px 18px;margin-top:6px;border:1px solid #1B2D4A;text-align:right;'><span style='color:#58A6FF;font-weight:700;'>Total facturado (pedidos Listo): ${_tot_fac:,.0f}</span></div>", unsafe_allow_html=True)
+            else:
+                for _, _pr2 in _pf_df.iterrows():
+                    _oid2  = int(_pr2["id"])
+                    _sc3   = _SC.get(_pr2["status"], "#9CA3AF")
+                    _lnom2 = LINEAS.get(_pr2["client_id"], {}).get("nombre", "")
+                    _lcol2 = LINEAS.get(_pr2["client_id"], {}).get("color", hdr_color)
+                    _fec2  = str(_pr2["date"])[:10] if _pr2["date"] else "—"
+                    _ent2  = str(_pr2.get("fecha_entrega_est", "—") or "—")
+
+                    _badge2 = (
+                        f"<span style='background:{_lcol2}22;color:{_lcol2};border:1px solid {_lcol2}44;"
+                        f"border-radius:99px;padding:2px 9px;font-size:0.68rem;font-weight:600;'>{_lnom2}</span>"
+                    ) if _show_badge else ""
+
+                    _pest2 = None
+                    if "pago_estado" in _pedidos_s.columns:
+                        _raw = _pr2.get("pago_estado")
+                        if _raw is not None and not pd.isna(_raw):
+                            _pest2 = str(_raw)
+                    if _pest2:
+                        _pb_txt, _pb_col = _pago_badge_map.get(_pest2, (_pest2, "#9CA3AF"))
+                        _pago_badge2 = (
+                            f"<span style='background:{_pb_col}22;color:{_pb_col};"
+                            f"border:1px solid {_pb_col}44;border-radius:99px;"
+                            f"padding:2px 9px;font-size:0.68rem;font-weight:600;'>{_pb_txt}</span>"
+                        )
+                    else:
+                        _pago_badge2 = ""
+
+                    _canal2     = _pr2.get("canal_origen") or ""
+                    _canal_ico2 = _canal_icons_ped.get(_canal2, "")
+                    _canal_html = (
+                        f"<span style='font-size:0.68rem;color:#6B7280;'>{_canal_ico2} {_canal2}</span>"
+                    ) if _canal2 else ""
+
+                    # Items del pedido con nombre del producto
+                    _ord_items = (
+                        _items_socio[_items_socio["order_id"] == _oid2]
+                        if not _items_socio.empty else pd.DataFrame()
+                    )
+                    _items_html = ""
+                    if not _ord_items.empty:
+                        _parts = []
+                        for _, _ir in _ord_items.iterrows():
+                            _parts.append(
+                                f"<span style='color:#F59E0B;font-weight:700;'>{int(_ir['cantidad'])}×</span>"
+                                f" <span style='color:#E6EDF3;font-weight:600;'>{_ir['producto']}</span>"
+                                f"<span style='color:#6B7280;font-size:0.7rem;'> · ${float(_ir['precio_unitario']):,.0f} c/u</span>"
+                            )
+                        _items_html = (
+                            "<div style='margin-top:8px;padding:8px 12px;background:#0D1117;"
+                            "border-radius:8px;border:1px solid #21262D;font-size:0.8rem;"
+                            "display:flex;flex-direction:column;gap:3px;'>"
+                            + "".join(f"<div>{p}</div>" for p in _parts)
+                            + "</div>"
+                        )
+
+                    _not2 = (
+                        f"<div style='font-size:0.72rem;color:#8B949E;margin-top:6px;"
+                        f"padding:6px 10px;background:#161B22;border-radius:6px;"
+                        f"border:1px dashed #30363D;'><em>{_pr2['notas']}</em></div>"
+                    ) if _pr2.get("notas") else ""
+
+                    st.markdown(
+                        f"<div style='background:#161B22;border-radius:14px;padding:16px 20px;"
+                        f"margin-bottom:6px;border-left:4px solid {_sc3};border:1px solid #21262D;'>"
+                        f"<div style='display:flex;justify-content:space-between;align-items:flex-start;'>"
+                        f"<div style='flex:1;min-width:0;'>"
+                        f"<div style='display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:4px;'>"
+                        f"<span style='font-weight:800;font-size:1rem;color:#E6EDF3;'>#{_oid2}</span>"
+                        f"<span style='background:{_sc3}22;color:{_sc3};border:1px solid {_sc3}44;"
+                        f"border-radius:99px;padding:2px 10px;font-size:0.7rem;font-weight:700;'>{_pr2['status']}</span>"
+                        f"{_badge2}{_pago_badge2}"
+                        f"</div>"
+                        f"<div style='font-size:0.72rem;color:#8B949E;display:flex;gap:12px;flex-wrap:wrap;'>"
+                        f"<span>📅 {_fec2}</span>"
+                        f"<span>🎯 entrega {_ent2}</span>"
+                        f"{_canal_html}"
+                        f"</div>"
+                        f"{_items_html}"
+                        f"{_not2}"
+                        f"</div>"
+                        f"<div style='font-family:Cormorant Garamond,serif;font-size:1.6rem;"
+                        f"font-weight:700;color:#E6EDF3;margin-left:16px;white-space:nowrap;"
+                        f"padding-top:2px;'>${float(_pr2['total']):,.0f}</div>"
+                        f"</div></div>",
+                        unsafe_allow_html=True,
+                    )
+
+                    # Acciones según estado
+                    if _pr2["status"] == "Pendiente":
+                        if st.button("❌ Cancelar pedido", key=f"ped_cancel_{_oid2}",
+                                     help="Cancela este pedido — Fer no lo fabricará"):
+                            with engine.connect() as _pc:
+                                _pc.execute(text("UPDATE orders SET status='Cancelado' WHERE id=:id"), {"id": _oid2})
+                                _pc.commit()
+                            st.warning(f"Pedido #{_oid2} cancelado.")
+                            st.rerun()
+                    elif _pr2["status"] == "Listo":
+                        if st.button("📦 Confirmar recepción", key=f"ped_entrega_{_oid2}",
+                                     type="primary", help="Marca el pedido como recibido"):
+                            with engine.connect() as _pc:
+                                _pc.execute(text("UPDATE orders SET status='Entregado' WHERE id=:id"), {"id": _oid2})
+                                _pc.commit()
+                            st.success(f"✅ Pedido #{_oid2} confirmado como Entregado.")
+                            st.rerun()
+
+            _tot_fac = float(_pedidos_s[_pedidos_s["status"].isin(["Listo", "Entregado"])]["total"].sum())
+            st.markdown(
+                f"<div style='background:#0D1B2E;border-radius:10px;padding:12px 18px;"
+                f"margin-top:8px;border:1px solid #1B2D4A;text-align:right;'>"
+                f"<span style='color:#58A6FF;font-weight:700;'>"
+                f"Total facturado (Listo + Entregado): ${_tot_fac:,.0f}</span></div>",
+                unsafe_allow_html=True,
+            )
 
     # ══ TAB MI TIENDA ══
     with _t_tienda:
@@ -379,14 +904,30 @@ def render():
 <div style='background:linear-gradient(135deg,{lcolor}22,{lcolor}0a);border-radius:16px;
      padding:18px 24px;border:1px solid {lcolor}33;margin-bottom:16px;'>
   <div style='font-size:0.62rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;
-       color:{lcolor};'>CAPA 2 · UNIVERSO DE LA LINEA</div>
+       color:{lcolor};'>CATÁLOGO COMPLETO · TU LÍNEA</div>
   <div style='font-size:1.1rem;font-weight:800;color:#E6EDF3;margin-top:6px;'>🏪 Mi Tienda — {lnom}</div>
   <div style='font-size:0.75rem;color:#8B949E;margin-top:4px;'>
-    Publicá tus propios productos. Borrador = solo vos lo ves · Publico = visible en tu página web.
+    Productos EP 3D = lo que El Pasaje fabrica para vos · Productos propios = los que vos creás y gestionás.
+    Seteá tu precio de venta en cada uno para calcular tu margen.
   </div>
 </div>""", unsafe_allow_html=True)
 
             df_c2 = get_productos_capa2(lid)
+
+            # ── Productos EP (propio_3d) de esta línea ──────────────────
+            try:
+                _df_ep = pd.read_sql(
+                    text("""SELECT sku, name, description, price, precio_socio,
+                                   precio_reventa, weight_gr, stock, categoria, imagen_url
+                            FROM products
+                            WHERE client_id=:cid AND tipo_producto='propio_3d' AND activo=1
+                            ORDER BY categoria, name"""),
+                    engine, params={"cid": lid},
+                )
+                if "precio_reventa" not in _df_ep.columns:
+                    _df_ep["precio_reventa"] = _df_ep.get("precio_socio", 0)
+            except Exception:
+                _df_ep = pd.DataFrame()
 
             # Verificar si la línea tiene número de WhatsApp configurado
             _wa_configured = False
@@ -420,122 +961,306 @@ def render():
             except Exception:
                 _df_kc_all = pd.DataFrame()
 
+            # ── KPIs de márgenes ──────────────────────────────────────
+            if not _df_ep.empty:
+                _ep_cost_stk  = float((_df_ep["price"] * _df_ep["stock"]).sum())
+                _df_ep_ps     = _df_ep["precio_reventa"].fillna(0)
+                _ep_venta_stk = float((_df_ep_ps * _df_ep["stock"]).sum())
+                _ep_margen_stk = _ep_venta_stk - _ep_cost_stk
+                _n_con_ps     = int((_df_ep_ps > 0).sum())
+                _km1, _km2, _km3, _km4 = st.columns(4)
+                for _kc, _kv, _kl, _kcol in [
+                    (_km1, f"${_ep_cost_stk:,.0f}",   "💰 Capital en EP", lcolor),
+                    (_km2, f"${_ep_venta_stk:,.0f}",  "💲 Venta proyectada",  "#10B981"),
+                    (_km3, f"${_ep_margen_stk:,.0f}", "📈 Margen proyectado",  "#3B82F6" if _ep_margen_stk >= 0 else "#EF4444"),
+                    (_km4, f"{_n_con_ps}/{len(_df_ep)}", "Con precio de venta", "#F59E0B"),
+                ]:
+                    with _kc:
+                        st.markdown(
+                            f"<div style='background:#161B22;border-radius:12px;padding:12px;border:1px solid #21262D;"
+                            f"border-top:3px solid {_kcol};text-align:center;margin-bottom:12px;'>"
+                            f"<div style='font-size:1.2rem;font-weight:800;color:{_kcol};line-height:1;'>{_kv}</div>"
+                            f"<div style='font-size:0.6rem;color:#8B949E;margin-top:5px;text-transform:uppercase;"
+                            f"letter-spacing:0.5px;'>{_kl}</div></div>",
+                            unsafe_allow_html=True,
+                        )
+
+            # ── Sección: Catálogo EP 3D (grilla 2 columnas) ──────────────
+            if not _df_ep.empty:
+                st.markdown(
+                    "<div style='font-size:0.62rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;"
+                    "color:#F59E0B;margin-bottom:12px;'>📦 CATÁLOGO EP 3D — LO QUE FABRICAMOS PARA VOS</div>",
+                    unsafe_allow_html=True,
+                )
+                _ep_grid = st.columns(2)
+                for _ep_i, (_, _ep_r) in enumerate(_df_ep.iterrows()):
+                    _ep_price  = float(_ep_r.get("price", 0) or 0)
+                    _ep_pr     = float(_ep_r.get("precio_reventa", 0) or 0)
+                    _ep_margen = _ep_pr - _ep_price if _ep_pr > 0 else 0
+                    _ep_pct    = _ep_margen / _ep_pr * 100 if _ep_pr > 0 else 0
+                    _ep_markup = _ep_pr / _ep_price if (_ep_price > 0 and _ep_pr > 0) else 0
+                    _ep_desc   = str(_ep_r.get("description", "") or "").strip()
+                    _ep_cat    = str(_ep_r.get("categoria", "") or "").strip()
+                    _ep_stk    = int(_ep_r.get("stock", 0) or 0)
+                    _ep_wt     = float(_ep_r.get("weight_gr", 0) or 0)
+                    _ep_stk_c  = "#10B981" if _ep_stk > 5 else ("#F59E0B" if _ep_stk > 0 else "#EF4444")
+                    _ep_cat_html = (
+                        f"<span style='background:#21262D;color:#8B949E;border-radius:99px;"
+                        f"padding:1px 8px;font-size:0.62rem;'>{_ep_cat}</span>"
+                    ) if _ep_cat else ""
+                    _ep_margen_line = (
+                        f"<span style='color:#10B981;font-weight:700;'>+${_ep_margen:,.0f}"
+                        f"<span style='font-size:0.7rem;font-weight:500;'> ({_ep_pct:.0f}% margen)</span></span>"
+                    ) if _ep_pr > 0 else (
+                        "<span style='color:#F59E0B;font-size:0.7rem;'>⚠ Sin precio de reventa seteado</span>"
+                    )
+                    _ep_markup_badge = (
+                        f"<span style='background:#10B98122;color:#10B981;border-radius:99px;"
+                        f"padding:1px 7px;font-size:0.6rem;font-weight:700;'>×{_ep_markup:.1f}</span>"
+                    ) if _ep_markup > 0 else ""
+                    _ep_desc_html = (
+                        f"<div style='font-size:0.72rem;color:#C9D1D9;margin-top:6px;line-height:1.4;"
+                        f"font-style:italic;border-top:1px solid #21262D;padding-top:6px;'>{_ep_desc}</div>"
+                    ) if _ep_desc else ""
+                    with _ep_grid[_ep_i % 2]:
+                        st.markdown(f"""
+<div style='background:#161B22;border-radius:12px;padding:14px 16px;
+     border:1px solid #21262D;border-top:3px solid #F59E0B;margin-bottom:4px;'>
+  <div style='display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:2px;'>
+    <span style='font-size:0.85rem;font-weight:700;color:#E6EDF3;'>{_ep_r['name']}</span>
+    {_ep_cat_html}
+  </div>
+  <div style='font-size:0.68rem;color:#8B949E;'>
+    {_ep_r['sku']} · {_ep_wt:.0f}g ·
+    <span style='color:{_ep_stk_c};font-weight:600;'>{_ep_stk} u stock</span>
+  </div>
+  {_ep_desc_html}
+  <div style='margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:6px;'>
+    <div style='background:#0D1117;border-radius:7px;padding:8px 10px;'>
+      <div style='font-size:0.55rem;color:#8B949E;text-transform:uppercase;letter-spacing:0.4px;'>
+        Precio EP <span style='font-size:0.5rem;opacity:.6;'>(solo vos)</span></div>
+      <div style='font-size:0.92rem;font-weight:800;color:#F59E0B;'>${_ep_price:,.0f}</div>
+    </div>
+    <div style='background:#0D1117;border-radius:7px;padding:8px 10px;'>
+      <div style='font-size:0.55rem;color:#8B949E;text-transform:uppercase;letter-spacing:0.4px;
+                  display:flex;align-items:center;gap:4px;'>
+        Tu precio {_ep_markup_badge}</div>
+      <div style='font-size:0.92rem;font-weight:800;color:#10B981;'>${_ep_pr:,.0f}</div>
+    </div>
+  </div>
+  <div style='margin-top:6px;font-size:0.78rem;'>{_ep_margen_line}</div>
+</div>""", unsafe_allow_html=True)
+                        _ep_inp = st.number_input(
+                            "✏️ Tu precio de reventa",
+                            min_value=float(_ep_price), value=max(_ep_pr, _ep_price),
+                            step=100.0, format="%.0f",
+                            key=f"ep_pr_{_ep_r['sku']}_{lid}",
+                            help=f"Mínimo: ${_ep_price:,.0f} (precio EP)",
+                        )
+                        if abs(_ep_inp - _ep_pr) > 0.5:
+                            if st.button(
+                                "💾 Guardar",
+                                key=f"ep_prsave_{_ep_r['sku']}_{lid}",
+                                type="primary", use_container_width=True,
+                            ):
+                                with engine.begin() as _ep_conn:
+                                    _ep_conn.execute(
+                                        text("UPDATE products SET precio_reventa=:pr, precio_socio=:pr WHERE sku=:s"),
+                                        {"pr": _ep_inp, "s": _ep_r["sku"]},
+                                    )
+                                    if _ep_pr > 0:
+                                        _ep_conn.execute(
+                                            text("""INSERT INTO price_history
+                                                    (product_sku, precio_anterior, precio_nuevo, motivo)
+                                                    VALUES (:s,:a,:n,:m)"""),
+                                            {"s": _ep_r["sku"], "a": _ep_pr,
+                                             "n": _ep_inp, "m": f"Precio reventa {lnom}"},
+                                        )
+                                get_productos_capa2.clear()
+                                _cp_tienda.clear()
+                                st.success(f"${_ep_inp:,.0f} guardado")
+                                st.rerun()
+                        if _ep_pr > 0 and _wa_configured:
+                            _ep_wa_lnk = _wa_link_producto(
+                                _ep_r["name"], _ep_r["sku"], _ep_price, lid, engine,
+                                precio_override=_ep_pr,
+                            )
+                            st.link_button("📲 Compartir", url=_ep_wa_lnk, use_container_width=True)
+                        st.markdown("<div style='height:4px;'></div>", unsafe_allow_html=True)
+                st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
+
+            # ── Sección: Productos propios (Capa 2) ───────────────────
             if df_c2.empty:
-                st.markdown("<div style='background:#161B22;border-radius:12px;padding:20px;border:1px dashed #30363D;text-align:center;color:#8B949E;margin-bottom:16px;'>Todavía no tenés productos propios en Capa 2.<br>Usá el formulario de abajo para agregar el primero.</div>", unsafe_allow_html=True)
+                st.markdown(
+                    "<div style='background:#161B22;border-radius:12px;padding:16px 20px;"
+                    "border:1px dashed #30363D;color:#8B949E;margin-bottom:16px;'>"
+                    "Sin productos propios agregados todavía.<br>"
+                    "Usá el formulario de abajo para agregar el primero.</div>",
+                    unsafe_allow_html=True,
+                )
             else:
-                st.markdown("<div style='font-size:0.62rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#58A6FF;margin-bottom:10px;'>TUS PRODUCTOS</div>", unsafe_allow_html=True)
+                st.markdown(
+                    "<div style='font-size:0.62rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;"
+                    "color:#58A6FF;margin-bottom:10px;'>✨ TUS PRODUCTOS PROPIOS</div>",
+                    unsafe_allow_html=True,
+                )
                 df_c2["_cat"] = df_c2["categoria"].fillna("Sin categoría").replace("", "Sin categoría")
                 for _cat in sorted(df_c2["_cat"].unique()):
                     _df_cat = df_c2[df_c2["_cat"] == _cat]
                     _n_cat  = len(_df_cat)
                     with st.expander(f"📦 {_cat}  ·  {_n_cat} producto{'s' if _n_cat != 1 else ''}", expanded=True):
                         for _, _r2 in _df_cat.iterrows():
-                            _vis2  = _r2.get("visibilidad", "borrador") or "borrador"
-                            _vc2   = _VIS_COLOR.get(_vis2, "#6B7280")
-                            _vl2   = _VIS_LABEL.get(_vis2, _vis2)
-                            _tipo2 = (_r2.get("tipo_producto", "linea_propio") or "linea_propio").replace("_", " ").title()
-                            _is_kit  = (_r2.get("tipo_producto") or "") == "kit_mixto"
-                            _kc_this = _df_kc_all[_df_kc_all["kit_sku"] == _r2["sku"]] if not _df_kc_all.empty else pd.DataFrame()
-                            _kit_badge = f" · {len(_kc_this)} componentes" if _is_kit else ""
-                            _img_url = str(_r2.get("imagen_url") or "").strip()
-                            _cimg, _cinfo = st.columns([1, 6])
-                            with _cimg:
-                                if _img_url.startswith("http") or _img_url.startswith("data:"):
-                                    st.image(_img_url, width=80)
-                                else:
-                                    st.markdown(
-                                        "<div style='width:80px;height:80px;background:#21262D;"
-                                        "border-radius:10px;display:flex;align-items:center;"
-                                        "justify-content:center;font-size:2rem;'>📦</div>",
-                                        unsafe_allow_html=True,
-                                    )
-                            with _cinfo:
-                                _ca2, _cb2 = st.columns([3, 1])
-                                with _ca2:
-                                    st.markdown(f"""
-<div style='background:#161B22;border-radius:12px;padding:14px 18px;
-     border:1px solid #21262D;border-left:3px solid {_vc2};'>
+                            _vis2        = _r2.get("visibilidad", "borrador") or "borrador"
+                            _vc2         = _VIS_COLOR.get(_vis2, "#6B7280")
+                            _vl2         = _VIS_LABEL.get(_vis2, _vis2)
+                            _tipo2       = (_r2.get("tipo_producto", "linea_propio") or "linea_propio").replace("_", " ").title()
+                            _is_kit      = (_r2.get("tipo_producto") or "") == "kit_mixto"
+                            _kc_this     = _df_kc_all[_df_kc_all["kit_sku"] == _r2["sku"]] if not _df_kc_all.empty else pd.DataFrame()
+                            _kit_badge   = f" · {len(_kc_this)} componentes" if _is_kit else ""
+                            _img_url     = str(_r2.get("imagen_url") or "").strip()
+                            _desc2       = str(_r2.get("description", "") or "").strip()
+                            _precio_actual = float(_r2.get("price", 0) or 0)
+                            _has_img     = _img_url.startswith("http") or _img_url.startswith("data:")
+
+                            _desc2_html = (
+                                f"<div style='font-size:0.73rem;color:#C9D1D9;margin-top:7px;"
+                                f"line-height:1.4;font-style:italic;border-top:1px solid #21262D;"
+                                f"padding-top:7px;'>{_desc2}</div>"
+                            ) if _desc2 else ""
+
+                            # Layout: imagen opcional + todo el contenido en una sola columna
+                            if _has_img:
+                                _c2img, _c2main = st.columns([1, 7])
+                                with _c2img:
+                                    st.image(_img_url, width=76)
+                            else:
+                                _c2main = st.container()
+
+                            with _c2main:
+                                # ── Tarjeta informativa ─────────────────────
+                                st.markdown(f"""
+<div style='background:#161B22;border-radius:12px;padding:12px 16px;
+     border:1px solid #21262D;border-left:3px solid {_vc2};margin-bottom:6px;'>
   <div style='display:flex;align-items:center;gap:8px;flex-wrap:wrap;'>
-    <span style='font-size:0.82rem;font-weight:700;color:#E6EDF3;'>{_r2['name']}</span>
+    <span style='font-size:0.84rem;font-weight:700;color:#E6EDF3;'>{_r2['name']}</span>
     <span style='background:{_vc2}22;color:{_vc2};border:1px solid {_vc2}44;border-radius:99px;
          padding:2px 9px;font-size:0.65rem;font-weight:700;'>{_vl2}</span>
     <span style='background:#21262D;color:#8B949E;border-radius:99px;
          padding:2px 9px;font-size:0.62rem;'>{_tipo2}</span>
   </div>
-  <div style='font-size:0.72rem;color:#8B949E;margin-top:4px;'>
-    SKU: {_r2.get('sku','')} &nbsp;·&nbsp; Precio: ${float(_r2.get('price',0) or 0):,.0f} &nbsp;·&nbsp; Stock: {int(_r2.get('stock',0) or 0)} u{_kit_badge}
+  <div style='font-size:0.72rem;color:#8B949E;margin-top:3px;'>
+    {_r2.get('sku','')} &nbsp;·&nbsp;
+    <b style='color:#F59E0B;'>${_precio_actual:,.0f}</b> &nbsp;·&nbsp;
+    {int(_r2.get('stock',0) or 0)} u stock{_kit_badge}
   </div>
+  {_desc2_html}
 </div>""", unsafe_allow_html=True)
-                                with _cb2:
+
+                                # ── Controles: visibilidad + precio (una sola fila) ─
+                                _ctl1, _ctl2, _ctl3 = st.columns([2, 2, 1])
+                                with _ctl1:
                                     _vis_opts = ["publico", "borrador", "pausado"]
                                     _vis_idx  = _vis_opts.index(_vis2) if _vis2 in _vis_opts else 1
-                                    _new_vis  = st.selectbox("", _vis_opts, index=_vis_idx,
-                                                             key=f"vis_{_r2['sku']}_{lid}",
-                                                             format_func=lambda x: _VIS_LABEL[x])
+                                    _new_vis  = st.selectbox(
+                                        "Visibilidad", _vis_opts, index=_vis_idx,
+                                        key=f"vis_{_r2['sku']}_{lid}",
+                                        format_func=lambda x: {
+                                            "publico": "🟢 Público",
+                                            "borrador": "🟡 Borrador",
+                                            "pausado": "⛔ Pausado",
+                                        }.get(x, x),
+                                        label_visibility="collapsed",
+                                    )
                                     if _new_vis != _vis2:
-                                        if st.button("Guardar", key=f"vis_save_{_r2['sku']}_{lid}",
+                                        if st.button("Guardar visibilidad", key=f"vis_save_{_r2['sku']}_{lid}",
                                                      use_container_width=True):
                                             with engine.begin() as _cn2:
                                                 _cn2.execute(
                                                     text("UPDATE products SET visibilidad=:v WHERE sku=:s"),
-                                                    {"v": _new_vis, "s": _r2["sku"]}
+                                                    {"v": _new_vis, "s": _r2["sku"]},
                                                 )
                                             get_productos_capa2.clear()
                                             _cp_tienda.clear()
                                             st.success("Visibilidad actualizada")
                                             st.rerun()
-                            if _is_kit:
-                                with st.expander(f"🧩 Componentes ({len(_kc_this)})"):
-                                    if _kc_this.empty:
-                                        st.caption("Sin componentes registrados.")
-                                    else:
-                                        for _, _kc_r in _kc_this.iterrows():
-                                            _kcp = float(_kc_r.get("comp_price", 0) or 0) * int(_kc_r.get("cantidad", 1))
-                                            st.markdown(
-                                                f"<div style='font-size:0.78rem;color:#C9D1D9;padding:5px 0;"
-                                                f"border-bottom:1px solid #21262D;'>"
-                                                f"<span style='font-family:monospace;color:#58A6FF;'>"
-                                                f"{_kc_r.get('component_sku','')}</span>"
-                                                f" — {_kc_r.get('comp_name','')} "
-                                                f"× {int(_kc_r.get('cantidad',1))}"
-                                                f" = <b style='color:#10B981;'>${_kcp:,.0f}</b></div>",
-                                                unsafe_allow_html=True
-                                            )
-                                        _kit_total = float(
-                                            (_kc_this["comp_price"].fillna(0) * _kc_this["cantidad"].fillna(1)).sum()
-                                        )
-                                        st.markdown(
-                                            f"<div style='font-size:0.8rem;font-weight:700;color:#E6EDF3;"
-                                            f"text-align:right;margin-top:6px;'>"
-                                            f"Total componentes: ${_kit_total:,.0f}</div>",
-                                            unsafe_allow_html=True
-                                        )
+                                with _ctl2:
+                                    _nuevo_precio = st.number_input(
+                                        "💲 Precio de venta",
+                                        min_value=0.0, value=_precio_actual, step=100.0, format="%.0f",
+                                        key=f"precio_inp_{_r2['sku']}_{lid}",
+                                        label_visibility="collapsed",
+                                    )
+                                with _ctl3:
+                                    if abs(_nuevo_precio - _precio_actual) > 0.5:
+                                        if st.button(
+                                            "💾", key=f"precio_save_{_r2['sku']}_{lid}",
+                                            type="primary", use_container_width=True,
+                                            help="Guardar nuevo precio",
+                                        ):
+                                            with engine.begin() as _pe_conn:
+                                                _pe_conn.execute(
+                                                    text("UPDATE products SET price=:p WHERE sku=:s"),
+                                                    {"p": _nuevo_precio, "s": _r2["sku"]},
+                                                )
+                                                _pe_conn.execute(
+                                                    text("""INSERT INTO price_history
+                                                            (product_sku, precio_anterior, precio_nuevo, motivo)
+                                                            VALUES (:sku, :ant, :nvo, :mot)"""),
+                                                    {"sku": _r2["sku"], "ant": _precio_actual,
+                                                     "nvo": _nuevo_precio, "mot": f"Socio {lnom}"},
+                                                )
+                                            get_productos_capa2.clear()
+                                            _cp_tienda.clear()
+                                            st.success(f"${_nuevo_precio:,.0f} guardado")
+                                            st.rerun()
 
-                            if _vis2 != "pausado":
-                                _is_ip_wa = any(kw in (_r2.get("name", "") or "").lower() for kw in IP_RESTRINGIDA)
-                                if _is_ip_wa:
-                                    st.markdown(
-                                        "<div style='font-size:0.72rem;color:#9CA3AF;padding:4px 2px;'>"
-                                        "🔒 Solo uso interno</div>",
-                                        unsafe_allow_html=True,
-                                    )
-                                elif not _wa_configured:
-                                    st.caption("⚠️ Configurá el número de WhatsApp de tu línea en ⚙️ Mi Línea")
-                                else:
-                                    _wa_lnk = _wa_link_producto(
-                                        _r2.get("name", ""), _r2.get("sku", ""),
-                                        float(_r2.get("price", 0) or 0), lid, engine,
-                                    )
-                                    _wa_txt_u = (
-                                        f"Hola! Me interesa el {_r2.get('name','')} "
-                                        f"(SKU: {_r2.get('sku','')}) — "
-                                        f"${float(_r2.get('price', 0) or 0):,.0f} ¿Está disponible?"
-                                    )
-                                    _wa_c1, _wa_c2 = st.columns(2)
-                                    with _wa_c1:
-                                        st.link_button("📲 WhatsApp", url=_wa_lnk, use_container_width=True)
-                                    with _wa_c2:
-                                        st.code(_wa_txt_u, language=None)
+                                # ── Componentes del kit ──────────────────────
+                                if _is_kit:
+                                    with st.expander(f"🧩 Componentes ({len(_kc_this)})"):
+                                        if _kc_this.empty:
+                                            st.caption("Sin componentes registrados.")
+                                        else:
+                                            for _, _kc_r in _kc_this.iterrows():
+                                                _kcp = float(_kc_r.get("comp_price", 0) or 0) * int(_kc_r.get("cantidad", 1))
+                                                st.markdown(
+                                                    f"<div style='font-size:0.78rem;color:#C9D1D9;padding:5px 0;"
+                                                    f"border-bottom:1px solid #21262D;'>"
+                                                    f"<span style='font-family:monospace;color:#58A6FF;'>"
+                                                    f"{_kc_r.get('component_sku','')}</span>"
+                                                    f" — {_kc_r.get('comp_name','')} "
+                                                    f"× {int(_kc_r.get('cantidad',1))}"
+                                                    f" = <b style='color:#10B981;'>${_kcp:,.0f}</b></div>",
+                                                    unsafe_allow_html=True,
+                                                )
+                                            _kit_total = float(
+                                                (_kc_this["comp_price"].fillna(0) * _kc_this["cantidad"].fillna(1)).sum()
+                                            )
+                                            st.markdown(
+                                                f"<div style='font-size:0.8rem;font-weight:700;color:#E6EDF3;"
+                                                f"text-align:right;margin-top:6px;'>"
+                                                f"Total componentes: ${_kit_total:,.0f}</div>",
+                                                unsafe_allow_html=True,
+                                            )
+
+                                # ── WhatsApp ─────────────────────────────────
+                                if _vis2 != "pausado":
+                                    _is_ip_wa = any(kw in (_r2.get("name", "") or "").lower() for kw in IP_RESTRINGIDA)
+                                    if _is_ip_wa:
+                                        st.markdown(
+                                            "<div style='font-size:0.72rem;color:#9CA3AF;padding:3px 0;'>"
+                                            "🔒 Solo uso interno</div>",
+                                            unsafe_allow_html=True,
+                                        )
+                                    elif _wa_configured:
+                                        _c2_pr = float(_r2.get("precio_reventa", 0) or 0)
+                                        _c2_p  = float(_r2.get("price", 0) or 0)
+                                        _wa_lnk = _wa_link_producto(
+                                            _r2.get("name", ""), _r2.get("sku", ""),
+                                            _c2_p, lid, engine,
+                                            precio_override=_c2_pr if _c2_pr > 0 else None,
+                                        )
+                                        st.link_button("📲 Compartir por WhatsApp", url=_wa_lnk,
+                                                       use_container_width=True)
 
                             st.markdown("<div style='height:4px;'></div>", unsafe_allow_html=True)
 
@@ -836,11 +1561,16 @@ def render():
             _items_key = f"presup_items_{_pb_lid}"
             _paso_act  = st.session_state.get(_paso_key, 1)
 
+            # Helper: precio que se cobra al cliente
+            def _precio_venta(row):
+                pr = float(row.get("precio_reventa") or 0)
+                return pr if pr > 0 else float(row.get("price") or 0)
+
             if _paso_act == 1:
                 # ── Paso 1: armar presupuesto ──────────────────────────
                 _pb_opts    = _pb_prods["sku"].tolist()
                 _pb_lbl_map = {
-                    r["sku"]: f"{r['sku']} — {r['name']} — ${float(r['price']):,.0f}"
+                    r["sku"]: f"{r['sku']} — {r['name']} — ${_precio_venta(r):,.0f}"
                     for _, r in _pb_prods.iterrows()
                 }
                 _pb_sel = st.multiselect(
@@ -853,13 +1583,14 @@ def render():
                 _pb_total_live = 0.0
                 if _pb_sel:
                     for _pb_sku in _pb_sel:
-                        _pb_row = _pb_prods[_pb_prods["sku"] == _pb_sku].iloc[0]
-                        _pb_qty = st.number_input(
-                            f"{_pb_row['name']}  (${float(_pb_row['price']):,.0f} c/u)",
+                        _pb_row  = _pb_prods[_pb_prods["sku"] == _pb_sku].iloc[0]
+                        _pb_pv   = _precio_venta(_pb_row)
+                        _pb_qty  = st.number_input(
+                            f"{_pb_row['name']}  (${_pb_pv:,.0f} c/u)",
                             min_value=1, value=1, step=1,
                             key=f"presup_qty_{_pb_sku}_{_pb_lid}",
                         )
-                        _pb_sub = float(_pb_row["price"]) * int(_pb_qty)
+                        _pb_sub = _pb_pv * int(_pb_qty)
                         _pb_total_live += _pb_sub
                         st.caption(f"Subtotal: ${_pb_sub:,.0f}")
 
@@ -880,13 +1611,15 @@ def render():
                             _r2 = _pb_prods[_pb_prods["sku"] == _pb_sku2]
                             if _r2.empty:
                                 continue
-                            _r2 = _r2.iloc[0]
+                            _r2  = _r2.iloc[0]
+                            _pv2 = _precio_venta(_r2)
                             _qty2 = int(st.session_state.get(f"presup_qty_{_pb_sku2}_{_pb_lid}", 1))
                             _final_items.append({
-                                "nombre":   _r2["name"],
-                                "sku":      _pb_sku2,
-                                "cantidad": _qty2,
-                                "precio":   float(_r2["price"]),
+                                "nombre":         _r2["name"],
+                                "sku":            _pb_sku2,
+                                "cantidad":       _qty2,
+                                "precio":         float(_r2.get("price", 0) or 0),
+                                "precio_reventa": _pv2,
                             })
                         st.session_state[_items_key] = _final_items
                         st.session_state[_paso_key]  = 2
@@ -897,7 +1630,10 @@ def render():
             else:
                 # ── Paso 2: presupuesto generado ───────────────────────
                 _pb_items_f = st.session_state.get(_items_key, [])
-                _pb_total_f = sum(float(it["precio"]) * int(it["cantidad"]) for it in _pb_items_f)
+                _pb_total_f = sum(
+                    float(it.get("precio_reventa") or it["precio"]) * int(it["cantidad"])
+                    for it in _pb_items_f
+                )
                 _pb_numero  = _get_wa_numero(_pb_lid, engine)
 
                 st.markdown(
@@ -911,7 +1647,7 @@ def render():
                         f"border-bottom:1px solid #21262D;'>"
                         f"• {it['cantidad']}x <b>{it['nombre']}</b>"
                         f"<span style='float:right;color:#3FB950;font-weight:700;'>"
-                        f"${float(it['precio']) * int(it['cantidad']):,.0f}</span></div>"
+                        f"${float(it.get('precio_reventa') or it['precio']) * int(it['cantidad']):,.0f}</span></div>"
                         for it in _pb_items_f
                     )
                     + f"<div style='font-size:1.1rem;font-weight:800;color:#3FB950;text-align:right;"
@@ -1081,6 +1817,90 @@ def render():
                     except Exception as _lce:
                         st.error(f"Error al guardar: {_lce}")
 
+        # ── Precios de reventa ──────────────────────────────────────
+        st.markdown(
+            f"<div style='font-size:0.65rem;font-weight:700;letter-spacing:3px;"
+            f"text-transform:uppercase;color:{_lc_color};margin:28px 0 4px;'>"
+            f"💲 PRECIOS DE REVENTA</div>",
+            unsafe_allow_html=True,
+        )
+        st.markdown(
+            "<div style='font-size:0.75rem;color:#8B949E;margin-bottom:14px;'>"
+            "Lo que vos cobrás a tus clientes. No afecta el precio de El Pasaje. "
+            "Se usa en presupuestos y links de WhatsApp.</div>",
+            unsafe_allow_html=True,
+        )
+        try:
+            _pr_df = pd.read_sql(
+                text("""SELECT sku, name, price, precio_reventa
+                        FROM products
+                        WHERE client_id=:cid AND activo=1
+                        ORDER BY name"""),
+                engine, params={"cid": _lc_lid},
+            )
+            if "precio_reventa" not in _pr_df.columns:
+                _pr_df["precio_reventa"] = 0.0
+        except Exception:
+            _pr_df = pd.DataFrame()
+
+        if not _pr_df.empty:
+            _pr_inputs = {}
+            for _, _prr in _pr_df.iterrows():
+                _prr_ep  = float(_prr.get("price", 0) or 0)
+                _prr_cur = float(_prr.get("precio_reventa", 0) or 0)
+                _prr_mk  = _prr_cur / _prr_ep if (_prr_ep > 0 and _prr_cur > 0) else 0
+                _prr_c1, _prr_c2 = st.columns([3, 1])
+                with _prr_c1:
+                    _mk_badge = (
+                        f"<span style='background:#10B98122;color:#10B981;border-radius:99px;"
+                        f"padding:1px 7px;font-size:0.6rem;font-weight:700;margin-left:6px;'>×{_prr_mk:.1f}</span>"
+                    ) if _prr_mk > 0 else ""
+                    st.markdown(
+                        f"<div style='padding:6px 0;'>"
+                        f"<span style='font-size:0.82rem;font-weight:600;color:#E6EDF3;'>{_prr['name']}</span>"
+                        f"{_mk_badge}<br>"
+                        f"<span style='font-size:0.65rem;color:#8B949E;'>Precio EP: "
+                        f"<b style='color:#F59E0B;'>${_prr_ep:,.0f}</b></span></div>",
+                        unsafe_allow_html=True,
+                    )
+                with _prr_c2:
+                    _inp_val = st.number_input(
+                        "Precio reventa",
+                        min_value=float(_prr_ep),
+                        value=max(_prr_cur, _prr_ep),
+                        step=100.0, format="%.0f",
+                        key=f"pr_inp_{_prr['sku']}_{_lc_lid}",
+                        label_visibility="collapsed",
+                        help=f"Mínimo ${_prr_ep:,.0f}",
+                    )
+                _pr_inputs[_prr["sku"]] = (_inp_val, _prr_cur, _prr_ep)
+                st.markdown("<div style='border-bottom:1px solid #21262D;margin:2px 0 6px;'></div>",
+                            unsafe_allow_html=True)
+
+            if st.button("💾 Guardar todos los precios", type="primary",
+                         use_container_width=True, key=f"pr_save_all_{_lc_lid}"):
+                _saved = 0
+                with engine.begin() as _pr_conn:
+                    for _sku_k, (_new_p, _old_p, _ep_p) in _pr_inputs.items():
+                        if _new_p < _ep_p:
+                            continue
+                        _pr_conn.execute(
+                            text("UPDATE products SET precio_reventa=:pr, precio_socio=:pr WHERE sku=:s"),
+                            {"pr": _new_p, "s": _sku_k},
+                        )
+                        if abs(_new_p - _old_p) > 0.5 and _old_p > 0:
+                            _pr_conn.execute(
+                                text("""INSERT INTO price_history
+                                        (product_sku, precio_anterior, precio_nuevo, motivo)
+                                        VALUES (:s,:a,:n,:m)"""),
+                                {"s": _sku_k, "a": _old_p, "n": _new_p,
+                                 "m": f"Reventa {_lc_nom} — batch"},
+                            )
+                        _saved += 1
+                get_productos_capa2.clear()
+                st.success(f"✅ {_saved} precios guardados")
+                st.rerun()
+
         # ── Fotos de productos ──────────────────────────────────────
         st.markdown(
             f"<div style='font-size:0.65rem;font-weight:700;letter-spacing:3px;"
@@ -1096,7 +1916,7 @@ def render():
         )
         try:
             _lc_prods = pd.read_sql(
-                text("SELECT sku, name, imagen_url FROM products WHERE client_id=:cid AND activo=1 ORDER BY name"),
+                text("SELECT sku, name, imagen_url FROM products WHERE client_id=:cid AND activo=1 AND tipo_producto != 'propio_3d' ORDER BY name"),
                 engine, params={"cid": _lc_lid},
             )
         except Exception:

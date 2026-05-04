@@ -92,7 +92,10 @@ details{{background:#161B22!important;border:1px solid #21262D!important;border-
 <div style='font-size:0.6rem;color:{_lcolor};font-weight:700;letter-spacing:1px;text-transform:uppercase;'>{_cpr['sku']}</div>
 <div style='font-size:0.88rem;font-weight:700;color:#E6EDF3;margin-top:3px;'>{_cpr['name']}</div>
 <div style='font-size:0.68rem;color:#8B949E;margin-top:2px;'>{_cpr.get('categoria','') or ''}</div>
-<div style='margin-top:8px;font-size:1rem;font-weight:800;color:{_lcolor};'>${float(_cpr['price']):,.0f}</div>
+<div style='margin-top:8px;'>
+  <div style='font-size:0.58rem;color:#8B949E;text-transform:uppercase;letter-spacing:0.5px;'>Precio EP</div>
+  <div style='font-size:1rem;font-weight:800;color:{_lcolor};'>${float(_cpr['price']):,.0f}</div>
+</div>
 <div style='font-size:0.65rem;color:#6B7280;'>{float(_cpr.get('weight_gr',0) or 0):.0f} g · {str(_cpr.get('description','') or '')[:50]}</div>
 </div>""", unsafe_allow_html=True)
                         if st.button("Seleccionar", key=f"cpbtn_{_cpr['sku']}", use_container_width=True, type="secondary"):

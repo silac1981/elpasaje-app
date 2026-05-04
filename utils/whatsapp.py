@@ -25,23 +25,27 @@ def _wa_url(numero: str, mensaje: str) -> str:
 
 
 def link_producto(nombre: str, sku: str, precio: float,
-                  client_id: str, db_engine) -> str:
-    """URL wa.me con mensaje pre-cargado para consulta de un producto."""
+                  client_id: str, db_engine,
+                  precio_override: float = None) -> str:
+    """URL wa.me con mensaje pre-cargado para consulta de un producto.
+    precio_override: si se pasa y es > 0, reemplaza a precio en el mensaje."""
     numero = get_numero_linea(client_id, db_engine)
+    precio_final = precio_override if (precio_override and precio_override > 0) else precio
     msg = (
         f"Hola! Me interesa el {nombre} (SKU: {sku}) — "
-        f"Precio: ${precio:,.0f}\n¿Está disponible?"
+        f"Precio: ${precio_final:,.0f}\n¿Está disponible?"
     )
     return _wa_url(numero, msg)
 
 
 def link_presupuesto(items: list, total: float,
                      client_id: str, db_engine) -> str:
-    """URL wa.me con presupuesto multi-ítem pre-cargado."""
+    """URL wa.me con presupuesto multi-ítem pre-cargado.
+    Cada item puede traer clave 'precio_reventa' que tiene precedencia sobre 'precio'."""
     numero = get_numero_linea(client_id, db_engine)
     lineas_txt = "\n".join(
         f"• {it['cantidad']}x {it['nombre']} ({it['sku']}) — "
-        f"${float(it['precio']) * int(it['cantidad']):,.0f}"
+        f"${float(it.get('precio_reventa') or it['precio']) * int(it['cantidad']):,.0f}"
         for it in items
     )
     msg = (
@@ -56,11 +60,12 @@ def link_presupuesto(items: list, total: float,
 def texto_presupuesto(items: list, total: float,
                       linea_nombre: str = "El Pasaje 3D Studio",
                       numero: str = "") -> str:
-    """Texto plano del presupuesto para copiar al portapapeles."""
+    """Texto plano del presupuesto. Usa precio_reventa si está en el item."""
     sep = "─" * 33
     lines = [f"PRESUPUESTO — {linea_nombre}", sep]
     for it in items:
-        sub = float(it["precio"]) * int(it["cantidad"])
+        precio_item = float(it.get("precio_reventa") or it["precio"])
+        sub = precio_item * int(it["cantidad"])
         nom = f"{it['cantidad']}x {it['nombre']}"
         lines.append(f"• {nom[:30]}  ${sub:,.0f}")
     lines.append(sep)
