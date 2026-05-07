@@ -426,19 +426,41 @@ with st.sidebar:
   <p style="font-size:9px;letter-spacing:2px;text-transform:uppercase;
             color:rgba(184,115,51,0.45);margin:2px 0 0;font-family:'Jost',sans-serif;">{_sb_rol}</p>
 </div>""", unsafe_allow_html=True)
+    st.markdown(f"""<style>
+[data-testid="stSidebar"] [data-checked="true"] label p,
+[data-testid="stSidebar"] [data-checked="true"] label span {{
+    color: {_sb_color} !important;
+    font-weight: 500 !important;
+}}
+[data-testid="stSidebar"] [data-baseweb="radio"] {{
+    gap: 2px !important;
+}}
+[data-testid="stSidebar"] [data-baseweb="radio"] label {{
+    padding: 7px 4px !important;
+    border-left: 2px solid transparent !important;
+    transition: all 0.15s !important;
+}}
+[data-testid="stSidebar"] [data-checked="true"] label {{
+    border-left-color: {_sb_color} !important;
+    background: rgba(255,255,255,0.03) !important;
+    padding-left: 10px !important;
+    border-radius: 0 4px 4px 0 !important;
+}}
+</style>""", unsafe_allow_html=True)
+
     if st.session_state["role"] == "admin":
-        menu = st.radio("", ["📊 Dashboard Alejandra","📦 Inventario Pro","🛠️ Produccion (Fer)","🤝 Socios","👥 Clientes","🌱 Impacto Social"], label_visibility="collapsed")
+        menu = st.radio("", ["CONTROL","STOCK","TALLER","LÍNEAS","CRM","IMPACTO"], label_visibility="collapsed")
     elif st.session_state["role"] == "produccion":
-        menu = st.radio("", ["🛠️ Produccion (Fer)"], label_visibility="collapsed")
+        menu = st.radio("", ["TALLER"], label_visibility="collapsed")
     elif st.session_state["role"] == "socio_multi":
         _lids = get_lineas_usuario(st.session_state["uid"])
         _nombre_a_id = {LINEAS[l]["nombre"]: l for l in _lids if l in LINEAS}
         _opciones = ["Todas"] + list(_nombre_a_id.keys())
-        _sel = st.selectbox("Línea", _opciones, key="linea_sel")
+        _sel = st.selectbox("Ver línea", _opciones, key="linea_sel")
         st.session_state["linea_filtro"] = _lids if _sel == "Todas" else [_nombre_a_id[_sel]]
-        menu = st.radio("", ["📈 Mi Panel","🛒 Cargar Pedido"], label_visibility="collapsed")
+        menu = st.radio("", ["MI LÍNEA","PEDIDO"], label_visibility="collapsed")
     else:
-        menu = st.radio("", ["📈 Mi Panel","🛒 Cargar Pedido"], label_visibility="collapsed")
+        menu = st.radio("", ["MI LÍNEA","PEDIDO"], label_visibility="collapsed")
     st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)
     if st.button("Cerrar Sesion", use_container_width=True):
         st.session_state.update({"auth": False, "user": None, "role": None, "uid": None})
@@ -460,34 +482,34 @@ with st.sidebar:
     st.markdown(f"<div style='font-size:0.7rem;color:#94a3b8;text-align:center;margin-top:20px;'>v3.0 · {datetime.now().strftime('%d/%m/%Y')}</div>", unsafe_allow_html=True)
 
 # ── Router ─────────────────────────────────────────────────────────────────
-if menu == "📊 Dashboard Alejandra":
+if menu == "CONTROL":
     from modules.dashboard_admin import render
     render()
 
-elif menu == "📦 Inventario Pro":
+elif menu == "STOCK":
     from modules.inventario import render
     render()
 
-elif menu == "🛠️ Produccion (Fer)":
+elif menu == "TALLER":
     from modules.panel_fer import render
     render()
 
-elif menu == "🤝 Socios":
+elif menu == "LÍNEAS":
     from modules.panel_socios import render
     render()
 
-elif menu == "📈 Mi Panel":
+elif menu == "MI LÍNEA":
     from modules.panel_socio import render
     render()
 
-elif menu == "🛒 Cargar Pedido":
+elif menu == "PEDIDO":
     from modules.cargar_pedido import render
     render()
 
-elif menu == "👥 Clientes":
+elif menu == "CRM":
     from modules.clientes import render
     render()
 
-elif menu == "🌱 Impacto Social":
+elif menu == "IMPACTO":
     from modules.impacto import render
     render()
