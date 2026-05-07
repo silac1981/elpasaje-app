@@ -55,8 +55,8 @@ st.markdown("""
 
 /* Caption / ayuda */
 [data-testid="stCaptionContainer"],
-[data-testid="stCaptionContainer"] * { color: rgba(240,236,228,0.55) !important; }
-.stApp small { color: rgba(240,236,228,0.55) !important; }
+[data-testid="stCaptionContainer"] * { color: rgba(240,236,228,0.70) !important; }
+.stApp small { color: rgba(240,236,228,0.70) !important; }
 
 /* ══════════════════════════════════════════════════════
    WIDGETS — labels y valores en claro
@@ -200,7 +200,7 @@ st.markdown("""
     gap: 0 !important;
 }
 .stTabs [data-baseweb="tab"] {
-    color: rgba(240,236,228,0.38) !important;
+    color: rgba(240,236,228,0.55) !important;
     font-family: 'Jost', sans-serif !important;
     font-size: 11px !important;
     letter-spacing: 1.5px !important;
@@ -328,6 +328,7 @@ h1, h2, h3, h4, h5, h6 {
     border-color: rgba(184,115,51,0.3) !important;
 }
 [data-testid="stFileUploaderDropzone"] * { color: #f0ece4 !important; }
+
 </style>
 """, unsafe_allow_html=True)
 
