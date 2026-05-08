@@ -337,6 +337,10 @@ from crear_schema_v3 import init_schema as _init_schema
 _init_schema()
 from migration_v7 import run as _migration_v7
 _migration_v7()
+from migration_v8 import run as _migration_v8
+_migration_v8()
+from migration_v9 import run as _migration_v9
+_migration_v9()
 
 # ── Autenticación ──────────────────────────────────────────────────────────
 if "auth" not in st.session_state:

@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bienvenida · Oasis del Estero</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --verde-oscuro: #2D6A4F;
+    --verde-medio:  #52B788;
+    --verde-claro:  #D8F3DC;
+    --verde-acento: #74C69D;
+    --tierra:       #1B4332;
+    --texto:        #1a2e22;
+    --gris:         #52796F;
+    --blanco:       #F8FDF9;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--blanco);
+    color: var(--texto);
+    max-width: 860px;
+    margin: 0 auto;
+  }
+
+  /* ── PORTADA ── */
+  .portada {
+    min-height: 100vh;
+    background: linear-gradient(160deg, var(--tierra) 0%, var(--verde-oscuro) 60%, #40916C 100%);
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: flex-start;
+    padding: 80px 72px;
+    position: relative;
+    overflow: hidden;
+    page-break-after: always;
+  }
+  .portada::before {
+    content: '';
+    position: absolute; top: -120px; right: -80px;
+    width: 520px; height: 520px;
+    border-radius: 50%;
+    border: 1px solid rgba(116,198,157,0.15);
+  }
+  .portada::after {
+    content: '';
+    position: absolute; bottom: -60px; right: 60px;
+    width: 300px; height: 300px;
+    border-radius: 50%;
+    border: 0.5px solid rgba(116,198,157,0.10);
+  }
+  .portada-logo {
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    border: 1.5px solid var(--verde-acento);
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 48px;
+  }
+  .portada-logo span {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px; color: var(--verde-acento); letter-spacing: 2px;
+  }
+  .portada-linea {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px; font-weight: 500;
+    letter-spacing: 4px; text-transform: uppercase;
+    color: var(--verde-acento); margin-bottom: 16px;
+  }
+  .portada h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 54px; font-weight: 400;
+    color: #fff; letter-spacing: 1px;
+    line-height: 1.1; margin-bottom: 40px;
+  }
+  .portada-carta {
+    max-width: 480px;
+    border-left: 2px solid var(--verde-acento);
+    padding-left: 24px;
+  }
+  .portada-carta p {
+    font-size: 16px; font-weight: 300; line-height: 1.8;
+    color: rgba(255,255,255,0.85);
+  }
+  .portada-firma {
+    margin-top: 32px;
+    font-family: 'DM Serif Display', serif;
+    font-size: 13px; color: var(--verde-acento);
+    letter-spacing: 1px;
+  }
+  .portada-dots {
+    position: absolute; bottom: 48px; left: 72px;
+    display: flex; gap: 8px;
+  }
+  .portada-dots span {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--verde-acento); opacity: 0.5;
+  }
+
+  /* ── PÁGINAS INTERNAS ── */
+  .pagina {
+    padding: 72px;
+    page-break-after: always;
+  }
+  .pagina:last-child { page-break-after: auto; }
+
+  .seccion-label {
+    font-size: 10px; font-weight: 600;
+    letter-spacing: 4px; text-transform: uppercase;
+    color: var(--verde-medio); margin-bottom: 8px;
+  }
+  .seccion-titulo {
+    font-family: 'DM Serif Display', serif;
+    font-size: 32px; font-weight: 400;
+    color: var(--verde-oscuro); margin-bottom: 32px;
+    padding-bottom: 16px;
+    border-bottom: 0.5px solid rgba(45,106,79,0.2);
+  }
+
+  /* acceso */
+  .acceso-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+    margin-bottom: 32px;
+  }
+  .acceso-item {
+    background: var(--verde-claro);
+    border-radius: 10px;
+    padding: 20px 24px;
+    border-left: 3px solid var(--verde-medio);
+  }
+  .acceso-item .etiqueta {
+    font-size: 9px; font-weight: 600;
+    letter-spacing: 3px; text-transform: uppercase;
+    color: var(--verde-oscuro); margin-bottom: 6px;
+  }
+  .acceso-item .valor {
+    font-size: 15px; font-weight: 500;
+    color: var(--tierra); font-family: 'DM Sans', monospace;
+  }
+  .acceso-item.destacado {
+    grid-column: 1 / -1;
+    background: var(--verde-oscuro);
+  }
+  .acceso-item.destacado .etiqueta { color: var(--verde-acento); }
+  .acceso-item.destacado .valor { color: #fff; font-size: 18px; }
+
+  /* navegacion */
+  .nav-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+    margin-top: 24px;
+  }
+  .nav-item {
+    background: #fff;
+    border: 0.5px solid rgba(45,106,79,0.2);
+    border-radius: 10px; padding: 18px 22px;
+    display: flex; align-items: flex-start; gap: 14px;
+  }
+  .nav-item .nav-num {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--verde-oscuro);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 600; color: #fff;
+    flex-shrink: 0; margin-top: 2px;
+  }
+  .nav-item .nav-nombre {
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: var(--verde-oscuro); margin-bottom: 4px;
+  }
+  .nav-item .nav-desc {
+    font-size: 12px; color: var(--gris); line-height: 1.5;
+  }
+
+  /* catalogo tabla */
+  .catalogo-seccion {
+    margin-bottom: 32px;
+  }
+  .catalogo-header {
+    font-size: 10px; font-weight: 600;
+    letter-spacing: 3px; text-transform: uppercase;
+    color: var(--verde-oscuro);
+    background: var(--verde-claro);
+    padding: 10px 16px; border-radius: 6px;
+    margin-bottom: 8px;
+  }
+  .catalogo-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 0.5px solid rgba(45,106,79,0.1);
+    gap: 12px;
+  }
+  .catalogo-item:last-child { border-bottom: none; }
+  .cat-sku {
+    font-size: 10px; font-weight: 600;
+    letter-spacing: 1.5px; color: var(--verde-medio);
+    min-width: 110px;
+  }
+  .cat-nombre {
+    font-size: 13px; color: var(--texto); flex: 1;
+  }
+  .cat-precio {
+    font-size: 14px; font-weight: 600;
+    color: var(--verde-oscuro); text-align: right; min-width: 80px;
+  }
+  .cat-badge {
+    font-size: 9px; font-weight: 600;
+    letter-spacing: 1px; text-transform: uppercase;
+    padding: 3px 8px; border-radius: 20px;
+    margin-left: 8px;
+  }
+  .badge-stock { background: #D8F3DC; color: #2D6A4F; }
+  .badge-pedido { background: #FFF3CD; color: #856404; }
+  .badge-nuevo { background: #2D6A4F; color: #D8F3DC; }
+
+  /* flujo */
+  .flujo-steps {
+    display: flex; flex-direction: column; gap: 0; margin-top: 24px;
+  }
+  .flujo-step {
+    display: flex; gap: 20px; align-items: flex-start;
+    padding: 20px 0;
+    border-bottom: 0.5px solid rgba(45,106,79,0.1);
+  }
+  .flujo-step:last-child { border-bottom: none; }
+  .flujo-num {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--verde-oscuro);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'DM Serif Display', serif;
+    font-size: 16px; color: #fff; flex-shrink: 0;
+  }
+  .flujo-contenido .flujo-titulo {
+    font-size: 13px; font-weight: 600; color: var(--verde-oscuro);
+    margin-bottom: 4px;
+  }
+  .flujo-contenido .flujo-detalle {
+    font-size: 12px; color: var(--gris); line-height: 1.5;
+  }
+
+  /* footer */
+  .footer {
+    background: var(--tierra);
+    padding: 48px 72px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .footer-brand {
+    font-family: 'DM Serif Display', serif;
+    font-size: 18px; color: #fff; letter-spacing: 2px;
+  }
+  .footer-sub {
+    font-size: 9px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--verde-acento); margin-top: 4px;
+  }
+  .footer-linea { color: var(--verde-acento); font-size: 11px; letter-spacing: 2px; }
+
+  @media print {
+    body { max-width: none; }
+    .portada { min-height: 100vh; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ════════════════ PORTADA ════════════════ -->
+<div class="portada">
+  <div class="portada-logo"><span>EP</span></div>
+  <div class="portada-linea">Oasis del Estero · Acceso al Sistema</div>
+  <h1>Bienvenido,<br>Fede.</h1>
+  <div class="portada-carta">
+    <p>
+      Esta es tu línea. Oasis del Estero tiene la identidad del norte que vos conocés:
+      la naturaleza, las plantas, los materiales que se sienten reales.
+      <br><br>
+      El sistema está para que puedas ver tus productos, seguir tus pedidos
+      y hablarle a Mike cuando necesitás un número. Simple. Tuyo.
+    </p>
+    <div class="portada-firma">Con amor — Alejandra ♥</div>
+  </div>
+  <div class="portada-dots">
+    <span></span><span></span><span></span><span></span><span></span>
+  </div>
+</div>
+
+<!-- ════════════════ ACCESO ════════════════ -->
+<div class="pagina">
+  <div class="seccion-label">Paso 1</div>
+  <div class="seccion-titulo">Tu acceso al sistema</div>
+
+  <div class="acceso-grid">
+    <div class="acceso-item destacado">
+      <div class="etiqueta">URL del sistema</div>
+      <div class="valor">elpasaje.streamlit.app</div>
+    </div>
+    <div class="acceso-item">
+      <div class="etiqueta">Usuario</div>
+      <div class="valor">oasisdelestero@elpasaje.com</div>
+    </div>
+    <div class="acceso-item">
+      <div class="etiqueta">Contraseña inicial</div>
+      <div class="valor">123</div>
+    </div>
+    <div class="acceso-item">
+      <div class="etiqueta">Dispositivo</div>
+      <div class="valor">Celu, tablet o computadora</div>
+    </div>
+    <div class="acceso-item">
+      <div class="etiqueta">Tu acceso</div>
+      <div class="valor">Solo ves Oasis del Estero</div>
+    </div>
+  </div>
+
+  <div style="background:#fff3cd;border-left:3px solid #f59e0b;border-radius:6px;padding:16px 20px;font-size:13px;color:#78350f;">
+    <strong>Cambiar contraseña:</strong> entrá al sistema → <em>MI LÍNEA</em> → tab <em>Mi Tienda</em> → sección Configuración.
+  </div>
+</div>
+
+<!-- ════════════════ NAVEGACIÓN ════════════════ -->
+<div class="pagina">
+  <div class="seccion-label">Paso 2</div>
+  <div class="seccion-titulo">Tu panel · lo que vas a ver</div>
+
+  <div class="nav-grid">
+    <div class="nav-item">
+      <div class="nav-num">1</div>
+      <div>
+        <div class="nav-nombre">Resumen</div>
+        <div class="nav-desc">Tus métricas del mes: productos activos, pedidos en curso, valor de stock y facturación.</div>
+      </div>
+    </div>
+    <div class="nav-item">
+      <div class="nav-num">2</div>
+      <div>
+        <div class="nav-nombre">Estadísticas</div>
+        <div class="nav-desc">Evolución de ventas, productos más pedidos y análisis de tu línea.</div>
+      </div>
+    </div>
+    <div class="nav-item">
+      <div class="nav-num">3</div>
+      <div>
+        <div class="nav-nombre">Productos</div>
+        <div class="nav-desc">Tu catálogo completo. Podés agregar nuevos productos, cambiar precios y gestionar stock.</div>
+      </div>
+    </div>
+    <div class="nav-item">
+      <div class="nav-num">4</div>
+      <div>
+        <div class="nav-nombre">Pedidos</div>
+        <div class="nav-desc">Historial de pedidos de tu línea. Estado: pendiente → en producción → listo.</div>
+      </div>
+    </div>
+    <div class="nav-item">
+      <div class="nav-num">5</div>
+      <div>
+        <div class="nav-nombre">Mi Tienda EP</div>
+        <div class="nav-desc">Presupuestador online para armar cotizaciones rápidas y ver tu página de catálogo.</div>
+      </div>
+    </div>
+    <div class="nav-item">
+      <div class="nav-num">6</div>
+      <div>
+        <div class="nav-nombre">Mike</div>
+        <div class="nav-desc">IA del sistema. Preguntale: "¿cuánto me rinde este mes?" o "¿qué productos tienen stock?"</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ CATÁLOGO ════════════════ -->
+<div class="pagina">
+  <div class="seccion-label">Tu catálogo</div>
+  <div class="seccion-titulo">Productos Oasis del Estero</div>
+
+  <div class="catalogo-seccion">
+    <div class="catalogo-header">Bandejas · ya en sistema</div>
+    <div class="catalogo-item">
+      <span class="cat-sku">OE-BRR-S</span>
+      <span class="cat-nombre">Bandeja Orgánica Redonda S</span>
+      <span class="cat-precio">$6.500 <span class="cat-badge badge-stock">Stock</span></span>
+    </div>
+    <div class="catalogo-item">
+      <span class="cat-sku">OE-BRR-M</span>
+      <span class="cat-nombre">Bandeja Orgánica Redonda M</span>
+      <span class="cat-precio">$9.900 <span class="cat-badge badge-stock">Stock</span></span>
+    </div>
+    <div class="catalogo-item">
+      <span class="cat-sku">OE-BOV-S</span>
+      <span class="cat-nombre">Bandeja Oval S</span>
+      <span class="cat-precio">$8.500 <span class="cat-badge badge-stock">Stock</span></span>
+    </div>
+    <div class="catalogo-item">
+      <span class="cat-sku">OE-BOV-M</span>
+      <span class="cat-nombre">Bandeja Oval M</span>
+      <span class="cat-precio">$14.000 <span class="cat-badge badge-stock">Stock</span></span>
+    </div>
+    <div class="catalogo-item">
+      <span class="cat-sku">OE-BOV-L</span>
+      <span class="cat-nombre">Bandeja Oval L</span>
+      <span class="cat-precio">$19.900 <span class="cat-badge badge-pedido">Por pedido</span></span>
+    </div>
+    <div class="catalogo-item">
+      <span class="cat-sku">OE-BAS-S</span>
+      <span class="cat-nombre">Bandeja Orgánica Asimétrica S</span>
+      <span class="cat-precio">$9.900 <span class="cat-badge badge-stock">Stock</span></span>
+    </div>
+    <div class="catalogo-item">
+      <span class="cat-sku">OE-BAS-M</span>
+      <span class="cat-nombre">Bandeja Orgánica Asimétrica M</span>
+      <span class="cat-precio">$15.900 <span class="cat-badge badge-stock">Stock</span></span>
+    </div>
+    <div class="catalogo-item">
+      <span class="cat-sku">OE-SAR-U</span>
+      <span class="cat-nombre">Soporte Aromático Circular</span>
+      <span class="cat-precio">$8.000 <span class="cat-badge badge-pedido">Por pedido</span></span>
+    </div>
+  </div>
+
+  <div class="catalogo-seccion">
+    <div class="catalogo-header">Macetas · línea nueva</div>
+    <div class="catalogo-item">
+      <span class="cat-sku">OE-MAC-S</span>
+      <span class="cat-nombre">Maceta Orgánica Textura S</span>
+      <span class="cat-precio">$4.500 <span class="cat-badge badge-nuevo">Nuevo</span></span>
+    </div>
+    <div class="catalogo-item">
+      <span class="cat-sku">OE-MAC-M</span>
+      <span class="cat-nombre">Maceta Orgánica Textura M</span>
+      <span class="cat-precio">$7.500 <span class="cat-badge badge-nuevo">Nuevo</span></span>
+    </div>
+    <div class="catalogo-item">
+      <span class="cat-sku">OE-MAC-BC-M</span>
+      <span class="cat-nombre">Maceta Bicolor Diagonal M</span>
+      <span class="cat-precio">$9.500 <span class="cat-badge badge-nuevo">Nuevo</span></span>
+    </div>
+    <div class="catalogo-item">
+      <span class="cat-sku">OE-SEL-S</span>
+      <span class="cat-nombre">Soporte Elevador para Maceta S</span>
+      <span class="cat-precio">$3.200 <span class="cat-badge badge-nuevo">Nuevo</span></span>
+    </div>
+    <div class="catalogo-item">
+      <span class="cat-sku">OE-SEL-M</span>
+      <span class="cat-nombre">Soporte Elevador para Maceta M</span>
+      <span class="cat-precio">$4.800 <span class="cat-badge badge-nuevo">Nuevo</span></span>
+    </div>
+  </div>
+
+  <div class="catalogo-seccion">
+    <div class="catalogo-header">Jardinería</div>
+    <div class="catalogo-item">
+      <span class="cat-sku">OE-MRP-3</span>
+      <span class="cat-nombre">Set 3 Marcadores de Plantas</span>
+      <span class="cat-precio">$1.800 <span class="cat-badge badge-pedido">Por pedido</span></span>
+    </div>
+    <div class="catalogo-item">
+      <span class="cat-sku">OE-MRP-5</span>
+      <span class="cat-nombre">Set 5 Marcadores Personalizados</span>
+      <span class="cat-precio">$2.800 <span class="cat-badge badge-pedido">Por pedido</span></span>
+    </div>
+    <div class="catalogo-item">
+      <span class="cat-sku">OE-TUT-M</span>
+      <span class="cat-nombre">Tutor Espiral M (40–70cm)</span>
+      <span class="cat-precio">$1.200 <span class="cat-badge badge-pedido">Por pedido</span></span>
+    </div>
+    <div class="catalogo-item">
+      <span class="cat-sku">OE-SEM-U</span>
+      <span class="cat-nombre">Organizador de Semillas (6 comp.)</span>
+      <span class="cat-precio">$3.500 <span class="cat-badge badge-pedido">Por pedido</span></span>
+    </div>
+  </div>
+
+  <div class="catalogo-seccion">
+    <div class="catalogo-header">Kits regalo</div>
+    <div class="catalogo-item">
+      <span class="cat-sku">OE-KIT-JAR</span>
+      <span class="cat-nombre">Kit Jardinero Urbano</span>
+      <span class="cat-precio">$12.000 <span class="cat-badge badge-nuevo">Nuevo</span></span>
+    </div>
+    <div class="catalogo-item">
+      <span class="cat-sku">OE-KIT-SUC</span>
+      <span class="cat-nombre">Kit Suculentas</span>
+      <span class="cat-precio">$18.000 <span class="cat-badge badge-nuevo">Nuevo</span></span>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ FLUJO DE VENTA ════════════════ -->
+<div class="pagina">
+  <div class="seccion-label">Cómo funciona</div>
+  <div class="seccion-titulo">Flujo de venta · paso a paso</div>
+
+  <div class="flujo-steps">
+    <div class="flujo-step">
+      <div class="flujo-num">1</div>
+      <div class="flujo-contenido">
+        <div class="flujo-titulo">Cliente ve el catálogo</div>
+        <div class="flujo-detalle">El cliente ve tus productos en tu página web o por WhatsApp. Te escribe con lo que quiere.</div>
+      </div>
+    </div>
+    <div class="flujo-step">
+      <div class="flujo-num">2</div>
+      <div class="flujo-contenido">
+        <div class="flujo-titulo">Armás la cotización</div>
+        <div class="flujo-detalle">En el sistema: <strong>MI LÍNEA → Mi Tienda EP → Presupuestador</strong>. Seleccionás los productos y el sistema genera el precio automáticamente.</div>
+      </div>
+    </div>
+    <div class="flujo-step">
+      <div class="flujo-num">3</div>
+      <div class="flujo-contenido">
+        <div class="flujo-titulo">Avisás a Alejandra</div>
+        <div class="flujo-detalle">Le mandás la cotización aprobada. Ella carga el pedido oficial en el sistema con los detalles de producción.</div>
+      </div>
+    </div>
+    <div class="flujo-step">
+      <div class="flujo-num">4</div>
+      <div class="flujo-contenido">
+        <div class="flujo-titulo">Fer fabrica</div>
+        <div class="flujo-detalle">El pedido aparece en la cola de Fer. Podés ver el estado en <strong>MI LÍNEA → Pedidos</strong>: Pendiente → En proceso → Listo.</div>
+      </div>
+    </div>
+    <div class="flujo-step">
+      <div class="flujo-num">5</div>
+      <div class="flujo-contenido">
+        <div class="flujo-titulo">Coordinás la entrega</div>
+        <div class="flujo-detalle">Cuando el estado pasa a Listo, coordinás con Alejandra la entrega o el envío al cliente.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ FOOTER ════════════════ -->
+<div class="footer">
+  <div>
+    <div class="footer-brand">El Pasaje 3D Studio</div>
+    <div class="footer-sub">Sistema de gestión · v3.0 · Mayo 2026</div>
+  </div>
+  <div class="footer-linea">Oasis del Estero · Fede</div>
+</div>
+
+</body>
+</html>
