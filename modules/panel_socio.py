@@ -694,7 +694,11 @@ def render():
                     ) if _tipo_label else ""
                     _precio_p   = float(_prow.get("price", 0) or 0)
                     _stk_p      = int(_prow.get("stock", 0) or 0)
-                    _lbl_precio = "PRECIO EP" if _tipo_tp == "propio_3d" else "PRECIO"
+                    _costo_p    = float(_prow.get("costo_unit", 0) or 0)
+                    _gan_p      = float(_prow.get("ganancia_unit", 0) or 0)
+                    _margen_p   = float(_prow.get("margen_pct", 0) or 0)
+                    _gan_color  = "#10B981" if _gan_p > 0 else "#EF4444"
+                    _lbl_precio = "PRECIO VENTA" if _tipo_tp == "propio_3d" else "PRECIO"
                     _nums_html = (
                         f"<div style='margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:4px;'>"
                         f"<div style='background:#0D1117;border-radius:6px;padding:8px 4px;text-align:center;'>"
@@ -703,7 +707,16 @@ def render():
                         f"<div style='background:#0D1117;border-radius:6px;padding:8px 4px;text-align:center;'>"
                         f"<div style='font-size:0.56rem;color:#8B949E;margin-bottom:2px;'>STOCK</div>"
                         f"<div style='font-size:0.84rem;font-weight:700;color:{_pstock_c};'>{_stk_p} u</div></div>"
-                        f"</div>"
+                        + (
+                        f"<div style='background:#0D1117;border-radius:6px;padding:8px 4px;text-align:center;'>"
+                        f"<div style='font-size:0.56rem;color:#8B949E;margin-bottom:2px;'>COSTO</div>"
+                        f"<div style='font-size:0.84rem;font-weight:700;color:#F59E0B;'>${_costo_p:,.0f}</div></div>"
+                        f"<div style='background:#0D1117;border-radius:6px;padding:8px 4px;text-align:center;'>"
+                        f"<div style='font-size:0.56rem;color:#8B949E;margin-bottom:2px;'>GANANCIA · {_margen_p:.0f}%</div>"
+                        f"<div style='font-size:0.84rem;font-weight:700;color:{_gan_color};'>${_gan_p:,.0f}</div></div>"
+                        if _costo_p > 0 else ""
+                        )
+                        + f"</div>"
                     )
                     st.markdown(
                         f"<div style='background:#161B22;border-radius:14px;padding:16px;"
