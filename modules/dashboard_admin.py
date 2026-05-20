@@ -78,15 +78,62 @@ def _dash_main():
     # ── Facturación real desde órdenes ─────────────────────────
     st.markdown("<div style='height:28px'></div>", unsafe_allow_html=True)
     st.markdown("<div class='section-title'>📅 Facturación Real — Órdenes Completadas</div>", unsafe_allow_html=True)
+
+    # P&L real: costo desde weight_gr, split 50/50
+    try:
+        _pnl = pd.read_sql("""
+            SELECT
+                SUM(oi.precio_unitario * oi.cantidad) AS facturado,
+                SUM(CASE WHEN p.tipo_producto='propio_3d'
+                    THEN p.weight_gr * 1.10 * 2350.0 / 1000.0 * oi.cantidad
+                    ELSE 0 END) AS costo_prod,
+                COUNT(DISTINCT o.id) AS n_pedidos
+            FROM order_items oi
+            JOIN orders o ON o.id = oi.order_id
+            JOIN products p ON p.sku = oi.product_sku
+            WHERE o.status IN ('Listo','Entregado')
+        """, engine).iloc[0]
+        _pnl_fac   = float(_pnl["facturado"] or 0)
+        _pnl_cost  = float(_pnl["costo_prod"] or 0)
+        _pnl_gb    = _pnl_fac - _pnl_cost
+        _pnl_soc   = round(_pnl_gb * 0.5)
+        _pnl_ep    = _pnl_gb - _pnl_soc
+        _pnl_nped  = int(_pnl["n_pedidos"] or 0)
+    except Exception:
+        _pnl_fac = _pnl_cost = _pnl_gb = _pnl_soc = _pnl_ep = 0.0
+        _pnl_nped = 0
+
+    _pa, _pb, _pc, _pd, _pe = st.columns(5)
+    for _pcol, _pv, _pl, _ps, _pcolor in [
+        (_pa, f"${_pnl_fac:,.0f}",  "💰 Facturado real",      f"{_pnl_nped} pedidos completados",    "#3B82F6"),
+        (_pb, f"${_pnl_cost:,.0f}", "🧵 Costo producción",    "filamento · merma 10% · $2350/kg",    "#F59E0B"),
+        (_pc, f"${_pnl_gb:,.0f}",   "📊 Ganancia bruta",      "facturado − costo",                   "#58A6FF"),
+        (_pd, f"${_pnl_soc:,.0f}",  "🤝 Cuota socios 50%",   "acumulado todos los socios",           "#A855F7"),
+        (_pe, f"${_pnl_ep:,.0f}",   "🏠 Para El Pasaje 50%", "antes de overhead",                   "#22C55E"),
+    ]:
+        with _pcol:
+            st.markdown(
+                f"<div style='background:#161B22;border-radius:12px;padding:14px 10px;"
+                f"border:1px solid #21262D;border-top:3px solid {_pcolor};"
+                f"text-align:center;margin-bottom:14px;'>"
+                f"<div style='font-size:1.2rem;font-weight:800;color:{_pcolor};line-height:1;'>{_pv}</div>"
+                f"<div style='font-size:0.65rem;font-weight:600;color:#C9D1D9;margin-top:6px;'>{_pl}</div>"
+                f"<div style='font-size:0.58rem;color:#6B7280;margin-top:3px;'>{_ps}</div></div>",
+                unsafe_allow_html=True,
+            )
+
     try:
         _df_fac = pd.read_sql("""
             SELECT strftime('%Y-%m', o.date) AS mes,
                    o.client_id,
                    COUNT(DISTINCT o.id) AS pedidos,
                    SUM(oi.cantidad * oi.precio_unitario) AS facturado,
-                   SUM(oi.cantidad * oi.precio_unitario * 0.25) AS costo_aprox
+                   SUM(CASE WHEN p.tipo_producto='propio_3d'
+                       THEN p.weight_gr * 1.10 * 2350.0 / 1000.0 * oi.cantidad
+                       ELSE 0 END) AS costo_prod
             FROM orders o
             JOIN order_items oi ON oi.order_id = o.id
+            JOIN products p ON p.sku = oi.product_sku
             WHERE o.status = 'Listo'
             GROUP BY mes, o.client_id
             ORDER BY mes
