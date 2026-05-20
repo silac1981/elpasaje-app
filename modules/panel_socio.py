@@ -985,19 +985,39 @@ def render():
                 _ep_venta_stk = float((_df_ep_ps * _df_ep["stock"]).sum())
                 _ep_margen_stk = _ep_venta_stk - _ep_cost_stk
                 _n_con_ps     = int((_df_ep_ps > 0).sum())
-                _km1, _km2, _km3, _km4 = st.columns(4)
+
+                # Ganancia real acumulada del socio (50% de (precio-costo) en ventas Listo+Entregado)
+                try:
+                    with engine.connect() as _gc:
+                        _gan_row = _gc.execute(text("""
+                            SELECT COALESCE(SUM(
+                                (oi.precio_unitario - (p.weight_gr * 1.10 * 2350.0 / 1000)) * 0.5 * oi.cantidad
+                            ), 0)
+                            FROM order_items oi
+                            JOIN orders o ON o.id = oi.order_id
+                            JOIN products p ON p.sku = oi.product_sku
+                            WHERE o.client_id = :lid
+                              AND o.status IN ('Listo','Entregado')
+                              AND p.tipo_producto = 'propio_3d'
+                        """), {"lid": lid}).fetchone()
+                    _gan_acum = float(_gan_row[0] or 0)
+                except Exception:
+                    _gan_acum = 0.0
+
+                _km1, _km2, _km3, _km4, _km5 = st.columns(5)
                 for _kc, _kv, _kl, _kcol in [
-                    (_km1, f"${_ep_cost_stk:,.0f}",   "💰 Capital en EP", lcolor),
-                    (_km2, f"${_ep_venta_stk:,.0f}",  "💲 Venta proyectada",  "#10B981"),
-                    (_km3, f"${_ep_margen_stk:,.0f}", "📈 Margen proyectado",  "#3B82F6" if _ep_margen_stk >= 0 else "#EF4444"),
+                    (_km1, f"${_ep_cost_stk:,.0f}",   "Capital en EP", lcolor),
+                    (_km2, f"${_ep_venta_stk:,.0f}",  "Venta proyectada",  "#10B981"),
+                    (_km3, f"${_ep_margen_stk:,.0f}", "Margen proyectado",  "#3B82F6" if _ep_margen_stk >= 0 else "#EF4444"),
                     (_km4, f"{_n_con_ps}/{len(_df_ep)}", "Con precio de venta", "#F59E0B"),
+                    (_km5, f"${_gan_acum:,.0f}", "Tu ganancia acumulada · 50%", "#A855F7"),
                 ]:
                     with _kc:
                         st.markdown(
                             f"<div style='background:#161B22;border-radius:12px;padding:12px;border:1px solid #21262D;"
                             f"border-top:3px solid {_kcol};text-align:center;margin-bottom:12px;'>"
-                            f"<div style='font-size:1.2rem;font-weight:800;color:{_kcol};line-height:1;'>{_kv}</div>"
-                            f"<div style='font-size:0.6rem;color:#8B949E;margin-top:5px;text-transform:uppercase;"
+                            f"<div style='font-size:1.1rem;font-weight:800;color:{_kcol};line-height:1;'>{_kv}</div>"
+                            f"<div style='font-size:0.55rem;color:#8B949E;margin-top:5px;text-transform:uppercase;"
                             f"letter-spacing:0.5px;'>{_kl}</div></div>",
                             unsafe_allow_html=True,
                         )
@@ -1021,9 +1041,10 @@ def render():
                     _ep_stk    = int(_ep_r.get("stock", 0) or 0)
                     _ep_wt     = float(_ep_r.get("weight_gr", 0) or 0)
                     _ep_stk_c  = "#10B981" if _ep_stk > 5 else ("#F59E0B" if _ep_stk > 0 else "#EF4444")
-                    _ep_costo  = round(_ep_wt * 1.10 * 2350 / 1000) if _ep_wt > 0 else 0
-                    _ep_gan_ep = _ep_price - _ep_costo if _ep_costo > 0 else 0
-                    _ep_mrg_ep = round(_ep_gan_ep / _ep_price * 100) if (_ep_price > 0 and _ep_costo > 0) else 0
+                    _ep_costo     = round(_ep_wt * 1.10 * 2350 / 1000) if _ep_wt > 0 else 0
+                    _ep_gan_ep    = _ep_price - _ep_costo if _ep_costo > 0 else 0
+                    _ep_mrg_ep    = round(_ep_gan_ep / _ep_price * 100) if (_ep_price > 0 and _ep_costo > 0) else 0
+                    _ep_gan_socio = round(_ep_gan_ep * 0.5) if _ep_gan_ep > 0 else 0
                     _ep_cat_html = (
                         f"<span style='background:#21262D;color:#8B949E;border-radius:99px;"
                         f"padding:1px 8px;font-size:0.62rem;'>{_ep_cat}</span>"
@@ -1067,8 +1088,9 @@ def render():
         Tu precio {_ep_markup_badge}</div>
       <div style='font-size:0.92rem;font-weight:800;color:#10B981;'>${_ep_pr:,.0f}</div>
     </div>
-    {f"<div style='background:#0D1117;border-radius:7px;padding:8px 10px;'><div style='font-size:0.55rem;color:#8B949E;text-transform:uppercase;letter-spacing:0.4px;'>Costo fabricación</div><div style='font-size:0.92rem;font-weight:800;color:#94A3B8;'>${_ep_costo:,.0f}</div></div><div style='background:#0D1117;border-radius:7px;padding:8px 10px;'><div style='font-size:0.55rem;color:#8B949E;text-transform:uppercase;letter-spacing:0.4px;'>Margen EP · {_ep_mrg_ep}%</div><div style='font-size:0.92rem;font-weight:800;color:#6366F1;'>${_ep_gan_ep:,.0f}</div></div>" if _ep_costo > 0 else ""}
+    {f"<div style='background:#0D1117;border-radius:7px;padding:8px 10px;'><div style='font-size:0.55rem;color:#8B949E;text-transform:uppercase;letter-spacing:0.4px;'>Costo fabricación</div><div style='font-size:0.92rem;font-weight:800;color:#94A3B8;'>${_ep_costo:,.0f}</div></div><div style='background:#0D1117;border-radius:7px;padding:8px 10px;'><div style='font-size:0.55rem;color:#8B949E;text-transform:uppercase;letter-spacing:0.4px;'>Ganancia EP total</div><div style='font-size:0.92rem;font-weight:800;color:#6366F1;'>${_ep_gan_ep:,.0f}</div></div>" if _ep_costo > 0 else ""}
   </div>
+  {f"<div style='margin-top:6px;background:#2D1B69;border-radius:7px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;'><div style='font-size:0.6rem;color:#C4B5FD;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;'>Tu ganancia por unidad · 50%</div><div style='font-size:1.05rem;font-weight:800;color:#A855F7;'>${_ep_gan_socio:,.0f}</div></div>" if _ep_gan_socio > 0 else ""}
   <div style='margin-top:6px;font-size:0.78rem;'>{_ep_margen_line}</div>
 </div>""", unsafe_allow_html=True)
                         _ep_inp = st.number_input(
