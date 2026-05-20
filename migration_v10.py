@@ -8,23 +8,24 @@ DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "elpasaje_v2.
 
 # (sku, name, client_id, price, weight_gr, stock, categoria, description, tipo_producto)
 PRODUCTOS_FSP = [
+    # weight_gr=1470 -> costo filamento+luz+maquina = $3.800 (precio interno El Pasaje a Francisco)
     ("FSP-001", "Cajita Porta-Figuritas AFA",
-     "francisco_sport", 10000, 35, 5,
+     "francisco_sport", 10000, 1470, 5,
      "Coleccionables",
      "Caja 3D impresa con el escudo AFA y tres estrellas en relieve. Cierre a presión, separador interior para repetidas y faltantes. Edición Mundial 2026.",
-     "linea_propio"),
+     "propio_3d"),
 
     ("FSP-002", "Cajita Porta-Figuritas FIFA 26",
-     "francisco_sport", 10000, 35, 5,
+     "francisco_sport", 10000, 1470, 5,
      "Coleccionables",
      "Diseño exclusivo FIFA 26 con la Copa del Mundo en alto relieve sobre fondo oscuro. Cierre a presión, separador interior. Edición limitada.",
-     "linea_propio"),
+     "propio_3d"),
 
     ("FSP-003", "Cajita Porta-Figuritas Argentina FIFA",
-     "francisco_sport", 10000, 35, 5,
+     "francisco_sport", 10000, 1470, 5,
      "Coleccionables",
      "Franjas celeste y blanco con la Copa del Mundo en relieve dorado. Cierre a presión, separador interior para repetidas. El regalo ideal para hinchas.",
-     "linea_propio"),
+     "propio_3d"),
 ]
 
 FOTOS_FSP = {
