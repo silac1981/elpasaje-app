@@ -43,6 +43,7 @@ div[data-testid="stFormSubmitButton"] button { margin-top: 12px; }
 </style>
 """, unsafe_allow_html=True)
 
+import os
 import os as _os
 DB_PATH = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "elpasaje_v2.db")
 engine = create_engine(f"sqlite:///{DB_PATH}")
@@ -686,7 +687,22 @@ elif menu == "📈 Mi Panel":
     if prod.empty:
         st.info("Aun no tenes productos cargados en tu linea.")
     else:
-        st.dataframe(prod[["name","sku","price","stock","ganancia_unit","margen_pct"]].rename(columns={"name":"Producto","sku":"SKU","price":"Precio","stock":"Stock","ganancia_unit":"Ganancia Unit","margen_pct":"Margen%"}).style.format({"Precio":"${:,.0f}","Ganancia Unit":"${:,.0f}","Margen%":"{:.1f}%"}), use_container_width=True, hide_index=True)
+        prod_img = prod[prod["imagen_url"].notna() & (prod["imagen_url"] != "")] if "imagen_url" in prod.columns else pd.DataFrame()
+        prod_sin = prod[~prod.index.isin(prod_img.index)]
+        if not prod_img.empty:
+            cols_cards = st.columns(min(len(prod_img), 3))
+            for i, (_, row) in enumerate(prod_img.iterrows()):
+                with cols_cards[i % 3]:
+                    img_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), row["imagen_url"])
+                    if os.path.exists(img_path):
+                        st.image(img_path, use_container_width=True)
+                    st.markdown(f"**{row['name']}**")
+                    st.markdown(f"SKU: `{row['sku']}` · Color: {row['color']}")
+                    st.markdown(f"💰 **${row['price']:,.0f}** · Stock: {int(row['stock'])} u.")
+                    st.caption(row.get("description",""))
+                    st.divider()
+        if not prod_sin.empty:
+            st.dataframe(prod_sin[["name","sku","price","stock","ganancia_unit","margen_pct"]].rename(columns={"name":"Producto","sku":"SKU","price":"Precio","stock":"Stock","ganancia_unit":"Ganancia Unit","margen_pct":"Margen%"}).style.format({"Precio":"${:,.0f}","Ganancia Unit":"${:,.0f}","Margen%":"{:.1f}%"}), use_container_width=True, hide_index=True)
 
 elif menu == "🛒 Cargar Pedido":
     uid = st.session_state["uid"]
