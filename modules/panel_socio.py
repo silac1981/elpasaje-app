@@ -1017,6 +1017,9 @@ def render():
                     _ep_stk    = int(_ep_r.get("stock", 0) or 0)
                     _ep_wt     = float(_ep_r.get("weight_gr", 0) or 0)
                     _ep_stk_c  = "#10B981" if _ep_stk > 5 else ("#F59E0B" if _ep_stk > 0 else "#EF4444")
+                    _ep_costo  = round(_ep_wt * 1.10 * 2350 / 1000) if _ep_wt > 0 else 0
+                    _ep_gan_ep = _ep_price - _ep_costo if _ep_costo > 0 else 0
+                    _ep_mrg_ep = round(_ep_gan_ep / _ep_price * 100) if (_ep_price > 0 and _ep_costo > 0) else 0
                     _ep_cat_html = (
                         f"<span style='background:#21262D;color:#8B949E;border-radius:99px;"
                         f"padding:1px 8px;font-size:0.62rem;'>{_ep_cat}</span>"
@@ -1051,7 +1054,7 @@ def render():
   <div style='margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:6px;'>
     <div style='background:#0D1117;border-radius:7px;padding:8px 10px;'>
       <div style='font-size:0.55rem;color:#8B949E;text-transform:uppercase;letter-spacing:0.4px;'>
-        Precio EP <span style='font-size:0.5rem;opacity:.6;'>(solo vos)</span></div>
+        Precio EP <span style='font-size:0.5rem;opacity:.6;'>(lo que pagas)</span></div>
       <div style='font-size:0.92rem;font-weight:800;color:#F59E0B;'>${_ep_price:,.0f}</div>
     </div>
     <div style='background:#0D1117;border-radius:7px;padding:8px 10px;'>
@@ -1060,6 +1063,7 @@ def render():
         Tu precio {_ep_markup_badge}</div>
       <div style='font-size:0.92rem;font-weight:800;color:#10B981;'>${_ep_pr:,.0f}</div>
     </div>
+    {f"<div style='background:#0D1117;border-radius:7px;padding:8px 10px;'><div style='font-size:0.55rem;color:#8B949E;text-transform:uppercase;letter-spacing:0.4px;'>Costo fabricación</div><div style='font-size:0.92rem;font-weight:800;color:#94A3B8;'>${_ep_costo:,.0f}</div></div><div style='background:#0D1117;border-radius:7px;padding:8px 10px;'><div style='font-size:0.55rem;color:#8B949E;text-transform:uppercase;letter-spacing:0.4px;'>Margen EP · {_ep_mrg_ep}%</div><div style='font-size:0.92rem;font-weight:800;color:#6366F1;'>${_ep_gan_ep:,.0f}</div></div>" if _ep_costo > 0 else ""}
   </div>
   <div style='margin-top:6px;font-size:0.78rem;'>{_ep_margen_line}</div>
 </div>""", unsafe_allow_html=True)
