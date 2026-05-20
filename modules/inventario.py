@@ -41,6 +41,10 @@ details{background:#161B22!important;border-radius:12px!important;border:1px sol
 details summary{color:#E6EDF3!important}
 [data-testid="stAlert"]{background:#1a2332!important;border-color:#30363D!important}
 [data-testid="stFileUploaderDropzone"]{background:#161B22!important;border-color:#30363D!important}
+[data-testid="stTextInput"] input,[data-testid="stNumberInput"] input,[data-testid="stTextArea"] textarea{background:#161B22!important;color:#E6EDF3!important;border-color:#30363D!important}
+[data-testid="stSelectbox"] div[data-baseweb="select"] div{background:#161B22!important;color:#E6EDF3!important;border-color:#30363D!important}
+[data-testid="stDateInput"] input{background:#161B22!important;color:#E6EDF3!important;border-color:#30363D!important}
+[data-testid="stTextInput"] input::placeholder,[data-testid="stTextArea"] textarea::placeholder{color:#6B7280!important}
 </style>""", unsafe_allow_html=True)
 
 
