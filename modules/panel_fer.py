@@ -890,19 +890,41 @@ details summary{color:#E6EDF3!important;padding:8px 12px!important}
             _df_stock_inv = pd.DataFrame()
 
         _fac_total      = float(_df_ingresos["facturado"].sum()) if not _df_ingresos.empty else 0
-        _cost_mat_total = float(_df_costo_mat["costo_mat"].sum()) if not _df_costo_mat.empty else 0
-        _margen_bruto   = _fac_total - _cost_mat_total - _overhead_total
         _n_ped_listo    = int(_df_ingresos["pedidos"].sum()) if not _df_ingresos.empty else 0
 
-        _fk1, _fk2, _fk3, _fk4 = st.columns(4)
+        # Costo real calculado desde weight_gr (no depende de production_log)
+        try:
+            _df_costo_calc = pd.read_sql("""
+                SELECT COALESCE(SUM(
+                    CASE WHEN p.tipo_producto='propio_3d'
+                         THEN p.weight_gr * 1.10 * 2350.0 / 1000.0 * oi.cantidad
+                         ELSE 0 END
+                ), 0) AS costo_calc
+                FROM order_items oi
+                JOIN orders o ON o.id = oi.order_id
+                JOIN products p ON p.sku = oi.product_sku
+                WHERE o.status = 'Listo'
+            """, engine)
+            _costo_produccion = float(_df_costo_calc["costo_calc"].iloc[0] or 0)
+        except Exception:
+            _costo_produccion = 0.0
+
+        _ganancia_bruta   = _fac_total - _costo_produccion
+        _cuota_socios     = round(_ganancia_bruta * 0.5)
+        _para_elpasaje    = _ganancia_bruta - _cuota_socios
+        _margen_neto      = _para_elpasaje - _overhead_total
+
+        _fk1, _fk2, _fk3, _fk4, _fk5, _fk6 = st.columns(6)
         for _fc, _fv, _fl, _fs, _fcolor in [
-            (_fk1, f"${_fac_total:,.0f}",     "💰 Facturación Total",  f"{_n_ped_listo} pedidos completados", "#3FB950"),
-            (_fk2, f"${_cost_mat_total:,.0f}", "🧵 Costo Materiales",   "consumo registrado en log",          "#F59E0B"),
-            (_fk3, f"${_overhead_total:,.0f}", "⚙️ Overhead Mensual",   "costos fijos del taller",            "#58A6FF"),
-            (_fk4, f"${_margen_bruto:,.0f}",   "📈 Margen Bruto Est.",  "facturado − mat − overhead",         "#EF4444" if _margen_bruto < 0 else "#22C55E"),
+            (_fk1, f"${_fac_total:,.0f}",       "💰 Facturación",       f"{_n_ped_listo} pedidos completados",   "#3FB950"),
+            (_fk2, f"${_costo_produccion:,.0f}", "🧵 Costo producción",  "filamento · 1.10 merma · $2350/kg",     "#F59E0B"),
+            (_fk3, f"${_ganancia_bruta:,.0f}",   "📊 Ganancia bruta",    "facturado − costo",                     "#58A6FF"),
+            (_fk4, f"${_cuota_socios:,.0f}",     "🤝 Cuota socios 50%",  "parte de cada línea",                   "#A855F7"),
+            (_fk5, f"${_para_elpasaje:,.0f}",    "🏠 Para El Pasaje",    "50% restante antes de overhead",        "#22C55E"),
+            (_fk6, f"${_margen_neto:,.0f}",      "📈 Margen neto",       "El Pasaje − overhead",                  "#EF4444" if _margen_neto < 0 else "#22C55E"),
         ]:
             with _fc:
-                st.markdown(f"<div style='background:#161B22;border-radius:14px;padding:20px 16px;border:1px solid #21262D;border-top:3px solid {_fcolor};text-align:center;margin-bottom:8px;'><div style='font-size:1.65rem;font-weight:800;color:{_fcolor};line-height:1;'>{_fv}</div><div style='font-size:0.75rem;font-weight:600;color:#C9D1D9;margin-top:8px;'>{_fl}</div><div style='font-size:0.64rem;color:#6B7280;margin-top:4px;'>{_fs}</div></div>", unsafe_allow_html=True)
+                st.markdown(f"<div style='background:#161B22;border-radius:14px;padding:14px 10px;border:1px solid #21262D;border-top:3px solid {_fcolor};text-align:center;margin-bottom:8px;'><div style='font-size:1.3rem;font-weight:800;color:{_fcolor};line-height:1;'>{_fv}</div><div style='font-size:0.65rem;font-weight:600;color:#C9D1D9;margin-top:6px;'>{_fl}</div><div style='font-size:0.58rem;color:#6B7280;margin-top:3px;'>{_fs}</div></div>", unsafe_allow_html=True)
 
         st.markdown("<div style='margin-top:28px;margin-bottom:12px;font-size:0.65rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#58A6FF;'>📅 DETALLE MENSUAL</div>", unsafe_allow_html=True)
         if not _df_ingresos.empty or not _df_costo_mat.empty:
@@ -910,14 +932,41 @@ details summary{color:#E6EDF3!important;padding:8px 12px!important}
                 list(_df_ingresos["mes"].tolist() if not _df_ingresos.empty else []) +
                 list(_df_costo_mat["mes"].tolist() if not _df_costo_mat.empty else [])
             ), reverse=True)[:6]
+            # Costo calculado por mes desde weight_gr
+            try:
+                _df_costo_mes = pd.read_sql("""
+                    SELECT strftime('%Y-%m', o.date) AS mes,
+                           SUM(CASE WHEN p.tipo_producto='propio_3d'
+                               THEN p.weight_gr * 1.10 * 2350.0 / 1000.0 * oi.cantidad
+                               ELSE 0 END) AS costo_calc
+                    FROM order_items oi
+                    JOIN orders o ON o.id = oi.order_id
+                    JOIN products p ON p.sku = oi.product_sku
+                    WHERE o.status = 'Listo'
+                    GROUP BY mes
+                """, engine)
+            except Exception:
+                _df_costo_mes = pd.DataFrame(columns=["mes","costo_calc"])
+
             _rows_mes = []
             for _m in _meses_all:
-                _fac = float(_df_ingresos[_df_ingresos["mes"]==_m]["facturado"].sum()) if not _df_ingresos.empty else 0
-                _ped = int(_df_ingresos[_df_ingresos["mes"]==_m]["pedidos"].sum()) if not _df_ingresos.empty else 0
-                _cm  = float(_df_costo_mat[_df_costo_mat["mes"]==_m]["costo_mat"].sum()) if not _df_costo_mat.empty else 0
-                _gr  = float(_df_costo_mat[_df_costo_mat["mes"]==_m]["gramos_total"].sum()) if not _df_costo_mat.empty else 0
-                _mg  = _fac - _cm - _overhead_total
-                _rows_mes.append({"Mes":_m,"Pedidos":_ped,"Facturado $":f"${_fac:,.0f}","Costo Mat $":f"${_cm:,.0f}","Overhead $":f"${_overhead_total:,.0f}","Margen $":f"${_mg:,.0f}","Gramos usados":f"{_gr:,.0f} g"})
+                _fac  = float(_df_ingresos[_df_ingresos["mes"]==_m]["facturado"].sum()) if not _df_ingresos.empty else 0
+                _ped  = int(_df_ingresos[_df_ingresos["mes"]==_m]["pedidos"].sum()) if not _df_ingresos.empty else 0
+                _cc   = float(_df_costo_mes[_df_costo_mes["mes"]==_m]["costo_calc"].sum()) if not _df_costo_mes.empty else 0
+                _gb   = _fac - _cc
+                _cs   = round(_gb * 0.5)
+                _ep   = _gb - _cs
+                _mn   = _ep - _overhead_total
+                _rows_mes.append({
+                    "Mes": _m, "Pedidos": _ped,
+                    "Facturado": f"${_fac:,.0f}",
+                    "Costo prod.": f"${_cc:,.0f}",
+                    "Gan. bruta": f"${_gb:,.0f}",
+                    "Socios 50%": f"${_cs:,.0f}",
+                    "El Pasaje": f"${_ep:,.0f}",
+                    "Overhead": f"${_overhead_total:,.0f}",
+                    "Margen neto": f"${_mn:,.0f}",
+                })
             st.dataframe(pd.DataFrame(_rows_mes), use_container_width=True, hide_index=True)
         else:
             st.info("Sin registros de ventas completadas todavía.")
