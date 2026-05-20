@@ -1,64 +1,87 @@
 """
 crear_schema_v3.py
 ==================
-Crea el esquema completo de elpasaje_v2.db desde cero.
-ADVERTENCIA: borra y recrea todas las tablas. Solo usar cuando no hay datos reales.
+DOS MODOS DE USO:
 
-Ejecutar desde la carpeta del proyecto:
-    python crear_schema_v3.py
+  IMPORTADO POR main.py (Streamlit Cloud / producción):
+      from crear_schema_v3 import init_schema
+      init_schema()   # crea tablas solo si no existen — no borra datos
+
+  SCRIPT MANUAL (instalación desde cero, solo en local):
+      python crear_schema_v3.py
+      → DROP + CREATE + seed completo. BORRA datos existentes.
 """
 
 import os
 from sqlalchemy import create_engine, text
 from datetime import datetime
 
-DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "elpasaje_v2.db")
-engine  = create_engine(f"sqlite:///{DB_PATH}")
+_DIR    = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(_DIR, "elpasaje_v2.db")
+HOY     = datetime.now().strftime("%Y-%m-%d")
 
-HOY = datetime.now().strftime("%Y-%m-%d")
+# ─────────────────────────────────────────────────────────
+#  DDL — todas las tablas con IF NOT EXISTS
+#  (funciona tanto para init_schema como para crear_schema)
+# ─────────────────────────────────────────────────────────
 
 TABLAS = [
-    # ─────────────────────────────────────────────
-    #  NÚCLEO DEL ECOSISTEMA
-    # ─────────────────────────────────────────────
     ("tenants", """
-        CREATE TABLE tenants (
-            id          TEXT PRIMARY KEY,
-            name        TEXT NOT NULL,
-            email       TEXT UNIQUE NOT NULL,
-            password    TEXT NOT NULL,
-            telefono    TEXT,
-            tipo        TEXT DEFAULT 'familia',   -- 'familia' | 'b2b' | 'admin'
-            sector      TEXT,                     -- área dentro de la empresa
-            fecha_alta  TEXT DEFAULT CURRENT_DATE,
-            activo      INTEGER DEFAULT 1
+        CREATE TABLE IF NOT EXISTS tenants (
+            id                    TEXT PRIMARY KEY,
+            name                  TEXT NOT NULL,
+            email                 TEXT UNIQUE NOT NULL,
+            password              TEXT NOT NULL,
+            telefono              TEXT,
+            tipo                  TEXT DEFAULT 'familia',
+            sector                TEXT,
+            fecha_alta            TEXT DEFAULT CURRENT_DATE,
+            activo                INTEGER DEFAULT 1,
+            segmento              TEXT,
+            lead_source           TEXT,
+            potencial             TEXT,
+            canal_preferido       TEXT,
+            ciudad                TEXT DEFAULT 'Buenos Aires',
+            rubro                 TEXT,
+            notas_agente          TEXT,
+            es_cliente_real       INTEGER DEFAULT 0,
+            fecha_primer_contacto TEXT,
+            linea_interes         TEXT
+        )
+    """),
+
+    ("tenant_lineas", """
+        CREATE TABLE IF NOT EXISTS tenant_lineas (
+            tenant_id  TEXT NOT NULL REFERENCES tenants(id),
+            linea_id   TEXT NOT NULL REFERENCES tenants(id),
+            PRIMARY KEY (tenant_id, linea_id)
         )
     """),
 
     ("materials", """
-        CREATE TABLE materials (
+        CREATE TABLE IF NOT EXISTS materials (
             material_id     TEXT PRIMARY KEY,
             name            TEXT NOT NULL,
-            tipo            TEXT,                 -- 'PLA' | 'PETG' | 'TPU'
+            tipo            TEXT,
             color           TEXT,
             proveedor       TEXT,
             stock_gr        REAL DEFAULT 0,
             cost_kg         REAL DEFAULT 0,
             stock_minimo_gr INTEGER DEFAULT 200,
             fecha_compra    TEXT,
-            precio_compra   REAL,                 -- precio real pagado (para trazabilidad)
+            precio_compra   REAL,
             activo          INTEGER DEFAULT 1
         )
     """),
 
     ("products", """
-        CREATE TABLE products (
+        CREATE TABLE IF NOT EXISTS products (
             sku                  TEXT PRIMARY KEY,
             client_id            TEXT NOT NULL REFERENCES tenants(id),
             material_id          TEXT REFERENCES materials(material_id),
             name                 TEXT NOT NULL,
             description          TEXT,
-            categoria            TEXT,            -- 'Taller' | 'Oficina' | 'Tech' | 'General'
+            categoria            TEXT,
             color                TEXT,
             price                REAL DEFAULT 0,
             weight_gr            REAL DEFAULT 0,
@@ -71,54 +94,60 @@ TABLAS = [
     """),
 
     ("orders", """
-        CREATE TABLE orders (
-            id                INTEGER PRIMARY KEY AUTOINCREMENT,
-            client_id         TEXT NOT NULL REFERENCES tenants(id),
-            status            TEXT DEFAULT 'Pendiente',  -- 'Pendiente'|'En Proceso'|'Listo'|'Cancelado'
-            date              TEXT DEFAULT CURRENT_TIMESTAMP,
-            fecha_entrega_est TEXT,
-            notas             TEXT,
-            color_pedido      TEXT
+        CREATE TABLE IF NOT EXISTS orders (
+            id                        INTEGER PRIMARY KEY AUTOINCREMENT,
+            client_id                 TEXT NOT NULL REFERENCES tenants(id),
+            status                    TEXT DEFAULT 'Pendiente',
+            date                      TEXT DEFAULT CURRENT_TIMESTAMP,
+            fecha_entrega_est         TEXT,
+            notas                     TEXT,
+            color_pedido              TEXT,
+            maquina_id                TEXT DEFAULT 'creality_k2_plus_01',
+            horas_impresion           REAL,
+            gramos_consumidos         REAL,
+            costo_real                REAL,
+            fallo_impresion           INTEGER DEFAULT 0,
+            motivo_fallo              TEXT,
+            referencia_archivo        TEXT,
+            fecha_entrega_solicitada  TEXT,
+            canal_origen              TEXT
         )
     """),
 
     ("order_items", """
-        CREATE TABLE order_items (
+        CREATE TABLE IF NOT EXISTS order_items (
             id              INTEGER PRIMARY KEY AUTOINCREMENT,
             order_id        INTEGER NOT NULL REFERENCES orders(id),
             product_sku     TEXT NOT NULL REFERENCES products(sku),
             cantidad        INTEGER DEFAULT 1,
-            precio_unitario REAL DEFAULT 0        -- precio al momento del pedido
+            precio_unitario REAL DEFAULT 0
         )
     """),
 
-    # ─────────────────────────────────────────────
-    #  TRAZABILIDAD TEMPORAL (para análisis y predicción)
-    # ─────────────────────────────────────────────
     ("price_history", """
-        CREATE TABLE price_history (
+        CREATE TABLE IF NOT EXISTS price_history (
             id              INTEGER PRIMARY KEY AUTOINCREMENT,
             product_sku     TEXT NOT NULL REFERENCES products(sku),
             precio_anterior REAL,
             precio_nuevo    REAL,
             fecha           TEXT DEFAULT CURRENT_DATE,
-            motivo          TEXT                  -- 'ajuste inflacion' | 'rediseno' | etc
+            motivo          TEXT
         )
     """),
 
     ("stock_movements", """
-        CREATE TABLE stock_movements (
+        CREATE TABLE IF NOT EXISTS stock_movements (
             id          INTEGER PRIMARY KEY AUTOINCREMENT,
             product_sku TEXT NOT NULL REFERENCES products(sku),
-            tipo        TEXT NOT NULL,            -- 'entrada'|'venta'|'ajuste'|'merma'
+            tipo        TEXT NOT NULL,
             cantidad    INTEGER NOT NULL,
             fecha       TEXT DEFAULT CURRENT_TIMESTAMP,
-            referencia  TEXT                      -- nro de pedido u observación
+            referencia  TEXT
         )
     """),
 
     ("production_log", """
-        CREATE TABLE production_log (
+        CREATE TABLE IF NOT EXISTS production_log (
             id                INTEGER PRIMARY KEY AUTOINCREMENT,
             order_id          INTEGER REFERENCES orders(id),
             product_sku       TEXT NOT NULL REFERENCES products(sku),
@@ -127,142 +156,458 @@ TABLAS = [
             tiempo_real_min   INTEGER,
             fecha_inicio      TEXT,
             fecha_fin         TEXT,
-            resultado         TEXT DEFAULT 'ok'   -- 'ok'|'fallo'|'reimpresion'
+            resultado         TEXT DEFAULT 'ok'
         )
     """),
 
-    # ─────────────────────────────────────────────
-    #  CONTEXTO DE VENTAS (para modelos predictivos)
-    # ─────────────────────────────────────────────
     ("sales_context", """
-        CREATE TABLE sales_context (
+        CREATE TABLE IF NOT EXISTS sales_context (
             id              INTEGER PRIMARY KEY AUTOINCREMENT,
             order_id        INTEGER NOT NULL REFERENCES orders(id),
-            canal           TEXT,                 -- 'presencial'|'whatsapp'|'instagram'
-            sector_empresa  TEXT,                 -- 'hangar_a'|'oficina_economica'|etc
-            fue_con_muestra INTEGER DEFAULT 0,    -- 1=sí llevó muestra física
-            referido_por    TEXT,                 -- client_id del referente o null
-            primera_compra  INTEGER DEFAULT 0     -- 1=primera compra del cliente
+            canal           TEXT,
+            sector_empresa  TEXT,
+            fue_con_muestra INTEGER DEFAULT 0,
+            referido_por    TEXT,
+            primera_compra  INTEGER DEFAULT 0
         )
     """),
 
-    # ─────────────────────────────────────────────
-    #  FONDOS SOLIDARIOS
-    # ─────────────────────────────────────────────
     ("donations", """
-        CREATE TABLE donations (
+        CREATE TABLE IF NOT EXISTS donations (
             id          INTEGER PRIMARY KEY AUTOINCREMENT,
             fondo       TEXT NOT NULL,
             monto       REAL NOT NULL,
-            tipo        TEXT,                     -- 'urna'|'qr'|'redondeo'|'producto'
+            tipo        TEXT,
             descripcion TEXT,
             fecha       TEXT DEFAULT CURRENT_DATE
         )
     """),
+
+    ("log_agente", """
+        CREATE TABLE IF NOT EXISTS log_agente (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            proyecto        TEXT DEFAULT 'ElPasaje',
+            tipo            TEXT NOT NULL,
+            senal           TEXT NOT NULL,
+            dato_observado  TEXT,
+            accion_sugerida TEXT,
+            etiquetas       TEXT,
+            confianza       REAL DEFAULT 0.7,
+            origen          TEXT DEFAULT 'agente',
+            fecha           TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+    """),
+
+    ("senales_mercado", """
+        CREATE TABLE IF NOT EXISTS senales_mercado (
+            id               INTEGER PRIMARY KEY AUTOINCREMENT,
+            fecha            TEXT DEFAULT CURRENT_DATE,
+            cliente_id       TEXT,
+            linea            TEXT,
+            producto         TEXT,
+            reaccion         TEXT,
+            oportunidad      TEXT,
+            fuente           TEXT,
+            canal            TEXT,
+            notas            TEXT,
+            procesado_por_ia INTEGER DEFAULT 0
+        )
+    """),
 ]
 
-# ─────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────
 #  DATOS INICIALES
-# ─────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────
+
 TENANTS_INICIALES = [
-    ("admin",            "Alejandra",                         "admin@elpasaje.com",       "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9",  None,          "admin",   "Direccion Economica", HOY, 1),
-    ("olivia_coquette",  "Olivia",                            "coquette@elpasaje.com",    "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",    None,          "familia", None,                  HOY, 1),
-    ("francisco_sport",  "Francisco",                         "fsport@elpasaje.com",      "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",    None,          "familia", None,                  HOY, 1),
-    ("constantino_tech", "Constantino",                       "coretech@elpasaje.com",    "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",    None,          "familia", None,                  HOY, 1),
-    ("aviation",         "Fernando Gomez Aguilera (Nando)",   "aviation@elpasaje.com",    "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",    None,          "b2b",     "Mantenimiento",       HOY, 1),
-    ("oasis_animal",     "Oasis Animal",                      "oasisanimal@elpasaje.com", "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",    None,          "b2b",     None,                  HOY, 1),
-    ("oasis_del_estero", "Oasis del Estero",                  "oasisestero@elpasaje.com", "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",    None,          "b2b",     None,                  HOY, 1),
-    ("pharma_delux",     "Pharma DeLux",                      "pharma@elpasaje.com",      "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",    None,          "b2b",     None,                  HOY, 1),
-    ("fer_produccion",   "Fernando (Fer)",                     "fer@elpasaje.com",         "a29461d9796a45974014a214c0ece938a5f9dcd8799f26b26c34d3e8adf31c69",    None,          "produccion", "Fabricacion y Materiales", HOY, 1),
+    ("admin",            "Alejandra",                          "admin@elpasaje.com",        "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9", None, "admin",         "Direccion Economica",              HOY, 1, None,  None,        None,   None,           "Buenos Aires",        None,                       None, 1, HOY, "Todas"),
+    ("olivia_coquette",  "Olivia",                             "coquette@elpasaje.com",     "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",  None, "familia",       None,                               HOY, 1, "B2C", "Familia",   "Alto", "Presencial",   "Buenos Aires",        "Estética",                 None, 1, HOY, "Coquette"),
+    ("francisco_sport",  "Francisco",                          "fsport@elpasaje.com",       "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",  None, "familia",       None,                               HOY, 1, "B2C", "Familia",   "Alto", "Presencial",   "Buenos Aires",        "Deportes",                 None, 1, HOY, "Francisco Sport"),
+    ("constantino_tech", "Constantino",                        "coretech@elpasaje.com",     "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",  None, "familia",       None,                               HOY, 1, "B2C", "Familia",   "Alto", "Presencial",   "Buenos Aires",        "Tecnología",               None, 1, HOY, "Core Tech"),
+    ("aviation",         "Fernando Gomez Aguilera (Nando)",    "aviation@elpasaje.com",     "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",  None, "b2b",           "Mantenimiento AA",                 HOY, 1, "B2B", "Red Nando", "Alto", "WhatsApp",     "Buenos Aires",        "Aeronáutico",              None, 1, HOY, "Aviation Pro"),
+    ("oasis_animal",     "Oasis Animal",                       "oasisanimal@elpasaje.com",  "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",  None, "socio_multi",   None,                               HOY, 1, "B2B", "Red Nando", "Alto", "WhatsApp",     "Buenos Aires",        "Veterinario",              None, 1, HOY, "Oasis Animal + VK-Home"),
+    ("oasis_del_estero", "Fede",                               "oasisdelestero@elpasaje.com","a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",  None, "socio",         None,                               HOY, 1, "B2B", "Red Nando", "Medio","WhatsApp",     "Santiago del Estero", None,                       None, 1, HOY, "Oasis del Estero"),
+    ("pharma_delux",     "Pharma DeLux",                       "pharma@elpasaje.com",       "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",  None, "b2b",           None,                               HOY, 1, "B2B", "Directo",   "Alto", "Email",        "Buenos Aires",        "Farmacéutico",             None, 1, HOY, "Pharma DeLux"),
+    ("fer_produccion",   "Fernando (Fer)",                     "fer@elpasaje.com",          "a29461d9796a45974014a214c0ece938a5f9dcd8799f26b26c34d3e8adf31c69",  None, "produccion",    "Fabricacion y Materiales",         HOY, 1, None,  None,        None,   "Presencial",   "Buenos Aires",        None,                       None, 1, HOY, None),
+    ("agustina",         "Agustina",                           "agustina@elpasaje.com",     "1baedd25059490937a8f7a52dbaf5a7c168bc49f5bac0d7bc48bd6b58a84a421",  None, "socio_multi",   None,                               HOY, 1, "B2B", "Directo",   "Alto", "WhatsApp",     "Buenos Aires",        "Decoracion / Veterinaria", None, 1, HOY, "Oasis Animal + VK-Home"),
+    ("vkhome_cliente",   "VK-Home / Agustina",                 "vkhome@cliente.com",        "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",  None, "cliente_externo",None,                             HOY, 1, "B2B", "Directo",   "Alto", "Presencial",   "Buenos Aires",        "Decoracion",               None, 1, HOY, "VK-Home"),
+]
+
+TENANT_LINEAS_INICIALES = [
+    ("agustina",     "oasis_animal"),
+    ("agustina",     "vkhome_cliente"),
+    ("oasis_animal", "oasis_animal"),
+    ("oasis_animal", "vkhome_cliente"),
 ]
 
 MATERIALS_INICIALES = [
-    # material_id         name                    tipo    color              proveedor   stock_gr  cost_kg  stock_min  fecha_compra  precio_compra
-    ("petg_gris",        "PETG Gris Mecánico",   "PETG", "Gris Mecánico",   None,       800,      2350,    200,       HOY,          2350),
-    ("petg_naranja",     "PETG Naranja Seguridad","PETG", "Naranja Seguridad",None,      600,      2400,    200,       HOY,          2400),
-    ("pla_seda_azul",    "PLA Seda Azul Aerolínea","PLA", "Azul Aerolínea",  None,       500,      2600,    200,       HOY,          2600),
-    ("pla_seda_gris",    "PLA Seda Gris Acero",  "PLA",  "Gris Acero",      None,       400,      2550,    200,       HOY,          2550),
-    ("pla_rosa",         "PLA Rosa Coquette",    "PLA",  "Rosa",            None,       700,      2400,    200,       HOY,          2400),
-    ("pla_blanco",       "PLA Blanco",           "PLA",  "Blanco",          None,       1000,     2200,    300,       HOY,          2200),
-    ("pla_negro",        "PLA Negro",            "PLA",  "Negro",           None,       1000,     2200,    300,       HOY,          2200),
+    ("petg_gris",     "PETG Gris Mecánico",     "PETG", "Gris Mecánico",    None, 800,  2350, 200, HOY, 2350),
+    ("petg_naranja",  "PETG Naranja Seguridad",  "PETG", "Naranja Seguridad",None, 600,  2400, 200, HOY, 2400),
+    ("pla_seda_azul", "PLA Seda Azul Aerolínea", "PLA",  "Azul Aerolínea",   None, 500,  2600, 200, HOY, 2600),
+    ("pla_seda_gris", "PLA Seda Gris Acero",     "PLA",  "Gris Acero",       None, 400,  2550, 200, HOY, 2550),
+    ("pla_rosa",      "PLA Rosa Coquette",        "PLA",  "Rosa",             None, 700,  2400, 200, HOY, 2400),
+    ("pla_blanco",    "PLA Blanco",               "PLA",  "Blanco",           None, 1000, 2200, 300, HOY, 2200),
+    ("pla_negro",     "PLA Negro",                "PLA",  "Negro",            None, 1000, 2200, 300, HOY, 2200),
 ]
 
 PRODUCTS_AVIATION = [
-    # sku         client  material         name                         desc                                                          cat       color              price   weight  tiempo  stock
-    ("AVP-001", "aviation", "petg_gris",    "Rampa-Safe",               "Soporte celular/radio con base pesada. Legajo en relieve.",   "Taller", "Gris Mecánico",   4500,   85,     45,     5),
-    ("AVP-002", "aviation", "petg_gris",    "Mate-Carro",               "Accesorio para carro personal. Sostiene mate y termo.",        "Taller", "Gris Mecánico",   3800,   70,     35,     5),
-    ("AVP-003", "aviation", "petg_naranja", "Clip Seguridad EPP",       "Clip naranja alta visibilidad para EPP personal.",             "Taller", "Naranja Seguridad",2200,  35,     18,     8),
-    ("AVP-004", "aviation", "petg_gris",    "Porta-Credencial Pro",     "Funda rígida 3D con legajo. Protege tarjeta magnética.",       "Taller", "Gris Mecánico",   2800,   45,     22,     8),
-    ("AVP-005", "aviation", "petg_gris",    "Organizador Banco Personal","Bandeja modular: llaves, documentos y mate.",                 "Taller", "Gris Mecánico",   5500,   120,    60,     3),
-    ("AVP-006", "aviation", "pla_seda_azul","Dock Checklist",           "Soporte post-its y lapicera. Forma de pista de aterrizaje.",   "Oficina","Azul Aerolínea",  4200,   75,     38,     5),
-    ("AVP-007", "aviation", "pla_seda_azul","Organizador Fuselaje",     "Clips forma remaches aeronáuticos para cables escritorio.",    "Oficina","Azul Aerolínea",  3500,   60,     30,     6),
-    ("AVP-008", "aviation", "pla_seda_gris","Torre de Control",         "Soporte auriculares inspirado en torres EZE/AEP.",             "Oficina","Gris Acero",      5800,   110,    55,     3),
-    ("AVP-009", "aviation", "pla_seda_azul","Placa Analista Senior",    "Placa escritorio con nombre y legajo. Estética cabina.",       "Oficina","Azul Aerolínea",  4800,   90,     45,     4),
-    ("AVP-010", "aviation", "pla_seda_gris","Portabotella Aero",        "Soporte botella/termo con base antideslizante.",               "Oficina","Gris Acero",      3200,   55,     28,     6),
-    ("AVP-011", "aviation", "pla_seda_gris","Soporte Monitor Desk",     "Elevador de monitor con bandeja inferior.",                    "Tech",   "Gris Acero",      7500,   180,    90,     3),
-    ("AVP-012", "aviation", "petg_gris",    "Portacelular 360",         "Porta celular articulado 360° base pesada antideslizante.",    "Tech",   "Gris Mecánico",   3800,   65,     33,     6),
-    ("AVP-013", "aviation", "pla_seda_gris","Hub Organizador USB",      "Soporte para hub USB y cables de carga.",                      "Tech",   "Gris Acero",      4500,   95,     48,     4),
+    ("AVP-001", "aviation", "petg_gris",    "Rampa-Safe",                "Soporte celular/radio con base pesada. Legajo en relieve.",    "Taller", "Gris Mecánico",    4500, 85,  45, 5),
+    ("AVP-002", "aviation", "petg_gris",    "Mate-Carro",                "Accesorio para carro personal. Sostiene mate y termo.",         "Taller", "Gris Mecánico",    3800, 70,  35, 5),
+    ("AVP-003", "aviation", "petg_naranja", "Clip Seguridad EPP",        "Clip naranja alta visibilidad para EPP personal.",              "Taller", "Naranja Seguridad", 2200, 35,  18, 8),
+    ("AVP-004", "aviation", "petg_gris",    "Porta-Credencial Pro",      "Funda rígida 3D con legajo. Protege tarjeta magnética.",        "Taller", "Gris Mecánico",    2800, 45,  22, 8),
+    ("AVP-005", "aviation", "petg_gris",    "Organizador Banco Personal", "Bandeja modular: llaves, documentos y mate.",                  "Taller", "Gris Mecánico",    5500, 120, 60, 3),
+    ("AVP-006", "aviation", "pla_seda_azul","Dock Checklist",            "Soporte post-its y lapicera. Forma de pista de aterrizaje.",    "Oficina","Azul Aerolínea",   4200, 75,  38, 5),
+    ("AVP-007", "aviation", "pla_seda_azul","Organizador Fuselaje",      "Clips forma remaches aeronáuticos para cables escritorio.",     "Oficina","Azul Aerolínea",   3500, 60,  30, 6),
+    ("AVP-008", "aviation", "pla_seda_gris","Torre de Control",          "Soporte auriculares inspirado en torres EZE/AEP.",              "Oficina","Gris Acero",       5800, 110, 55, 3),
+    ("AVP-009", "aviation", "pla_seda_azul","Placa Analista Senior",     "Placa escritorio con nombre y legajo. Estética cabina.",        "Oficina","Azul Aerolínea",   4800, 90,  45, 4),
+    ("AVP-010", "aviation", "pla_seda_gris","Portabotella Aero",         "Soporte botella/termo con base antideslizante.",                "Oficina","Gris Acero",       3200, 55,  28, 6),
+    ("AVP-011", "aviation", "pla_seda_gris","Soporte Monitor Desk",      "Elevador de monitor con bandeja inferior.",                     "Tech",   "Gris Acero",       7500, 180, 90, 3),
+    ("AVP-012", "aviation", "petg_gris",    "Portacelular 360",          "Porta celular articulado 360° base pesada antideslizante.",     "Tech",   "Gris Mecánico",    3800, 65,  33, 6),
+    ("AVP-013", "aviation", "pla_seda_gris","Hub Organizador USB",       "Soporte para hub USB y cables de carga.",                       "Tech",   "Gris Acero",       4500, 95,  48, 4),
 ]
 
-# ─────────────────────────────────────────────────
-#  EJECUCIÓN
-# ─────────────────────────────────────────────────
-with engine.connect() as conn:
+# (sku, client_id, material_id, name, description, categoria, color, price, weight_gr, tiempo_min, stock, activo)
+PRODUCTS_SOCIOS = [
+    # ── COQUETTE (olivia_coquette) — catálogo provisional, a confirmar con Olivia ──
+    ("COQ-MON-001","olivia_coquette","pla_rosa",  "Mono Textil Silk",          "Mono artesanal impresion 3D acabado seda",                  "accesorios","#F9A8D4",1500,  22,  35, 5, 1),
+    ("COQ-MON-002","olivia_coquette","pla_rosa",  "Monedero Silk Coquette",    "Monedero 3D cierre magnetico acabado silk",                 "accesorios","#F9A8D4",2800,  60,  90, 3, 1),
+    ("COQ-LLA-001","olivia_coquette","pla_rosa",  "Llavero Peonia",            "Llavero floral detalle fino",                               "accesorios","#F9A8D4",1200,  15,  25, 8, 1),
+    ("COQ-ARG-001","olivia_coquette","pla_rosa",  "Argolla Coquette",          "Aro decorativo 3D personalizable",                         "joyeria",   "#F9A8D4",1800,  20,  30, 4, 1),
+    ("COQ-PRE-001","olivia_coquette","pla_rosa",  "Prendedor Floral",          "Prendedor 3D estilo romantico",                            "accesorios","#F9A8D4",1400,  18,  28, 6, 1),
+    ("COQ-CAJ-001","olivia_coquette","pla_rosa",  "Cajita Corazon",            "Cajita regalo 3D acabado mate",                            "regaleria", "#F9A8D4",2200,  45,  65, 3, 1),
+    ("COQ-XVA-001","olivia_coquette","pla_rosa",  "Kit Quinceanyera",          "Set 3 piezas personalizado XV anios",                      "especiales","#F9A8D4",4500, 120, 180, 2, 1),
+    # ── F-ZONE (francisco_sport) — Naranja #F97316 / Cyan #22D3EE ────────────────
+    ("FZ-CAP-001", "francisco_sport","pla_negro", "Cap-Hanger Pro",            "Soporte aerodinamico gorras, no deforma la visera",         "deportivo", "#F97316",1800,  45,  60, 4, 1),
+    ("FZ-PFX-001", "francisco_sport","pla_negro", "Parche Flexible",           "Aplique 3D para mochila/campera personalizable",            "identidad", "#F97316", 900,  25,  35,10, 1),
+    ("FZ-GMR-001", "francisco_sport","pla_negro", "Aplique Gamer",             "Soporte auriculares sello El Pasaje, escritorio gamer",     "gamer",     "#22D3EE",1200,  30,  45, 6, 1),
+    ("FZ-TRO-001", "francisco_sport","pla_negro", "Trofeo Mini",               "Trofeo impreso personalizable nombre y deporte",            "trofeos",   "#F97316",2200,  65,  90, 3, 1),
+    ("FZ-NUM-001", "francisco_sport","pla_negro", "Numero de Camiseta",        "Numero 3D rigido para camiseta o mochila",                  "identidad", "#F97316", 600,  12,  18,20, 1),
+    ("FZ-ORC-001", "francisco_sport","pla_negro", "Organizador Cancha",        "Soporte pizarron tactico mini para escritorio",             "entrenamiento","#F97316",3900, 95, 130, 2, 1),
+    ("FZ-SGB-U",   "francisco_sport","pla_negro", "Soporte Gaming Bicolor",    "Soporte gaming multicolor K2 Plus CFS, diseno propio Fer",  "gamer",     "#22D3EE",12000,1161, 350, 1, 1),
+    # ── CORE TECH (constantino_tech) — catálogo provisional ─────────────────────
+    ("CT-SIM-001", "constantino_tech","petg_gris","Soporte Instrumento Medicion","Base calibres micrometros laboratorio escuela",           "educativo", "#64748B",2400,  70,  95, 4, 1),
+    ("CT-GAB-001", "constantino_tech","petg_gris","Gabinete Microelectronica",  "Carcasa Arduino/ESP32/RaspberryPi",                        "electronica","#64748B",3800, 100, 140, 3, 1),
+    ("CT-ORG-001", "constantino_tech","petg_gris","Organizador Anti-Estatico",  "Bandeja componentes electronicos anti-ESD",                "electronica","#64748B",4200, 110, 155, 2, 1),
+    ("CT-KAI-001", "constantino_tech","petg_gris","Organizador Kaizen",         "Sistema modular 5S estacion de trabajo",                   "productividad","#64748B",5500,150, 210, 2, 1),
+    ("CT-CUB-001", "constantino_tech","petg_gris","Cubo Infinito Magnetico",    "Cubo articulado 8 segmentos imanes integrados",            "juguete",   "#64748B",3800,  90, 125, 3, 1),
+    ("CT-RPI-001", "constantino_tech","petg_gris","Case Raspberry Pi 5",        "Carcasa ventilada RPi5 soporte activo",                    "electronica","#64748B",4500, 120, 165, 2, 1),
+    # ── PHARMA DeLux (pharma_delux) — Verde #166534 ──────────────────────────────
+    ("PD-ORG-001", "pharma_delux",   "pla_blanco","Organizador Consultorio",   "Soporte instrumental medico escritorio consultorio",        "medico",    "#166534",5200, 140, 195, 2, 1),
+    ("PD-ORL-001", "pharma_delux",   "pla_blanco","Organizador con Logo Lab",  "Organizador con logo laboratorio farmaceutico",             "medico",    "#166534",6000, 155, 215, 2, 1),
+    ("PD-PAS-001", "pharma_delux",   "pla_blanco","Porta-Pastillas Semanal",   "Pastillero 7 compartimentos etiquetado",                   "salud",     "#166534",1800,  50,  70, 8, 1),
+    ("PD-MUE-001", "pharma_delux",   "pla_blanco","Muestrero Medico",          "Soporte tarjetas muestras medicas escritorio",              "medico",    "#166534",2800,  75, 105, 4, 1),
+    ("PD-SER-001", "pharma_delux",   "pla_blanco","Soporte Seringa",           "Porta-jeringas organizador tecnico",                       "medico",    "#166534",3800, 100, 140, 3, 1),
+    ("PD-GIF-001", "pharma_delux",   "pla_blanco","Gift Set Laboratorio",      "Kit 3 piezas personalizado para laboratorio",               "gift",      "#166534",4500, 125, 175, 2, 1),
+    # ── OASIS DEL ESTERO (oasis_del_estero) — línea de Federico, catálogo pendiente ──
+    # ── VKHOME (vkhome_cliente) — catálogo oficial VK-Home Agustina, Mayo 2026 ──────
+    # Diseño propio Fer en Fusion 360 — canal de ventas: VK-Home
+    ("OE-BRR-S","vkhome_cliente","pla_negro",   "Bandeja Organica Redonda S","Bandeja redonda organica S, 2 patas bola, diseno Fer",     "bandejas patitas",   "#A78BFA", 6500,  629, 190, 1, 1),
+    ("OE-BRR-M","vkhome_cliente","pla_negro",   "Bandeja Organica Redonda M","Bandeja redonda organica M, 3 patas bola, diseno Fer",     "bandejas patitas",   "#A78BFA", 8000,  957, 290, 1, 1),
+    ("OE-BOV-S","vkhome_cliente","pla_negro",   "Bandeja Oval S",            "Bandeja oval S, diseno propio Fer Fusion 360",             "bandejas ovaladas",  "#A78BFA", 3000,  822, 250, 1, 1),
+    ("OE-BOV-M","vkhome_cliente","pla_negro",   "Bandeja Oval M",            "Bandeja oval M, diseno propio Fer Fusion 360",             "bandejas ovaladas",  "#A78BFA", 6000, 1354, 410, 1, 1),
+    ("OE-BOV-L","vkhome_cliente","pla_negro",   "Bandeja Oval L",            "Bandeja oval L, por pedido, diseno Fer",                   "bandejas ovaladas",  "#A78BFA", 9000, 1925, 580, 0, 1),
+    ("OE-BAS-S","vkhome_cliente","pla_negro",   "Bandeja Asimetrica S",      "Bandeja organica asimetrica S, diseno propio Fer",         "bandejas asimetricas","#A78BFA", 9900,  957, 290, 1, 1),
+    ("OE-BAS-M","vkhome_cliente","pla_negro",   "Bandeja Asimetrica M",      "Bandeja organica asimetrica M, diseno propio Fer",         "bandejas asimetricas","#A78BFA",15900, 1538, 460, 1, 1),
+    ("OE-SAR-U","vkhome_cliente","pla_negro",   "Soporte Aromatico Circular","Soporte aromatico circular, por pedido",                   "accesorios",         "#A78BFA", 8000,  774, 230, 0, 1),
+    ("OE-BDA-U","vkhome_cliente","pla_negro",   "Bandeja Damero 35x32",      "En diseno con Agustina — precio a confirmar",             "bandejas",           "#A78BFA",    0,  900, 270, 0, 0),
+    # ── OASIS ANIMAL (oasis_animal) — catálogo oficial Mayo 2026 — Rosa #F472B6 ──
+    # 10% de ventas al refugio solidario
+    ("OA-LPG-U","oasis_animal","pla_negro",       "Llavero Perrito Globo",     "Llavero 3D perro globo acabado mate, precio mayorista El Pasaje","accesorios","#F472B6",1000,  97,  30,30, 1),
+    ("OA-GTG-U","oasis_animal","pla_negro",       "Guardian Tag QR Emergencia","Tag QR datos emergencia mascota, producto de entrada",      "identificacion","#F472B6",800, 77,  25, 0, 1),
+    ("OA-SCP-U","oasis_animal","pla_negro",       "Soporte Comedero Patita",   "Soporte comedero con cuenco forma patita, talla S/M",       "mascotas",  "#F472B6",9000,  871, 260, 0, 1),
+    ("OA-SCH-U","oasis_animal","pla_negro",       "Soporte Comedero Huesito",  "Soporte comedero con cuenco forma huesito, talla S/M",      "mascotas",  "#F472B6",9000,  871, 260, 0, 1),
+    ("OA-EEI-U","oasis_animal","pla_negro",       "Estacion Evolutiva Inicial","Modulo inicial comedero/juguete expandible por niveles",    "mascotas",  "#F472B6",8000,  774, 230, 0, 1),
+    ("OA-EEA-U","oasis_animal","pla_negro",       "Estacion Evolutiva Alto",   "Modulo alto expansion estacion evolutiva nivel 2",          "mascotas",  "#F472B6",10000, 968, 290, 0, 1),
+    ("OA-MLI-U","oasis_animal","pla_blanco",      "Memory Litophany",          "Litofania personalizada foto mascota, 16hs de impresion",   "memoria",   "#F472B6",35000,3386, 960, 0, 1),
+    ("OA-KIT-E","oasis_animal","pla_negro",       "Kit Bienvenida Esencial",   "Guardian Tag + Bandeja Oval S + Tarjeta + Guia 7 dias",     "kits",      "#F472B6",15000, 900, 280, 0, 1),
+    ("OA-KIT-C","oasis_animal","pla_negro",       "Kit Bienvenida Completo",   "Esencial + Llavero Perrito + Soporte Comedero + Snack",     "kits",      "#F472B6",28000,1000, 350, 0, 1),
+    ("OA-KIT-P","oasis_animal","pla_negro",       "Kit Bienvenida Premium",    "Completo + Estacion Evolutiva + Caja nombre + Certificado", "kits",      "#F472B6",45000,2000, 600, 0, 1),
+    # ── VKHOME (vkhome_cliente) — los productos OE-* de oasis_del_estero son su catálogo ─
+    # ── MAGNITUD 19 (admin — línea madre Alejandra) — Negro/Oro #1E3A8A / #C9A84C ─
+    # B2B industrial: carpinteros, reformadoras de cocina, estudios de arquitectura
+    ("M19-TKN-S","admin",          "pla_negro",   "Tirador Knurling S",        "Tirador cilindrico knurling S, prototipo B2B carpinteria",  "tiradores", "#C9A84C",2500,  242,  75, 1, 1),
+    ("M19-TKN-M","admin",          "pla_negro",   "Tirador Knurling M",        "Tirador cilindrico knurling M, prototipo B2B carpinteria",  "tiradores", "#C9A84C",3500,  339, 100, 1, 1),
+    ("M19-PMR-U","admin",          "pla_negro",   "Pies de Mueble Redondos x4","Pies mueble redondos x4, en desarrollo, no publicar",      "pies",      "#C9A84C",0,       0,   0, 0, 0),
+]
 
-    print("🗑️  Eliminando tablas anteriores...")
-    # Orden inverso para respetar foreign keys
-    for tabla, _ in reversed(TABLAS):
-        conn.execute(text(f"DROP TABLE IF EXISTS {tabla}"))
-    print("   OK\n")
+_TENANT_COLS = ("id","name","email","pwd","tel","tipo","sector","fecha","activo",
+                "segmento","lead_source","potencial","canal_preferido","ciudad","rubro",
+                "notas_agente","es_cliente_real","fecha_primer_contacto","linea_interes")
 
-    print("🏗️  Creando esquema v3...")
-    for tabla, ddl in TABLAS:
-        conn.execute(text(ddl))
-        print(f"   ✅ {tabla}")
-    print()
+# ─────────────────────────────────────────────────────────
+#  init_schema() — SEGURO para Streamlit Cloud
+#  Crea tablas IF NOT EXISTS, inserta seed con OR IGNORE.
+#  No borra nada. Cero efectos secundarios si ya existe todo.
+# ─────────────────────────────────────────────────────────
 
-    print("👥 Insertando tenants...")
-    for row in TENANTS_INICIALES:
+def init_schema():
+    """Inicializa el schema en producción. Seguro para llamar en cada arranque."""
+    _engine = create_engine(f"sqlite:///{DB_PATH}")
+    with _engine.connect() as conn:
+        for _, ddl in TABLAS:
+            conn.execute(text(ddl))
+
+        for row in TENANTS_INICIALES:
+            conn.execute(text("""
+                INSERT OR IGNORE INTO tenants
+                (id,name,email,password,telefono,tipo,sector,fecha_alta,activo,
+                 segmento,lead_source,potencial,canal_preferido,ciudad,rubro,
+                 notas_agente,es_cliente_real,fecha_primer_contacto,linea_interes)
+                VALUES
+                (:id,:name,:email,:pwd,:tel,:tipo,:sector,:fecha,:activo,
+                 :segmento,:lead_source,:potencial,:canal_preferido,:ciudad,:rubro,
+                 :notas_agente,:es_cliente_real,:fecha_primer_contacto,:linea_interes)
+            """), dict(zip(_TENANT_COLS, row)))
+
+        for tid, lid in TENANT_LINEAS_INICIALES:
+            conn.execute(
+                text("INSERT OR IGNORE INTO tenant_lineas (tenant_id, linea_id) VALUES (:tid, :lid)"),
+                {"tid": tid, "lid": lid}
+            )
+
+        for row in MATERIALS_INICIALES:
+            conn.execute(text("""
+                INSERT OR IGNORE INTO materials
+                (material_id,name,tipo,color,proveedor,stock_gr,cost_kg,stock_minimo_gr,fecha_compra,precio_compra)
+                VALUES (:mid,:name,:tipo,:color,:prov,:stock,:cost,:min,:fcompra,:pcompra)
+            """), dict(zip(["mid","name","tipo","color","prov","stock","cost","min","fcompra","pcompra"], row)))
+
+        for row in PRODUCTS_AVIATION:
+            conn.execute(text("""
+                INSERT OR IGNORE INTO products
+                (sku,client_id,material_id,name,description,categoria,color,
+                 price,weight_gr,tiempo_impresion_min,stock)
+                VALUES (:sku,:cid,:mid,:name,:desc,:cat,:color,:price,:weight,:tiempo,:stock)
+            """), dict(zip(["sku","cid","mid","name","desc","cat","color","price","weight","tiempo","stock"], row)))
+
+        for row in PRODUCTS_SOCIOS:
+            conn.execute(text("""
+                INSERT OR IGNORE INTO products
+                (sku,client_id,material_id,name,description,categoria,color,
+                 price,weight_gr,tiempo_impresion_min,stock,activo)
+                VALUES (:sku,:cid,:mid,:name,:desc,:cat,:color,:price,:weight,:tiempo,:stock,:activo)
+            """), dict(zip(["sku","cid","mid","name","desc","cat","color","price","weight","tiempo","stock","activo"], row)))
+
+        # ── Migraciones para installs existentes ──────────────
+        _migrations = [
+            "ALTER TABLE orders ADD COLUMN maquina_id TEXT DEFAULT 'creality_k2_plus_01'",
+            "ALTER TABLE orders ADD COLUMN horas_impresion REAL",
+            "ALTER TABLE orders ADD COLUMN gramos_consumidos REAL",
+            "ALTER TABLE orders ADD COLUMN costo_real REAL",
+            "ALTER TABLE orders ADD COLUMN fallo_impresion INTEGER DEFAULT 0",
+            "ALTER TABLE orders ADD COLUMN motivo_fallo TEXT",
+            "ALTER TABLE orders ADD COLUMN referencia_archivo TEXT",
+            "ALTER TABLE orders ADD COLUMN fecha_entrega_solicitada TEXT",
+            "ALTER TABLE orders ADD COLUMN canal_origen TEXT",
+            "ALTER TABLE senales_mercado ADD COLUMN segmento_detectado TEXT",
+            "ALTER TABLE senales_mercado ADD COLUMN oportunidad TEXT",
+            # v4 — modelo dos capas
+            "ALTER TABLE products ADD COLUMN tipo_producto TEXT DEFAULT 'propio_3d'",
+            "ALTER TABLE products ADD COLUMN visibilidad TEXT DEFAULT 'publico'",
+            "ALTER TABLE products ADD COLUMN proveedor_ref TEXT",
+        ]
+        for _m in _migrations:
+            try:
+                conn.execute(text(_m))
+            except Exception:
+                pass  # columna ya existe
+
+        # ── Limpiar SKUs incorrectos de iteraciones anteriores ─────────────────────
         conn.execute(text("""
-            INSERT INTO tenants (id, name, email, password, telefono, tipo, sector, fecha_alta, activo)
-            VALUES (:id, :name, :email, :pwd, :tel, :tipo, :sector, :fecha, :activo)
-        """), dict(zip(["id","name","email","pwd","tel","tipo","sector","fecha","activo"], row)))
-        print(f"   ✅ {row[0]} — {row[1]}")
+            DELETE FROM products WHERE sku IN (
+                'OE-MAC-001','OE-MAC-002','OE-ID-001','OE-REG-001','OE-SOP-001','OE-FAU-001',
+                'OAS-LLA-001','OAS-TAG-001','OAS-COM-001','OAS-COM-002','OAS-EST-001',
+                'OAS-EST-002','OAS-JOY-001','OAS-LIT-001','OAS-TRV-001',
+                'OAS-B2B-VKH-001','OAS-B2B-VKH-002'
+            )
+        """))
+
+        # ── Actualizar password de vkhome si tiene valor legacy ──
+        conn.execute(text(
+            "UPDATE tenants SET password=:h WHERE id='vkhome_cliente' AND password='pendiente'"
+        ), {"h": "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3"})
+
+        # ── oasis_del_estero: corregir email y tipo para acceso socio ──
+        conn.execute(text(
+            "UPDATE tenants SET email='oasisdelestero@elpasaje.com', tipo='socio', name='Fede' "
+            "WHERE id='oasis_del_estero'"
+        ))
+
+        # ── oasis_animal pasa a socio_multi para ver también VK-Home ──
+        conn.execute(text("UPDATE tenants SET tipo='socio_multi' WHERE id='oasis_animal'"))
+        conn.execute(text(
+            "INSERT OR IGNORE INTO tenant_lineas (tenant_id, linea_id) VALUES ('oasis_animal', 'oasis_animal')"
+        ))
+        conn.execute(text(
+            "INSERT OR IGNORE INTO tenant_lineas (tenant_id, linea_id) VALUES ('oasis_animal', 'vkhome_cliente')"
+        ))
+
+        # ── VKH catálogo real: mover OE-* de oasis_del_estero → vkhome_cliente ──
+        # y actualizar categorías al catálogo oficial Mayo 2026
+        conn.execute(text(
+            "UPDATE products SET client_id='vkhome_cliente', color='#A78BFA' WHERE client_id='oasis_del_estero' AND sku LIKE 'OE-%'"
+        ))
+        for _sku, _cat in [
+            ("OE-BRR-S","bandejas patitas"), ("OE-BRR-M","bandejas patitas"),
+            ("OE-BOV-S","bandejas ovaladas"),("OE-BOV-M","bandejas ovaladas"),("OE-BOV-L","bandejas ovaladas"),
+            ("OE-BAS-S","bandejas asimetricas"),("OE-BAS-M","bandejas asimetricas"),
+            ("OE-SAR-U","accesorios"),        ("OE-BDA-U","bandejas"),
+        ]:
+            conn.execute(text("UPDATE products SET categoria=:cat WHERE sku=:sku"),
+                         {"cat": _cat, "sku": _sku})
+        # ── Borrar placeholders VKH-* falsos ──
+        conn.execute(text(
+            "DELETE FROM products WHERE sku IN ('VKH-ORG-001','VKH-POT-001','VKH-COC-001','VKH-DEC-001')"
+        ))
+
+        # ── Precios reales VKH según último pedido Agustina (Mayo 2026) ──
+        _precios_vkh_reales = [
+            ("OE-BOV-S", 8500,  3000),
+            ("OE-BOV-M", 14000, 6000),
+            ("OE-BOV-L", 19900, 9000),
+            ("OE-BRR-M", 9900,  8000),
+        ]
+        for _psku, _pant, _pnvo in _precios_vkh_reales:
+            conn.execute(text("UPDATE products SET price=:p WHERE sku=:sku"), {"p": _pnvo, "sku": _psku})
+            _ph_ya = conn.execute(
+                text("SELECT COUNT(*) FROM price_history WHERE product_sku=:sku AND precio_nuevo=:p"),
+                {"sku": _psku, "p": _pnvo}
+            ).fetchone()[0]
+            if not _ph_ya:
+                try:
+                    conn.execute(text("""
+                        INSERT INTO price_history (product_sku, precio_anterior, precio_nuevo, fecha, motivo)
+                        VALUES (:sku, :ant, :nvo, '2026-05-02', 'Ajuste precio real segun ultimo pedido Agustina')
+                    """), {"sku": _psku, "ant": _pant, "nvo": _pnvo})
+                except Exception:
+                    pass
+
+        # ── Histórico último pedido Agustina ─────────────────────────────────────
+        _hist_ya = conn.execute(
+            text("SELECT COUNT(*) FROM orders WHERE notas LIKE '%HIST_AGUSTINA_ULTIMO%'")
+        ).fetchone()[0]
+        if not _hist_ya:
+            # Orden 1 — Oasis Animal: 29 × Llavero Perrito Globo
+            _r1 = conn.execute(text("""
+                INSERT INTO orders (client_id, status, date, notas, canal_origen)
+                VALUES ('oasis_animal', 'Entregado', '2026-05-02',
+                        'HIST_AGUSTINA_ULTIMO | 29 x Llavero Perrito Globo', 'WhatsApp')
+            """))
+            _oid1 = _r1.lastrowid
+            conn.execute(text(
+                "INSERT INTO order_items (order_id, product_sku, cantidad, precio_unitario) VALUES (:oid, 'OA-LPG-U', 29, 1000)"
+            ), {"oid": _oid1})
+            try:
+                conn.execute(text(
+                    "INSERT INTO pagos (order_id, monto, metodo, estado) VALUES (:oid, 29000, 'transferencia', 'acreditado')"
+                ), {"oid": _oid1})
+            except Exception:
+                pass
+            # Orden 2 — VK-Home: bandejas
+            _r2 = conn.execute(text("""
+                INSERT INTO orders (client_id, status, date, notas, canal_origen)
+                VALUES ('vkhome_cliente', 'Entregado', '2026-05-02',
+                        'HIST_AGUSTINA_ULTIMO | Bandejas: Oval S/M/L + Redonda M', 'WhatsApp')
+            """))
+            _oid2 = _r2.lastrowid
+            for _isku, _iqty, _iprecio in [
+                ("OE-BOV-S", 4, 3000),
+                ("OE-BOV-M", 4, 6000),
+                ("OE-BOV-L", 4, 9000),
+                ("OE-BRR-M", 4, 8000),
+            ]:
+                conn.execute(text("""
+                    INSERT INTO order_items (order_id, product_sku, cantidad, precio_unitario)
+                    VALUES (:oid, :sku, :qty, :precio)
+                """), {"oid": _oid2, "sku": _isku, "qty": _iqty, "precio": _iprecio})
+            try:
+                conn.execute(text(
+                    "INSERT INTO pagos (order_id, monto, metodo, estado) VALUES (:oid, 104000, 'transferencia', 'acreditado')"
+                ), {"oid": _oid2})
+            except Exception:
+                pass
+
+        conn.commit()
+
+# ─────────────────────────────────────────────────────────
+#  crear_schema() — DESTRUCTIVO, solo para instalación local
+#  Borra todo y recrea desde cero.
+# ─────────────────────────────────────────────────────────
+
+def crear_schema():
+    """Borra y recrea el schema completo. SOLO usar en local para instalación fresca."""
+    _engine = create_engine(f"sqlite:///{DB_PATH}")
+    with _engine.connect() as conn:
+        print("🗑️  Eliminando tablas anteriores...")
+        for tabla, _ in reversed(TABLAS):
+            conn.execute(text(f"DROP TABLE IF EXISTS {tabla}"))
+        print("   OK\n")
+
+        print("🏗️  Creando esquema v3...")
+        for tabla, ddl in TABLAS:
+            conn.execute(text(ddl))
+            print(f"   ✅ {tabla}")
+        print()
+
+        print("👥 Insertando tenants...")
+        for row in TENANTS_INICIALES:
+            conn.execute(text("""
+                INSERT INTO tenants
+                (id,name,email,password,telefono,tipo,sector,fecha_alta,activo,
+                 segmento,lead_source,potencial,canal_preferido,ciudad,rubro,
+                 notas_agente,es_cliente_real,fecha_primer_contacto,linea_interes)
+                VALUES
+                (:id,:name,:email,:pwd,:tel,:tipo,:sector,:fecha,:activo,
+                 :segmento,:lead_source,:potencial,:canal_preferido,:ciudad,:rubro,
+                 :notas_agente,:es_cliente_real,:fecha_primer_contacto,:linea_interes)
+            """), dict(zip(_TENANT_COLS, row)))
+            print(f"   ✅ {row[0]} — {row[1]}")
+        print()
+
+        print("🔗 Insertando vínculos multi-línea...")
+        for tid, lid in TENANT_LINEAS_INICIALES:
+            conn.execute(text("INSERT INTO tenant_lineas (tenant_id, linea_id) VALUES (:tid, :lid)"),
+                         {"tid": tid, "lid": lid})
+            print(f"   ✅ {tid} → {lid}")
+        print()
+
+        print("🧵 Insertando materiales...")
+        for row in MATERIALS_INICIALES:
+            conn.execute(text("""
+                INSERT INTO materials
+                (material_id,name,tipo,color,proveedor,stock_gr,cost_kg,stock_minimo_gr,fecha_compra,precio_compra)
+                VALUES (:mid,:name,:tipo,:color,:prov,:stock,:cost,:min,:fcompra,:pcompra)
+            """), dict(zip(["mid","name","tipo","color","prov","stock","cost","min","fcompra","pcompra"], row)))
+            print(f"   ✅ {row[0]} — {row[1]}")
+        print()
+
+        print("✈️  Insertando productos Aviation Pro...")
+        for row in PRODUCTS_AVIATION:
+            conn.execute(text("""
+                INSERT INTO products
+                (sku,client_id,material_id,name,description,categoria,color,
+                 price,weight_gr,tiempo_impresion_min,stock)
+                VALUES (:sku,:cid,:mid,:name,:desc,:cat,:color,:price,:weight,:tiempo,:stock)
+            """), dict(zip(["sku","cid","mid","name","desc","cat","color","price","weight","tiempo","stock"], row)))
+            print(f"   ✅ {row[0]} — {row[3]}")
+        print()
+
+        conn.commit()
+
+    print("=" * 50)
+    print("🚀 Esquema v3 creado exitosamente")
+    print(f"   Base de datos: {DB_PATH}")
+    print(f"   Tablas: {len(TABLAS)}")
+    print(f"   Tenants: {len(TENANTS_INICIALES)}")
+    print(f"   Materiales: {len(MATERIALS_INICIALES)}")
+    print(f"   Productos Aviation Pro: {len(PRODUCTS_AVIATION)}")
     print()
+    print("   Credenciales:")
+    print("   admin@elpasaje.com    / admin123")
+    print("   aviation@elpasaje.com / 123")
+    print("   (resto de socios: email@elpasaje.com / 123)")
+    print("=" * 50)
 
-    print("🧵 Insertando materiales...")
-    for row in MATERIALS_INICIALES:
-        conn.execute(text("""
-            INSERT INTO materials
-            (material_id, name, tipo, color, proveedor, stock_gr, cost_kg, stock_minimo_gr, fecha_compra, precio_compra)
-            VALUES (:mid, :name, :tipo, :color, :prov, :stock, :cost, :min, :fcompra, :pcompra)
-        """), dict(zip(["mid","name","tipo","color","prov","stock","cost","min","fcompra","pcompra"], row)))
-        print(f"   ✅ {row[0]} — {row[1]}")
-    print()
 
-    print("✈️  Insertando productos Aviation Pro...")
-    for row in PRODUCTS_AVIATION:
-        conn.execute(text("""
-            INSERT INTO products
-            (sku, client_id, material_id, name, description, categoria, color,
-             price, weight_gr, tiempo_impresion_min, stock)
-            VALUES (:sku,:cid,:mid,:name,:desc,:cat,:color,:price,:weight,:tiempo,:stock)
-        """), dict(zip(["sku","cid","mid","name","desc","cat","color","price","weight","tiempo","stock"], row)))
-        print(f"   ✅ {row[0]} — {row[3]}")
-    print()
-
-    conn.commit()
-
-print("=" * 50)
-print("🚀 Esquema v3 creado exitosamente")
-print(f"   Base de datos: {DB_PATH}")
-print(f"   Tablas: {len(TABLAS)}")
-print(f"   Tenants: {len(TENANTS_INICIALES)}")
-print(f"   Materiales: {len(MATERIALS_INICIALES)}")
-print(f"   Productos Aviation Pro: {len(PRODUCTS_AVIATION)}")
-print()
-print("   Credenciales:")
-print("   admin@elpasaje.com    / admin123")
-print("   aviation@elpasaje.com / 123")
-print("   (resto de socios: email@elpasaje.com / 123)")
-print("=" * 50)
+if __name__ == "__main__":
+    crear_schema()

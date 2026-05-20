@@ -29,6 +29,9 @@ from pathlib import Path
 # CONFIGURACIÓN — EDITÁ ESTAS RUTAS SI ES NECESARIO
 # ══════════════════════════════════════════════════════
 
+# El Pasaje: path relativo al directorio de este script (no hardcodeado)
+_ELPASAJE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 CONFIG = {
     "SIA": {
         "repo_path":      r"C:\Trabajo\SIA_Project",
@@ -42,13 +45,17 @@ CONFIG = {
         ]
     },
     "ELPASAJE": {
-        "repo_path":      r"C:\Trabajo\ElPasaje",
+        "repo_path":      _ELPASAJE_DIR,             # resuelto dinámicamente — sin hardcodear
         "branch":         "main",
         "google_drive":   r"C:\Users\ar028883\Google Drive\BACKUP_ELPASAJE",
         "disco_externo":  r"E:\BACKUP_ELPASAJE",
         "archivos_clave": [
-            "app.py",
-            "requirements.txt",
+            "main.py",
+            "crear_schema_v3.py",
+            "ep_agente.py",
+            "context_elpasaje.py",
+            "backup_manager.py",
+            "CONTEXTO_PROYECTO.md",
         ]
     }
 }

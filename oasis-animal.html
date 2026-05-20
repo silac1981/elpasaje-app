@@ -502,6 +502,25 @@ footer{padding:20px 64px;background:var(--deep);border-top:1px solid rgba(143,17
   </div>
 </section>
 
+<!-- ══ TIENDA OASIS — Capa 2 dinámica ══ -->
+<div class="bloque-sep"></div>
+<section id="tienda-oasis" style="background:#0D1A0C;padding:64px 80px">
+  <div style="margin-bottom:32px" class="reveal">
+    <div style="font-size:.58rem;letter-spacing:6px;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:12px">
+      <span style="width:18px;height:1px;background:var(--gold);display:inline-block"></span>Tienda Oasis · Capa 2
+    </div>
+    <h2 style="font-family:'Cormorant Garamond',serif;font-size:clamp(2rem,3.5vw,3rem);font-weight:300;color:#F0F6F0">
+      Más que objetos. <em style="font-style:italic;color:var(--sage2)">Un ecosistema.</em>
+    </h2>
+    <p style="font-family:'Raleway',sans-serif;font-size:.85rem;color:rgba(255,255,255,.5);margin-top:12px;line-height:1.8;max-width:520px">
+      Agustina no solo fabrica — también curada. Encontrás acá alimento, merchandising de galgos y kits pensados desde adentro del refugio.
+    </p>
+  </div>
+  <div id="tienda-oasis-container">
+    <div style="text-align:center;padding:48px;color:rgba(255,255,255,.3);font-family:'Raleway',sans-serif;font-size:.78rem">Cargando tienda...</div>
+  </div>
+</section>
+
 <!-- IMPACTO -->
 </div><!-- cierre mecenas -->
 
@@ -883,6 +902,64 @@ function enviarAdopcion(){
   resp.style.display='block';
   resp.textContent='¡Gracias! Tu consulta se abrió en WhatsApp. Te respondemos en menos de 24hs.';
 }
+
+// ── Capa 2 dinámica — Tienda Oasis Animal ───────────────────────────────────
+(async function loadTiendaOasis() {
+  const container = document.getElementById('tienda-oasis-container');
+  if (!container) return;
+  const PLACEHOLDER = '<div style="text-align:center;padding:48px;color:rgba(255,255,255,.3);font-family:Raleway,sans-serif;font-size:.78rem">Tienda próximamente 🐾</div>';
+  try {
+    const r = await fetch('./exports/oasis-animal-catalog.json?v=' + Date.now());
+    if (!r.ok) { container.innerHTML = PLACEHOLDER; return; }
+    const data = await r.json();
+    let html = '';
+
+    if (data.productos_linea && data.productos_linea.length > 0) {
+      html += `<div style="font-size:.52rem;letter-spacing:6px;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:24px;display:flex;align-items:center;gap:12px"><span style="width:18px;height:1px;background:var(--gold);display:inline-block"></span>Tienda Oasis</div>`;
+      html += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-bottom:48px">`;
+      for (const p of data.productos_linea) {
+        const precio = p.price != null ? `$${Number(p.price).toLocaleString('es-AR')}` : 'Consultar';
+        const isShared = p.tipo_producto === 'compartido';
+        const sharedBadge = isShared ? `<div style="margin-bottom:8px"><span style="background:rgba(234,179,8,.12);color:#EAB308;border:1px solid rgba(234,179,8,.25);border-radius:3px;padding:2px 8px;font-size:.6rem;font-weight:700;font-family:Raleway,sans-serif">🤝 Compartido</span></div>` : '';
+        const stockBadge = (p.stock||0) > 0
+          ? `<span style="color:var(--sage2);font-size:.62rem;font-weight:700">● ${p.stock} disponibles</span>`
+          : `<span style="color:rgba(255,255,255,.3);font-size:.62rem">Sin stock</span>`;
+        html += `<div style="background:#12221A;border:1px solid var(--brd);padding:22px;font-family:'Raleway',sans-serif">
+          <div style="font-size:.58rem;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:6px">${p.sku||''}</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:700;color:#E8F0E8;line-height:1.2;margin-bottom:6px">${p.name}</div>
+          ${sharedBadge}
+          ${p.description ? `<div style="font-size:.76rem;color:rgba(255,255,255,.45);line-height:1.65;margin-bottom:12px">${p.description}</div>` : ''}
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-family:'Cormorant Garamond',serif;font-size:1.25rem;font-weight:700;color:var(--sage)">${precio}</span>
+            ${stockBadge}
+          </div>
+        </div>`;
+      }
+      html += `</div>`;
+    }
+
+    if (data.kits && data.kits.length > 0) {
+      html += `<div style="height:1px;background:linear-gradient(to right,transparent,var(--brd),transparent);margin:0 0 40px"></div>`;
+      html += `<div style="font-size:.52rem;letter-spacing:6px;text-transform:uppercase;color:var(--sage);font-weight:700;margin-bottom:24px;display:flex;align-items:center;gap:12px"><span style="width:18px;height:1px;background:var(--sage);display:inline-block"></span>Kits para darle lo mejor</div>`;
+      html += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px">`;
+      for (const k of data.kits) {
+        const comps = (k.componentes||[]).map(c => `<span style="font-size:.7rem;color:rgba(255,255,255,.4)">· ${c.nombre} ×${c.cantidad}</span>`).join(' ');
+        html += `<div style="background:#0A140A;border:1px solid var(--brd);padding:26px">
+          <div style="font-size:.55rem;letter-spacing:3px;text-transform:uppercase;color:var(--sage2);margin-bottom:10px">KIT 🐾</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:700;color:#E8F0E8;line-height:1.2;margin-bottom:10px">${k.nombre}</div>
+          ${k.descripcion ? `<div style="font-size:.75rem;color:rgba(255,255,255,.4);line-height:1.6;margin-bottom:12px">${k.descripcion}</div>` : ''}
+          <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:16px">${comps}</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:300;color:var(--sage)">$${Number(k.precio).toLocaleString('es-AR')}</div>
+        </div>`;
+      }
+      html += `</div>`;
+    }
+
+    container.innerHTML = html || PLACEHOLDER;
+  } catch(e) {
+    container.innerHTML = PLACEHOLDER;
+  }
+})();
 
 function selDest(el){document.querySelectorAll(".dest-chip").forEach(c=>c.classList.remove("sel"));el.classList.add("sel")}
 
