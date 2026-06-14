@@ -599,8 +599,146 @@ def _dash_m19():
                 st.error(f"Error: {_e}")
 
 
+def _dash_pagos():
+    """Tab 💳 Pagos — acreditación manual de cobros."""
+    st.markdown(
+        "<div style='font-size:1.4rem;font-weight:800;color:#E6EDF3;margin-bottom:4px;'>💳 Acreditación de Pagos</div>"
+        "<div style='font-size:0.75rem;color:#8B949E;margin-bottom:20px;'>Marcá como acreditados los cobros que ya recibiste</div>",
+        unsafe_allow_html=True,
+    )
+
+    # ── KPI rápido ───────────────────────────────────────────────
+    try:
+        _kpi = pd.read_sql(
+            "SELECT estado, COUNT(*) AS n, SUM(monto) AS total FROM pagos GROUP BY estado",
+            engine,
+        )
+    except Exception:
+        _kpi = pd.DataFrame()
+
+    _n_pend  = int(_kpi.loc[_kpi["estado"] == "pendiente",  "n"].sum())     if not _kpi.empty else 0
+    _tot_pend = float(_kpi.loc[_kpi["estado"] == "pendiente", "total"].sum()) if not _kpi.empty else 0.0
+    _n_acred  = int(_kpi.loc[_kpi["estado"] == "acreditado", "n"].sum())     if not _kpi.empty else 0
+    _tot_acred= float(_kpi.loc[_kpi["estado"] == "acreditado","total"].sum()) if not _kpi.empty else 0.0
+
+    _ka, _kb, _kc, _kd = st.columns(4)
+    for _col, _val, _lbl, _sub, _color in [
+        (_ka, str(_n_pend),          "⏳ Pendientes",   "pagos sin acreditar",        "#F59E0B"),
+        (_kb, f"${_tot_pend:,.0f}",  "💵 Monto pend.", "suma de pendientes",         "#EF4444"),
+        (_kc, str(_n_acred),         "✅ Acreditados",  "cobros confirmados",          "#22C55E"),
+        (_kd, f"${_tot_acred:,.0f}", "💰 Total cobrado","suma acreditada",             "#3B82F6"),
+    ]:
+        with _col:
+            st.markdown(
+                f"<div style='background:#161B22;border-radius:12px;padding:14px 10px;"
+                f"border:1px solid #21262D;border-top:3px solid {_color};text-align:center;margin-bottom:16px;'>"
+                f"<div style='font-size:1.3rem;font-weight:800;color:{_color};line-height:1;'>{_val}</div>"
+                f"<div style='font-size:0.62rem;font-weight:600;color:#C9D1D9;margin-top:6px;'>{_lbl}</div>"
+                f"<div style='font-size:0.56rem;color:#6B7280;margin-top:3px;'>{_sub}</div></div>",
+                unsafe_allow_html=True,
+            )
+
+    _tp_pend, _tp_hist = st.tabs(["⏳ Pendientes", "✅ Historial"])
+
+    # ── Pendientes ───────────────────────────────────────────────
+    with _tp_pend:
+        try:
+            _df_pend = pd.read_sql(
+                """SELECT p.id, p.order_id, COALESCE(t.name, CAST(p.order_id AS TEXT)) AS cliente,
+                          p.monto, p.metodo, p.fecha, p.notas, o.status AS estado_pedido
+                   FROM pagos p
+                   LEFT JOIN orders o ON o.id = p.order_id
+                   LEFT JOIN tenants t ON t.id = o.client_id
+                   WHERE p.estado = 'pendiente'
+                   ORDER BY p.fecha DESC""",
+                engine,
+            )
+        except Exception:
+            _df_pend = pd.DataFrame()
+
+        if _df_pend.empty:
+            st.success("Sin pagos pendientes.")
+        else:
+            for _, _row in _df_pend.iterrows():
+                _metodo_color = {"efectivo": "#22C55E", "transferencia": "#3B82F6",
+                                 "mercadopago": "#009EE3"}.get(str(_row["metodo"]).lower(), "#6B7280")
+                st.markdown(
+                    f"<div style='background:#161B22;border-radius:12px;padding:16px 20px;"
+                    f"border:1px solid #30363D;border-left:4px solid #F59E0B;margin-bottom:10px;'>"
+                    f"<div style='display:flex;justify-content:space-between;align-items:center;'>"
+                    f"<div>"
+                    f"<span style='font-weight:700;color:#E6EDF3;font-size:0.9rem;'>{_row['cliente']}</span>"
+                    f"<span style='color:#8B949E;font-size:0.72rem;margin-left:10px;'>Pedido #{int(_row['order_id'])}</span>"
+                    f"</div>"
+                    f"<div style='font-size:1.1rem;font-weight:800;color:#F59E0B;'>${float(_row['monto']):,.0f}</div>"
+                    f"</div>"
+                    f"<div style='margin-top:6px;display:flex;gap:12px;flex-wrap:wrap;'>"
+                    f"<span style='font-size:0.68rem;background:{_metodo_color}22;color:{_metodo_color};"
+                    f"border:1px solid {_metodo_color}44;border-radius:99px;padding:2px 8px;font-weight:700;'>"
+                    f"{str(_row['metodo']).capitalize()}</span>"
+                    f"<span style='font-size:0.68rem;color:#8B949E;'>{str(_row['fecha'])[:16]}</span>"
+                    f"{'<span style=\"font-size:0.68rem;color:#8B949E;\">' + str(_row['notas']) + '</span>' if _row['notas'] else ''}"
+                    f"</div></div>",
+                    unsafe_allow_html=True,
+                )
+                with st.form(key=f"acred_form_{int(_row['id'])}"):
+                    _nota_acred = st.text_input(
+                        "Nota (opcional)", value="",
+                        placeholder="Ej: transferencia 14/6, CBU confirmado…",
+                        label_visibility="collapsed",
+                        key=f"nota_inp_{int(_row['id'])}",
+                    )
+                    if st.form_submit_button("✅ Acreditar pago", type="primary", use_container_width=False):
+                        try:
+                            with engine.begin() as _cn:
+                                _cn.execute(
+                                    text("""UPDATE pagos
+                                             SET estado = 'acreditado',
+                                                 notas  = CASE WHEN notas IS NULL OR notas = ''
+                                                               THEN :nota
+                                                               ELSE :nota || ' | ' || notas END
+                                           WHERE id = :pid"""),
+                                    {"nota": _nota_acred.strip() or f"Acreditado {pd.Timestamp.now().strftime('%d/%m/%Y %H:%M')}",
+                                     "pid": int(_row["id"])},
+                                )
+                            st.success(f"Pago #{int(_row['id'])} acreditado.")
+                            st.rerun()
+                        except Exception as _e:
+                            st.error(f"Error: {_e}")
+
+    # ── Historial ────────────────────────────────────────────────
+    with _tp_hist:
+        try:
+            _df_hist = pd.read_sql(
+                """SELECT p.id, p.order_id, COALESCE(t.name, CAST(p.order_id AS TEXT)) AS cliente,
+                          p.monto, p.metodo, p.estado, p.fecha, p.notas
+                   FROM pagos p
+                   LEFT JOIN orders o ON o.id = p.order_id
+                   LEFT JOIN tenants t ON t.id = o.client_id
+                   ORDER BY p.fecha DESC""",
+                engine,
+            )
+        except Exception:
+            _df_hist = pd.DataFrame()
+
+        if _df_hist.empty:
+            st.info("Sin pagos registrados.")
+        else:
+            _df_hist_show = _df_hist.rename(columns={
+                "id": "#", "order_id": "Pedido", "cliente": "Cliente",
+                "monto": "Monto", "metodo": "Método",
+                "estado": "Estado", "fecha": "Fecha", "notas": "Notas",
+            })
+            _df_hist_show["Monto"] = _df_hist_show["Monto"].apply(lambda x: f"${float(x):,.0f}")
+            _df_hist_show["Fecha"] = _df_hist_show["Fecha"].astype(str).str[:16]
+            _df_hist_show["Estado"] = _df_hist_show["Estado"].apply(
+                lambda x: "✅ Acreditado" if x == "acreditado" else "⏳ Pendiente"
+            )
+            st.dataframe(_df_hist_show, use_container_width=True, hide_index=True)
+
+
 def render():
-    _tab_dash, _tab_mike, _tab_m19 = st.tabs(["📊 Dashboard", "🤖 Mike", "⚡ Magnitud 19"])
+    _tab_dash, _tab_mike, _tab_m19, _tab_pagos = st.tabs(["📊 Dashboard", "🤖 Mike", "⚡ Magnitud 19", "💳 Pagos"])
     with _tab_dash:
         _dash_main()
     with _tab_mike:
@@ -608,3 +746,5 @@ def render():
         _mike_render()
     with _tab_m19:
         _dash_m19()
+    with _tab_pagos:
+        _dash_pagos()
