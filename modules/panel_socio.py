@@ -875,9 +875,9 @@ def render():
                         f"{_items_html}"
                         f"{_not2}"
                         f"</div>"
-                        f"<div style='font-family:Cormorant Garamond,serif;font-size:1.6rem;"
-                        f"font-weight:700;color:#E6EDF3;margin-left:16px;white-space:nowrap;"
-                        f"padding-top:2px;'>${float(_pr2['total']):,.0f}</div>"
+                        f"<div style='font-family:\"Bricolage Grotesque\",sans-serif;font-size:1.5rem;"
+                        f"font-weight:800;color:#16181F;margin-left:16px;white-space:nowrap;"
+                        f"letter-spacing:-.03em;padding-top:2px;'>${float(_pr2['total']):,.0f}</div>"
                         f"</div></div>",
                         unsafe_allow_html=True,
                     )

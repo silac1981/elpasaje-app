@@ -16,52 +16,49 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-st.markdown("""
+st.html("""
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;700;800&family=Source+Sans+3:wght@400;600;700&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Jost:wght@300;400;500&display=swap');
+/* TOKENS */
+:root {
+  --bg:#EBE6DC; --surface:#FAF8F3; --surface-2:#F2EEE5; --raise:#FFFFFF;
+  --line:#DCD5C7; --ink:#16181F; --ink-2:#3A3E4A; --muted:#74798A; --track:#E4DECF;
+  --ep:#FF4B4B; --ok:#2F9E54; --warn:#E0902A; --danger:#D7322B; --wa:#25D366;
+  --disp:"Bricolage Grotesque",sans-serif;
+  --text:"Source Sans 3",sans-serif;
+  --mono:"Source Code Pro",monospace;
+  --accent:#FF4B4B;
+}
 
-/* ══════════════════════════════════════════════════════
-   BASE — fondo negro, herencia de color claro
-   ══════════════════════════════════════════════════════ */
+/* ── BASE ───────────────────────────────────────────────── */
 .stApp,
 [data-testid="stAppViewContainer"],
 [data-testid="stMain"],
-.main  { background-color: #0e0e0e !important; color: #f0ece4 !important; }
+.main { background-color: var(--bg) !important; color: var(--ink) !important; font-family: var(--text) !important; }
 #MainMenu, footer, header { visibility: hidden; }
 .block-container { padding-top: 2rem !important; }
 
-/* ══════════════════════════════════════════════════════
-   TEXTO GENÉRICO — cubre todos los casos de Streamlit
-   ══════════════════════════════════════════════════════ */
-.stApp p, .stApp li, .stApp h1, .stApp h2, .stApp h3,
-.stApp h4, .stApp h5, .stApp small, .stApp strong, .stApp em,
-.stApp td, .stApp th, .stApp caption,
-.stApp [class*="css"] { color: #f0ece4; }
-
-/* div sin inline-style: hereda; con inline-style: la inline gana */
+/* ── TEXTO ──────────────────────────────────────────────── */
+.stApp p, .stApp li, .stApp td, .stApp th, .stApp caption,
+.stApp small, .stApp strong, .stApp em { color: var(--ink); }
 .stApp div { color: inherit; }
-
-/* Forzar en contenedores Streamlit específicos */
 [data-testid="stMarkdownContainer"] p,
 [data-testid="stMarkdownContainer"] li,
-[data-testid="stMarkdownContainer"] h1,
-[data-testid="stMarkdownContainer"] h2,
-[data-testid="stMarkdownContainer"] h3,
-[data-testid="stText"],
-[data-testid="stCaptionContainer"] { color: #f0ece4 !important; }
-
-.stMarkdown p, .stMarkdown li, .stMarkdown h1,
-.stMarkdown h2, .stMarkdown h3 { color: #f0ece4 !important; }
-
-/* Caption / ayuda */
+[data-testid="stText"] { color: var(--ink) !important; }
+.stMarkdown p, .stMarkdown li { color: var(--ink) !important; }
 [data-testid="stCaptionContainer"],
-[data-testid="stCaptionContainer"] * { color: rgba(240,236,228,0.70) !important; }
-.stApp small { color: rgba(240,236,228,0.70) !important; }
+[data-testid="stCaptionContainer"] * { color: var(--muted) !important; }
 
-/* ══════════════════════════════════════════════════════
-   WIDGETS — labels y valores en claro
-   ══════════════════════════════════════════════════════ */
-/* Labels generales */
+/* ── TITULARES ──────────────────────────────────────────── */
+h1, h2, h3, h4, h5, h6,
+.stApp h1, .stApp h2, .stApp h3 {
+    font-family: var(--disp) !important;
+    color: var(--ink) !important;
+    font-weight: 700 !important;
+    letter-spacing: -.02em !important;
+}
+
+/* ── WIDGETS ────────────────────────────────────────────── */
 [data-testid="stWidgetLabel"],
 [data-testid="stWidgetLabel"] *,
 .stTextInput label, .stNumberInput label,
@@ -70,267 +67,241 @@ st.markdown("""
 .stMultiSelect label, .stSlider label,
 .stDateInput label, .stTimeInput label,
 .stFileUploader label {
-    color: rgba(184,115,51,0.85) !important;
-    font-family: 'Jost', sans-serif !important;
-    font-size: 10px !important;
-    letter-spacing: 1.5px !important;
+    color: var(--muted) !important;
+    font-family: var(--text) !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    letter-spacing: .04em !important;
     text-transform: uppercase !important;
 }
-/* Radio / checkbox opciones */
-.stRadio p, .stRadio div, .stRadio span,
-.stCheckbox p, .stCheckbox div, .stCheckbox span {
-    color: #f0ece4 !important;
-}
-/* Help tooltip */
-.stTooltipContent, .stTooltipContent * { color: #f0ece4 !important; }
+.stRadio p, .stRadio span, .stCheckbox p, .stCheckbox span { color: var(--ink) !important; }
+.stTooltipContent, .stTooltipContent * { color: var(--ink) !important; }
 
-/* ── TEXT INPUT ── */
-.stTextInput input, .stTextInput textarea {
-    background: rgba(255,255,255,0.04) !important;
-    border: 0.5px solid rgba(184,115,51,0.3) !important;
-    border-radius: 4px !important;
-    color: #f0ece4 !important;
-    font-family: 'Jost', sans-serif !important;
-    font-size: 13px !important;
+/* TEXT INPUT / TEXTAREA */
+.stTextInput input, .stTextInput textarea, .stTextArea textarea {
+    background: var(--raise) !important;
+    border: 1px solid var(--line) !important;
+    border-radius: 8px !important;
+    color: var(--ink) !important;
+    font-family: var(--text) !important;
+    font-size: 13.5px !important;
 }
-.stTextInput input:focus, .stTextInput textarea:focus {
-    border-color: #B87333 !important;
-    box-shadow: none !important;
+.stTextInput input:focus, .stTextArea textarea:focus {
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 2px rgba(255,75,75,0.15) !important;
 }
-/* TEXT AREA */
-.stTextArea textarea {
-    background: rgba(255,255,255,0.04) !important;
-    border: 0.5px solid rgba(184,115,51,0.3) !important;
-    color: #f0ece4 !important;
-}
+
 /* NUMBER INPUT */
-.stNumberInput input { color: #f0ece4 !important; background: rgba(255,255,255,0.04) !important; }
-.stNumberInput [data-baseweb="button"],
-.stNumberInput button { background: rgba(255,255,255,0.06) !important; color: #f0ece4 !important; }
+.stNumberInput input { color: var(--ink) !important; background: var(--raise) !important; border: 1px solid var(--line) !important; border-radius: 8px !important; }
+.stNumberInput [data-baseweb="button"], .stNumberInput button { background: var(--surface-2) !important; color: var(--ink) !important; }
+
 /* SELECT */
 .stSelectbox [data-baseweb="select"],
 .stSelectbox [data-baseweb="select"] div,
 .stSelectbox [data-baseweb="select"] span {
-    background: rgba(255,255,255,0.04) !important;
-    border-color: rgba(184,115,51,0.3) !important;
-    color: #f0ece4 !important;
+    background: var(--raise) !important;
+    border-color: var(--line) !important;
+    color: var(--ink) !important;
 }
-/* SELECT DROPDOWN popup */
-[data-baseweb="popover"], [data-baseweb="menu"],
-[data-baseweb="menu"] * {
-    background: #1a1a1a !important;
-    color: #f0ece4 !important;
+[data-baseweb="popover"], [data-baseweb="menu"], [data-baseweb="menu"] * {
+    background: var(--surface) !important;
+    color: var(--ink) !important;
 }
-[data-baseweb="option"]:hover { background: rgba(184,115,51,0.2) !important; }
+[data-baseweb="option"]:hover { background: var(--surface-2) !important; }
+
 /* MULTISELECT */
 .stMultiSelect [data-baseweb="select"],
-.stMultiSelect [data-baseweb="select"] * { background: rgba(255,255,255,0.04) !important; color: #f0ece4 !important; }
-[data-baseweb="tag"] { background: rgba(184,115,51,0.25) !important; }
-[data-baseweb="tag"] span { color: #f0ece4 !important; }
+.stMultiSelect [data-baseweb="select"] * { background: var(--raise) !important; color: var(--ink) !important; }
+[data-baseweb="tag"] { background: rgba(255,75,75,0.15) !important; }
+[data-baseweb="tag"] span { color: var(--ink) !important; }
 
-/* ══════════════════════════════════════════════════════
-   BOTONES
-   ══════════════════════════════════════════════════════ */
+/* ── BOTONES ─────────────────────────────────────────────── */
 .stButton > button, .stDownloadButton > button,
 .stFormSubmitButton > button, .stLinkButton > a {
-    background: transparent !important;
-    border: 0.5px solid rgba(184,115,51,0.45) !important;
-    border-radius: 4px !important;
-    color: #B87333 !important;
-    font-family: 'Jost', sans-serif !important;
-    font-size: 11px !important;
-    font-weight: 500 !important;
-    letter-spacing: 2.5px !important;
-    text-transform: uppercase !important;
-    transition: all 0.2s !important;
+    background: var(--raise) !important;
+    border: 1px solid var(--line) !important;
+    border-radius: 9px !important;
+    color: var(--ink) !important;
+    font-family: var(--text) !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    letter-spacing: .04em !important;
+    transition: all 0.15s !important;
 }
 .stButton > button:hover, .stDownloadButton > button:hover,
 .stFormSubmitButton > button:hover {
-    background: rgba(184,115,51,0.15) !important;
-    border-color: #B87333 !important;
-    color: #f0ece4 !important;
+    border-color: var(--accent) !important;
+    color: var(--accent) !important;
 }
 .stButton > button[kind="primary"],
 .stFormSubmitButton > button[kind="primary"] {
-    background: #B87333 !important;
-    color: #0e0e0e !important;
-    border-color: #B87333 !important;
+    background: var(--accent) !important;
+    color: #fff !important;
+    border-color: var(--accent) !important;
 }
 .stButton > button[kind="primary"]:hover,
 .stFormSubmitButton > button[kind="primary"]:hover {
-    background: #cc8c45 !important;
+    filter: brightness(1.08) !important;
 }
 
-/* ══════════════════════════════════════════════════════
-   SIDEBAR
-   ══════════════════════════════════════════════════════ */
+/* ── SIDEBAR ─────────────────────────────────────────────── */
 [data-testid="stSidebar"] {
-    background: #111111 !important;
-    border-right: 0.5px solid rgba(184,115,51,0.15) !important;
+    background: var(--surface) !important;
+    border-right: 1px solid var(--line) !important;
 }
-[data-testid="stSidebar"] * { color: #f0ece4 !important; }
+[data-testid="stSidebar"] * { color: var(--ink) !important; }
 [data-testid="stSidebar"] [data-baseweb="radio"] label p,
 [data-testid="stSidebar"] [data-baseweb="radio"] label span {
-    font-family: 'Jost', sans-serif !important;
-    font-size: 11px !important;
-    letter-spacing: 1.5px !important;
-    text-transform: uppercase !important;
-    color: rgba(240,236,228,0.55) !important;
+    font-family: var(--text) !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    letter-spacing: .04em !important;
+    color: var(--ink-2) !important;
 }
 [data-testid="stSidebar"] [data-checked="true"] label p,
-[data-testid="stSidebar"] [data-checked="true"] label span { color: #B87333 !important; }
+[data-testid="stSidebar"] [data-checked="true"] label span { color: var(--accent) !important; }
 [data-testid="stSidebar"] button {
-    background: rgba(184,115,51,0.1) !important;
-    border: 0.5px solid rgba(184,115,51,0.3) !important;
-    color: rgba(240,236,228,0.8) !important;
+    background: var(--surface-2) !important;
+    border: 1px solid var(--line) !important;
+    color: var(--ink) !important;
 }
-[data-testid="stSidebar"] button:hover { background: rgba(184,115,51,0.22) !important; }
+[data-testid="stSidebar"] button:hover { border-color: var(--accent) !important; color: var(--accent) !important; }
 [data-testid="stSidebar"] .stSelectbox [data-baseweb="select"],
 [data-testid="stSidebar"] .stSelectbox [data-baseweb="select"] * {
-    background: rgba(255,255,255,0.05) !important;
-    color: #f0ece4 !important;
+    background: var(--raise) !important;
+    color: var(--ink) !important;
 }
 
-/* ══════════════════════════════════════════════════════
-   TABS
-   ══════════════════════════════════════════════════════ */
+/* ── TABS ─────────────────────────────────────────────────── */
 .stTabs [data-baseweb="tab-list"] {
     background: transparent !important;
-    border-bottom: 0.5px solid rgba(184,115,51,0.2) !important;
+    border-bottom: 1px solid var(--line) !important;
     gap: 0 !important;
 }
 .stTabs [data-baseweb="tab"] {
-    color: rgba(240,236,228,0.55) !important;
-    font-family: 'Jost', sans-serif !important;
-    font-size: 11px !important;
-    letter-spacing: 1.5px !important;
-    text-transform: uppercase !important;
+    color: var(--muted) !important;
+    font-family: var(--text) !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    letter-spacing: .04em !important;
     background: transparent !important;
     border-bottom: 2px solid transparent !important;
 }
 .stTabs [aria-selected="true"] {
-    color: #B87333 !important;
-    border-bottom: 2px solid #B87333 !important;
+    color: var(--accent) !important;
+    border-bottom: 2px solid var(--accent) !important;
     background: transparent !important;
 }
 
-/* ══════════════════════════════════════════════════════
-   MÉTRICAS
-   ══════════════════════════════════════════════════════ */
+/* ── MÉTRICAS ────────────────────────────────────────────── */
 [data-testid="metric-container"] {
-    background: rgba(255,255,255,0.03) !important;
-    border: 0.5px solid rgba(184,115,51,0.15) !important;
-    border-radius: 6px !important;
+    background: var(--surface) !important;
+    border: 1px solid var(--line) !important;
+    border-radius: 12px !important;
+    padding: 16px 18px !important;
 }
 [data-testid="stMetricLabel"], [data-testid="stMetricLabel"] * {
-    color: rgba(184,115,51,0.75) !important;
-    font-family: 'Jost', sans-serif !important;
-    font-size: 10px !important; letter-spacing: 2px !important;
+    color: var(--muted) !important;
+    font-family: var(--text) !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    letter-spacing: .06em !important;
     text-transform: uppercase !important;
 }
 [data-testid="stMetricValue"], [data-testid="stMetricValue"] * {
-    color: #f0ece4 !important;
-    font-family: 'Cormorant Garamond', serif !important;
-    font-size: 26px !important;
+    color: var(--ink) !important;
+    font-family: var(--disp) !important;
+    font-weight: 700 !important;
+    font-size: 30px !important;
+    letter-spacing: -.03em !important;
 }
 [data-testid="stMetricDelta"], [data-testid="stMetricDelta"] * {
-    color: #f0ece4 !important; font-size: 0.78rem !important;
+    font-size: 0.78rem !important;
 }
 
-/* ══════════════════════════════════════════════════════
-   ALERTAS / INFO / WARNING / ERROR / SUCCESS
-   ══════════════════════════════════════════════════════ */
+/* ── ALERTAS ─────────────────────────────────────────────── */
 [data-testid="stAlert"] {
-    background: rgba(255,255,255,0.04) !important;
-    border-color: rgba(184,115,51,0.3) !important;
-    border-radius: 6px !important;
+    background: var(--surface) !important;
+    border-color: var(--line) !important;
+    border-radius: 10px !important;
 }
 [data-testid="stAlert"] p,
 [data-testid="stAlert"] div,
-[data-testid="stAlert"] span,
-[data-testid="stAlert"] * { color: #f0ece4 !important; }
+[data-testid="stAlert"] span { color: var(--ink) !important; }
 
-/* ══════════════════════════════════════════════════════
-   EXPANDER
-   ══════════════════════════════════════════════════════ */
-.stExpander { background: rgba(255,255,255,0.02) !important; border-color: rgba(184,115,51,0.15) !important; }
-.stExpander details { background: rgba(255,255,255,0.02) !important; }
+/* ── EXPANDER ────────────────────────────────────────────── */
+.stExpander { background: var(--surface) !important; border-color: var(--line) !important; border-radius: 10px !important; }
+.stExpander details { background: var(--surface) !important; }
 .stExpander summary, .stExpander summary p,
-.stExpander summary span, .stExpander summary svg { color: #f0ece4 !important; }
+.stExpander summary span { color: var(--ink) !important; font-weight: 600 !important; }
 
-/* ══════════════════════════════════════════════════════
-   DATAFRAME / TABLA
-   ══════════════════════════════════════════════════════ */
+/* ── DATAFRAME ───────────────────────────────────────────── */
 .stDataFrame, [data-testid="stDataFrame"],
 [data-testid="stDataFrame"] * {
-    background: rgba(255,255,255,0.02) !important;
-    color: #f0ece4 !important;
+    background: var(--surface) !important;
+    color: var(--ink) !important;
 }
-.stDataFrame th { background: rgba(184,115,51,0.12) !important; color: #B87333 !important; }
-
-/* ══════════════════════════════════════════════════════
-   CODE BLOCK
-   ══════════════════════════════════════════════════════ */
-.stCode, .stCode *, pre, code {
-    background: rgba(255,255,255,0.05) !important;
-    color: #f0ece4 !important;
+.stDataFrame td, [data-testid="stDataFrame"] td {
+    font-family: var(--mono) !important;
+    font-variant-numeric: tabular-nums !important;
 }
+.stDataFrame th { background: var(--surface-2) !important; color: var(--ink-2) !important; font-weight: 600 !important; }
 
-/* ══════════════════════════════════════════════════════
-   FORM
-   ══════════════════════════════════════════════════════ */
+/* ── FORM ────────────────────────────────────────────────── */
 [data-testid="stForm"] {
-    background: rgba(255,255,255,0.02) !important;
-    border: 0.5px solid rgba(184,115,51,0.12) !important;
-    border-radius: 6px !important;
+    background: var(--surface) !important;
+    border: 1px solid var(--line) !important;
+    border-radius: 12px !important;
 }
 
-/* ══════════════════════════════════════════════════════
-   HEADINGS
-   ══════════════════════════════════════════════════════ */
-h1, h2, h3, h4, h5, h6 {
-    font-family: 'Cormorant Garamond', serif !important;
-    color: #f0ece4 !important;
-    font-weight: 300 !important;
-    letter-spacing: 2px !important;
-}
-
-/* ══════════════════════════════════════════════════════
-   CUSTOM CLASSES (admin / inventario)
-   ══════════════════════════════════════════════════════ */
-.main-header {
-    background: linear-gradient(135deg,#1a0e00,#2a1a00) !important;
-    border: 0.5px solid rgba(184,115,51,0.3) !important;
-    border-radius: 8px !important;
-    padding: 28px 36px !important; margin-bottom: 28px !important;
-}
-.main-header h1, .main-header * { color: #f0ece4 !important; }
-.metric-card {
-    background: rgba(255,255,255,0.03) !important;
-    border: 0.5px solid rgba(184,115,51,0.15) !important;
-    border-radius: 6px !important; padding: 20px !important;
-}
-.metric-card * { color: #f0ece4 !important; }
-.section-title {
-    font-family: 'Cormorant Garamond', serif !important;
-    font-size: 1.4rem !important; color: #f0ece4 !important;
-    border-bottom: 0.5px solid rgba(184,115,51,0.2) !important;
-    padding-bottom: 6px !important; margin: 24px 0 14px !important;
-}
-.stock-critico { background: rgba(239,68,68,0.1) !important; border-left: 3px solid #EF4444 !important; }
-.stock-critico * { color: #f0ece4 !important; }
-
-/* ══════════════════════════════════════════════════════
-   FILE UPLOADER
-   ══════════════════════════════════════════════════════ */
+/* ── FILE UPLOADER ───────────────────────────────────────── */
 [data-testid="stFileUploaderDropzone"] {
-    background: rgba(255,255,255,0.03) !important;
-    border-color: rgba(184,115,51,0.3) !important;
+    background: var(--surface) !important;
+    border-color: var(--line) !important;
+    border-radius: 10px !important;
 }
-[data-testid="stFileUploaderDropzone"] * { color: #f0ece4 !important; }
+[data-testid="stFileUploaderDropzone"] * { color: var(--ink) !important; }
 
+/* ── CODE BLOCK ──────────────────────────────────────────── */
+.stCode, .stCode *, pre, code {
+    background: var(--surface-2) !important;
+    color: var(--ink-2) !important;
+    font-family: var(--mono) !important;
+}
+
+/* ── CUSTOM CLASSES ──────────────────────────────────────── */
+.main-header {
+    background: var(--surface) !important;
+    border: 1px solid var(--line) !important;
+    border-left: 4px solid var(--accent) !important;
+    border-radius: 12px !important;
+    padding: 24px 32px !important;
+    margin-bottom: 24px !important;
+}
+.main-header h1, .main-header * { color: var(--ink) !important; }
+.metric-card {
+    background: var(--surface) !important;
+    border: 1px solid var(--line) !important;
+    border-radius: 12px !important;
+    padding: 20px !important;
+}
+.metric-card * { color: var(--ink) !important; }
+.section-title {
+    font-family: var(--disp) !important;
+    font-size: 1.25rem !important;
+    font-weight: 700 !important;
+    color: var(--ink) !important;
+    border-bottom: 1px solid var(--line) !important;
+    padding-bottom: 6px !important;
+    margin: 24px 0 14px !important;
+}
+.stock-critico {
+    background: rgba(215,50,43,0.08) !important;
+    border-left: 3px solid var(--danger) !important;
+}
+.stock-critico * { color: var(--ink) !important; }
 </style>
-""", unsafe_allow_html=True)
+""")
 
 # ── DB + Schema init ───────────────────────────────────────────────────────
 from crear_schema_v3 import init_schema as _init_schema
@@ -348,32 +319,37 @@ _migration_v10()
 if "auth" not in st.session_state:
     st.session_state.update({"auth": False, "user": None, "role": None, "uid": None})
 
+def _set_accent(hex_color: str):
+    st.html(f"<style>:root{{--accent:{hex_color};}}</style>")
+
 if not st.session_state["auth"]:
-    # Ocultar sidebar en la pantalla de login
-    st.markdown("<style>[data-testid='stSidebar']{display:none!important}</style>", unsafe_allow_html=True)
+    st.html("<style>[data-testid='stSidebar']{display:none!important}</style>")
     _, col2, _ = st.columns([1, 1.1, 1])
     with col2:
         st.markdown("""
-<div style="max-width:420px;margin:4vh auto 2rem;text-align:center;">
-  <div style="width:72px;height:72px;border-radius:50%;border:1.5px solid #B87333;
-              display:flex;align-items:center;justify-content:center;margin:0 auto 1.2rem;">
-    <span style="font-family:'Cormorant Garamond',Georgia,serif;font-size:22px;
-                 font-weight:600;color:#B87333;letter-spacing:2px;">EP</span>
+<div style="max-width:400px;margin:6vh auto 2rem;text-align:center;">
+  <div style="width:68px;height:68px;border-radius:50%;
+              background:#FAF8F3;border:2px solid #FF4B4B;
+              display:flex;align-items:center;justify-content:center;margin:0 auto 1.4rem;">
+    <span style="font-family:'Bricolage Grotesque',sans-serif;font-size:20px;
+                 font-weight:800;color:#FF4B4B;letter-spacing:-1px;">EP</span>
   </div>
-  <p style="font-family:'Cormorant Garamond',Georgia,serif;font-size:26px;font-weight:300;
-            color:#f0ece4;letter-spacing:7px;text-transform:uppercase;margin:0 0 4px;">El Pasaje</p>
-  <p style="font-size:10px;font-weight:300;color:#B87333;letter-spacing:5px;
-            text-transform:uppercase;margin:0 0 2rem;">3 D &nbsp; S T U D I O</p>
-  <div style="display:flex;align-items:center;gap:12px;margin-bottom:2rem;">
-    <div style="flex:1;height:0.5px;background:rgba(184,115,51,0.25);"></div>
-    <div style="width:6px;height:6px;background:#B87333;transform:rotate(45deg);opacity:0.6;"></div>
-    <div style="flex:1;height:0.5px;background:rgba(184,115,51,0.25);"></div>
+  <p style="font-family:'Bricolage Grotesque',sans-serif;font-size:28px;font-weight:800;
+            color:#16181F;letter-spacing:-.03em;margin:0 0 2px;">El Pasaje</p>
+  <p style="font-family:'Source Sans 3',sans-serif;font-size:11px;font-weight:600;
+            color:#74798A;letter-spacing:.18em;text-transform:uppercase;margin:0 0 2rem;">
+    3D Studio
+  </p>
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:2rem;">
+    <div style="flex:1;height:1px;background:#DCD5C7;"></div>
+    <div style="width:6px;height:6px;background:#FF4B4B;border-radius:50%;opacity:.7;"></div>
+    <div style="flex:1;height:1px;background:#DCD5C7;"></div>
   </div>
 </div>""", unsafe_allow_html=True)
 
         email = st.text_input("Email", placeholder="tu@elpasaje.com")
-        pwd   = st.text_input("Contrasena", type="password")
-        if st.button("INGRESAR AL SISTEMA", use_container_width=True, type="primary"):
+        pwd   = st.text_input("Contraseña", type="password")
+        if st.button("Ingresar al sistema", use_container_width=True, type="primary"):
             hashed_pwd = hashlib.sha256(pwd.strip().encode()).hexdigest()
             with engine.connect() as _conn:
                 row = pd.read_sql(
@@ -391,124 +367,166 @@ if not st.session_state["auth"]:
                 st.error("Credenciales incorrectas")
 
         st.markdown("""
-<div style="display:flex;justify-content:center;gap:6px;flex-wrap:wrap;
-            margin-top:1.5rem;padding-top:1.5rem;
-            border-top:0.5px solid rgba(184,115,51,0.1);">
-  <div style="width:6px;height:6px;border-radius:50%;background:#B87333;opacity:.5;"></div>
-  <div style="width:6px;height:6px;border-radius:50%;background:#9C6B3C;opacity:.5;"></div>
-  <div style="width:6px;height:6px;border-radius:50%;background:#FFB6C1;opacity:.5;"></div>
-  <div style="width:6px;height:6px;border-radius:50%;background:#F472B6;opacity:.5;"></div>
-  <div style="width:6px;height:6px;border-radius:50%;background:#166534;opacity:.5;"></div>
-  <div style="width:6px;height:6px;border-radius:50%;background:#1e3a5f;opacity:.5;"></div>
-  <div style="width:6px;height:6px;border-radius:50%;background:#F97316;opacity:.5;"></div>
-  <div style="width:6px;height:6px;border-radius:50%;background:#D4A574;opacity:.5;"></div>
-  <div style="width:6px;height:6px;border-radius:50%;background:#4ade80;opacity:.5;"></div>
+<div style="display:flex;justify-content:center;gap:8px;flex-wrap:wrap;
+            margin-top:2rem;padding-top:1.5rem;border-top:1px solid #DCD5C7;">
+  <div style="width:8px;height:8px;border-radius:50%;background:#3E9B53;"></div>
+  <div style="width:8px;height:8px;border-radius:50%;background:#F472B6;"></div>
+  <div style="width:8px;height:8px;border-radius:50%;background:#DB2777;"></div>
+  <div style="width:8px;height:8px;border-radius:50%;background:#F97316;"></div>
+  <div style="width:8px;height:8px;border-radius:50%;background:#C9A84C;"></div>
+  <div style="width:8px;height:8px;border-radius:50%;background:#1E5A8A;"></div>
+  <div style="width:8px;height:8px;border-radius:50%;background:#0E7E78;"></div>
+  <div style="width:8px;height:8px;border-radius:50%;background:#0E7490;"></div>
 </div>
 <div style="text-align:center;margin-top:1.2rem;">
   <a href="https://wa.me/5491165497234" target="_blank"
-     style="color:rgba(184,115,51,0.6);font-size:10px;letter-spacing:2px;
-            text-transform:uppercase;text-decoration:none;">
-    Consultas &nbsp;·&nbsp; WhatsApp
+     style="color:#74798A;font-family:'Source Sans 3',sans-serif;font-size:11px;
+            font-weight:600;letter-spacing:.1em;text-transform:uppercase;text-decoration:none;">
+    Consultas · WhatsApp
   </a>
 </div>""", unsafe_allow_html=True)
     st.stop()
 
+# ── Accent por rol ─────────────────────────────────────────────────────────
+_linea_cfg  = get_linea(st.session_state["uid"])
+_accent     = "#FF4B4B" if st.session_state["role"] == "admin" else _linea_cfg["color"]
+_set_accent(_accent)
+
 # ── Sidebar ────────────────────────────────────────────────────────────────
 with st.sidebar:
-    linea_cfg   = get_linea(st.session_state["uid"])
-    _sb_color   = linea_cfg["color"]
-    _sb_nombre  = linea_cfg["nombre"]
+    _sb_nombre  = _linea_cfg["nombre"]
     _sb_rol_map = {"admin": "Administración", "produccion": "Producción", "socio_multi": "Multi-Línea", "socio": "Socio"}
     _sb_rol     = _sb_rol_map.get(st.session_state["role"], "Socio")
-    st.markdown(f"""
-<div style="padding:1.4rem 0 1rem;border-bottom:0.5px solid rgba(184,115,51,0.15);margin-bottom:1rem;">
-  <p style="font-family:'Cormorant Garamond',Georgia,serif;font-size:20px;font-weight:300;
-            color:#f0ece4;letter-spacing:4px;text-transform:uppercase;margin:0 0 4px;">EP</p>
-  <p style="font-size:10px;letter-spacing:2px;text-transform:uppercase;
-            color:{_sb_color};margin:0 0 8px;font-family:'Jost',sans-serif;">{_sb_nombre}</p>
-  <p style="font-family:'Cormorant Garamond',Georgia,serif;font-size:15px;font-weight:300;
-            color:rgba(240,236,228,0.75);letter-spacing:1px;margin:0;">
-    Bienvenida,&nbsp;{st.session_state['user']}</p>
-  <p style="font-size:9px;letter-spacing:2px;text-transform:uppercase;
-            color:rgba(184,115,51,0.45);margin:2px 0 0;font-family:'Jost',sans-serif;">{_sb_rol}</p>
-</div>""", unsafe_allow_html=True)
-    st.markdown(f"""<style>
-[data-testid="stSidebar"] [data-checked="true"] label p,
-[data-testid="stSidebar"] [data-checked="true"] label span {{
-    color: {_sb_color} !important;
-    font-weight: 500 !important;
-}}
+
+    st.html(f"""<style>
 [data-testid="stSidebar"] [data-baseweb="radio"] {{
     gap: 2px !important;
 }}
 [data-testid="stSidebar"] [data-baseweb="radio"] label {{
-    padding: 7px 4px !important;
-    border-left: 2px solid transparent !important;
+    padding: 8px 10px !important;
+    border-left: 3px solid transparent !important;
+    border-radius: 0 8px 8px 0 !important;
     transition: all 0.15s !important;
 }}
 [data-testid="stSidebar"] [data-checked="true"] label {{
-    border-left-color: {_sb_color} !important;
-    background: rgba(255,255,255,0.03) !important;
-    padding-left: 10px !important;
-    border-radius: 0 4px 4px 0 !important;
+    border-left-color: {_accent} !important;
+    background: rgba(0,0,0,0.05) !important;
 }}
-</style>""", unsafe_allow_html=True)
+[data-testid="stSidebar"] [data-checked="true"] label p,
+[data-testid="stSidebar"] [data-checked="true"] label span {{
+    color: {_accent} !important;
+    font-weight: 700 !important;
+}}
+</style>""")
+
+    st.markdown(f"""
+<div style="padding:1.2rem 0 1rem;border-bottom:1px solid #DCD5C7;margin-bottom:1rem;">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+    <div style="width:36px;height:36px;border-radius:50%;background:#FAF8F3;
+                border:2px solid {_accent};display:flex;align-items:center;
+                justify-content:center;flex-shrink:0;">
+      <span style="font-family:'Bricolage Grotesque',sans-serif;font-size:13px;
+                   font-weight:800;color:{_accent};">EP</span>
+    </div>
+    <div>
+      <p style="font-family:'Bricolage Grotesque',sans-serif;font-size:15px;
+                font-weight:800;color:#16181F;letter-spacing:-.02em;margin:0 0 1px;">
+        El Pasaje</p>
+      <p style="font-family:'Source Sans 3',sans-serif;font-size:10px;font-weight:600;
+                color:{_accent};letter-spacing:.12em;text-transform:uppercase;margin:0;">
+        {_sb_nombre}</p>
+    </div>
+  </div>
+  <p style="font-family:'Source Sans 3',sans-serif;font-size:13px;font-weight:600;
+            color:#3A3E4A;margin:0 0 2px;">
+    Bienvenida, {st.session_state['user']}</p>
+  <p style="font-family:'Source Sans 3',sans-serif;font-size:10px;font-weight:600;
+            color:#74798A;letter-spacing:.1em;text-transform:uppercase;margin:0;">
+    {_sb_rol}</p>
+</div>""", unsafe_allow_html=True)
 
     if st.session_state["role"] == "admin":
-        menu = st.radio("", ["CONTROL","STOCK","TALLER","LÍNEAS","CRM","IMPACTO"], label_visibility="collapsed")
+        menu = st.radio("", ["Control", "Stock", "Taller", "Líneas", "CRM", "Impacto"], label_visibility="collapsed")
     elif st.session_state["role"] == "produccion":
-        menu = st.radio("", ["TALLER"], label_visibility="collapsed")
+        menu = st.radio("", ["Taller"], label_visibility="collapsed")
     elif st.session_state["role"] == "socio_multi":
         _lids = get_lineas_usuario(st.session_state["uid"])
         _nombre_a_id = {LINEAS[l]["nombre"]: l for l in _lids if l in LINEAS}
         _opciones = ["Todas"] + list(_nombre_a_id.keys())
         _sel = st.selectbox("Ver línea", _opciones, key="linea_sel")
         st.session_state["linea_filtro"] = _lids if _sel == "Todas" else [_nombre_a_id[_sel]]
-        menu = st.radio("", ["MI LÍNEA","PEDIDO"], label_visibility="collapsed")
+        menu = st.radio("", ["Mi Línea", "Pedido"], label_visibility="collapsed")
     else:
-        menu = st.radio("", ["MI LÍNEA","PEDIDO"], label_visibility="collapsed")
-    st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)
-    if st.button("Cerrar Sesion", use_container_width=True):
+        menu = st.radio("", ["Mi Línea", "Pedido"], label_visibility="collapsed")
+
+    st.markdown("<div style='height:16px'></div>", unsafe_allow_html=True)
+    if st.button("Cerrar sesión", use_container_width=True):
         st.session_state.update({"auth": False, "user": None, "role": None, "uid": None})
         st.rerun()
+
     if st.session_state["role"] in ("admin", "produccion"):
         _alertas = get_alertas_dashboard()
         if _alertas:
             _n_crit = sum(1 for a in _alertas if a["nivel"] == "critico")
             _n_atc  = sum(1 for a in _alertas if a["nivel"] == "atencion")
-            _resumen = f"{'🔴 ' + str(_n_crit) + ' crítica' + ('s' if _n_crit != 1 else '') + '  ' if _n_crit else ''}{'🟡 ' + str(_n_atc) if _n_atc else ''}".strip()
-            st.markdown(f"<div style='margin-top:18px;padding:8px 12px;background:#1e293b;border-radius:10px;border-left:3px solid {'#EF4444' if _n_crit else '#F59E0B'};'><div style='font-size:0.72rem;font-weight:700;color:{'#EF4444' if _n_crit else '#F59E0B'};'>🤖 MIKE · ALERTAS</div><div style='font-size:0.68rem;color:#CBD5E1;margin-top:3px;'>{_resumen}</div></div>", unsafe_allow_html=True)
+            _borde  = "#D7322B" if _n_crit else "#E0902A"
+            _resumen = f"{_n_crit} crítica{'s' if _n_crit != 1 else ''}" if _n_crit else ""
+            if _n_atc:
+                _resumen += f"{'  ' if _resumen else ''}{_n_atc} atención"
+            st.markdown(f"""
+<div style='margin-top:16px;padding:10px 12px;background:#FAF8F3;border-radius:10px;
+            border:1px solid #DCD5C7;border-left:3px solid {_borde};'>
+  <div style='font-family:"Source Sans 3",sans-serif;font-size:10px;font-weight:700;
+              color:{_borde};letter-spacing:.1em;text-transform:uppercase;'>Mike · Alertas</div>
+  <div style='font-family:"Source Code Pro",monospace;font-size:11px;color:#3A3E4A;
+              margin-top:3px;'>{_resumen}</div>
+</div>""", unsafe_allow_html=True)
             for _a in _alertas[:4]:
-                _col = "#EF4444" if _a["nivel"] == "critico" else ("#F59E0B" if _a["nivel"] == "atencion" else "#94A3B8")
-                st.markdown(f"<div style='margin-top:6px;padding:6px 10px;background:#0f172a;border-radius:8px;border-left:2px solid {_col};'><div style='font-size:0.67rem;color:{_col};font-weight:600;'>{_a['titulo']}</div><div style='font-size:0.63rem;color:#94A3B8;margin-top:2px;'>{_a['accion']}</div></div>", unsafe_allow_html=True)
+                _col = "#D7322B" if _a["nivel"] == "critico" else ("#E0902A" if _a["nivel"] == "atencion" else "#74798A")
+                st.markdown(f"""
+<div style='margin-top:5px;padding:7px 10px;background:#FAF8F3;border-radius:8px;
+            border-left:3px solid {_col};'>
+  <div style='font-family:"Source Sans 3",sans-serif;font-size:11px;
+              font-weight:700;color:{_col};'>{_a['titulo']}</div>
+  <div style='font-family:"Source Sans 3",sans-serif;font-size:11px;
+              color:#74798A;margin-top:2px;'>{_a['accion']}</div>
+</div>""", unsafe_allow_html=True)
             if len(_alertas) > 4:
-                st.markdown(f"<div style='font-size:0.62rem;color:#64748B;text-align:center;margin-top:4px;'>+{len(_alertas)-4} más · ver tab Mike</div>", unsafe_allow_html=True)
+                st.markdown(f"<div style='font-family:\"Source Sans 3\",sans-serif;font-size:11px;color:#74798A;text-align:center;margin-top:4px;'>+{len(_alertas)-4} más · ver tab Mike</div>", unsafe_allow_html=True)
         else:
-            st.markdown("<div style='margin-top:18px;padding:8px 12px;background:#1e293b;border-radius:10px;border-left:3px solid #22C55E;'><div style='font-size:0.72rem;font-weight:700;color:#22C55E;'>🤖 MIKE · SIN ALERTAS</div><div style='font-size:0.68rem;color:#CBD5E1;margin-top:3px;'>Todo en orden ✅</div></div>", unsafe_allow_html=True)
-    st.markdown(f"<div style='font-size:0.7rem;color:#94a3b8;text-align:center;margin-top:20px;'>v3.0 · {datetime.now().strftime('%d/%m/%Y')}</div>", unsafe_allow_html=True)
+            st.markdown(f"""
+<div style='margin-top:16px;padding:10px 12px;background:#FAF8F3;border-radius:10px;
+            border:1px solid #DCD5C7;border-left:3px solid #2F9E54;'>
+  <div style='font-family:"Source Sans 3",sans-serif;font-size:10px;font-weight:700;
+              color:#2F9E54;letter-spacing:.1em;text-transform:uppercase;'>Mike · Sin alertas</div>
+  <div style='font-family:"Source Sans 3",sans-serif;font-size:11px;color:#74798A;
+              margin-top:3px;'>Todo en orden</div>
+</div>""", unsafe_allow_html=True)
+
+    st.markdown(f"<div style='font-family:\"Source Code Pro\",monospace;font-size:10px;color:#74798A;text-align:center;margin-top:20px;'>v3.0 · {datetime.now().strftime('%d/%m/%Y')}</div>", unsafe_allow_html=True)
 
 # ── Router ─────────────────────────────────────────────────────────────────
-if menu == "CONTROL":
+if menu == "Control":
     from modules.dashboard_admin import render
     render()
 
-elif menu == "STOCK":
+elif menu == "Stock":
     from modules.inventario import render
     render()
 
-elif menu == "TALLER":
+elif menu == "Taller":
     from modules.panel_fer import render
     render()
 
-elif menu == "LÍNEAS":
+elif menu == "Líneas":
     from modules.panel_socios import render
     render()
 
-elif menu == "MI LÍNEA":
+elif menu == "Mi Línea":
     from modules.panel_socio import render
     render()
 
-elif menu == "PEDIDO":
+elif menu == "Pedido":
     from modules.cargar_pedido import render
     render()
 
@@ -516,6 +534,6 @@ elif menu == "CRM":
     from modules.clientes import render
     render()
 
-elif menu == "IMPACTO":
+elif menu == "Impacto":
     from modules.impacto import render
     render()

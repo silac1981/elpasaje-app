@@ -449,7 +449,7 @@ def _dash_main():
 
 def _dash_m19():
     """Tab ⚡ Magnitud 19 — panel de línea madre y Vuelo Certero."""
-    _LC = "#B87333"
+    _LC = "#C9A84C"
     st.markdown(
         f"<div style='background:linear-gradient(135deg,{_LC}22,{_LC}08);border-radius:16px;"
         f"padding:20px 28px;margin-bottom:16px;border:1px solid {_LC}33;'>"

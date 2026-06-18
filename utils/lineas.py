@@ -6,15 +6,15 @@ from utils.db import engine
 
 # ── Configuración de líneas del ecosistema ────────────────────────────────────
 LINEAS = {
-    "admin":            {"nombre": "Magnitud 19",             "color": "#B87333", "emoji": "⚡"},
-    "fer_produccion":   {"nombre": "Melómano",                "color": "#9C6B3C", "emoji": "🎵"},
+    "admin":            {"nombre": "Administración",          "color": "#FF4B4B", "emoji": "⚡"},
+    "fer_produccion":   {"nombre": "Producción",              "color": "#C9A84C", "emoji": "🛠"},
     "oasis_animal":     {"nombre": "Oasis Animal",            "color": "#F472B6", "emoji": "🐾"},
-    "oasis_del_estero": {"nombre": "Oasis del Estero",        "color": "#34D399", "emoji": "🌱"},
-    "pharma_delux":     {"nombre": "Pharma DeLux",            "color": "#FBBF24", "emoji": "💊"},
-    "aviation":         {"nombre": "Aviation Pro",            "color": "#0F3460", "emoji": "✈️"},
-    "olivia_coquette":  {"nombre": "Coquette",                "color": "#F9A8D4", "emoji": "🎀"},
-    "francisco_sport":  {"nombre": "Sport (Francisco)",       "color": "#F97316", "emoji": "⚽"},
-    "constantino_tech": {"nombre": "Core Tech (Constantino)", "color": "#64748B", "emoji": "⚙️"},
+    "oasis_del_estero": {"nombre": "Oasis del Estero",        "color": "#3E9B53", "emoji": "🌱"},
+    "pharma_delux":     {"nombre": "Pharma DeLux",            "color": "#0E7490", "emoji": "💊"},
+    "aviation":         {"nombre": "Aviation Pro",            "color": "#1E5A8A", "emoji": "✈"},
+    "olivia_coquette":  {"nombre": "Coquette",                "color": "#DB2777", "emoji": "🎀"},
+    "francisco_sport":  {"nombre": "F-Zone",                  "color": "#F97316", "emoji": "⚡"},
+    "constantino_tech": {"nombre": "Core Tech",               "color": "#0E7E78", "emoji": "⚙"},
     "vkhome_cliente":   {"nombre": "VK-Home",                 "color": "#A78BFA", "emoji": "🏡"},
     "agustina":         {"nombre": "Agustina",                "color": "#6366F1", "emoji": "✨"},
 }
@@ -64,8 +64,8 @@ IP_RESTRINGIDA = ["deadpool", "marshall", "hello kitty", "pokeball", "ferrari", 
 
 
 def get_linea(cid: str) -> dict:
-    """Retorna la configuración de color/emoji/nombre de una línea."""
-    return LINEAS.get(cid, {"nombre": cid, "color": "#6B7280", "emoji": "📦"})
+    """Retorna la configuración de color/nombre de una línea."""
+    return LINEAS.get(cid, {"nombre": cid, "color": "#74798A"})
 
 
 @st.cache_data(ttl=60)
