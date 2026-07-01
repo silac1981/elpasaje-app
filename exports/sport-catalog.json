@@ -1,0 +1,102 @@
+{
+  "linea": "francisco_sport",
+  "slug": "sport",
+  "nombre": "F-Zone",
+  "color": "#F97316",
+  "emoji": "⚡",
+  "generado": "2026-07-01T19:03:46",
+  "productos_3d": [
+    {
+      "sku": "FZ-GMR-001",
+      "name": "Aplique Gamer",
+      "price": 1200.0,
+      "peso_gr": 30.0,
+      "stock": 0,
+      "categoria": "gamer",
+      "description": "Soporte auriculares sello El Pasaje, escritorio gamer"
+    },
+    {
+      "sku": "FSP-001",
+      "name": "Cajita Porta-Figuritas AFA",
+      "price": 10000.0,
+      "peso_gr": 1470.0,
+      "stock": 0,
+      "categoria": "Coleccionables",
+      "description": "Boveda conmemorativa tricampeona con el escudo oficial AFA y tres estrellas en relieve dorado. Disponible en negro, blanco y celeste. Bisagra y cierre a presion. Edicion 1978 1986 2022."
+    },
+    {
+      "sku": "FSP-003",
+      "name": "Cajita Porta-Figuritas Argentina FIFA",
+      "price": 10000.0,
+      "peso_gr": 1470.0,
+      "stock": 0,
+      "categoria": "Coleccionables",
+      "description": "Boveda con las franjas albicelestes y la Copa FIFA en relieve dorado. Efecto holograma con los colores de la Seleccion. Bisagra y cierre a presion. El regalo ideal para el hincha tricampeon."
+    },
+    {
+      "sku": "FSP-002",
+      "name": "Cajita Porta-Figuritas FIFA 26",
+      "price": 10000.0,
+      "peso_gr": 1470.0,
+      "stock": 0,
+      "categoria": "Coleccionables",
+      "description": "Boveda conmemorativa FIFA 2026 con la Copa del Mundo en relieve dorado sobre panel contrastante. Disponible en negro, blanco y celeste. Bisagra y cierre resistente. Edicion limitada."
+    },
+    {
+      "sku": "FZ-CAP-001",
+      "name": "Cap-Hanger Pro",
+      "price": 1800.0,
+      "peso_gr": 45.0,
+      "stock": 0,
+      "categoria": "deportivo",
+      "description": "Soporte aerodinamico gorras, no deforma la visera"
+    },
+    {
+      "sku": "FZ-NUM-001",
+      "name": "Numero de Camiseta",
+      "price": 600.0,
+      "peso_gr": 12.0,
+      "stock": 0,
+      "categoria": "identidad",
+      "description": "Numero 3D rigido para camiseta o mochila"
+    },
+    {
+      "sku": "FZ-ORC-001",
+      "name": "Organizador Cancha",
+      "price": 3900.0,
+      "peso_gr": 95.0,
+      "stock": 0,
+      "categoria": "entrenamiento",
+      "description": "Soporte pizarron tactico mini para escritorio"
+    },
+    {
+      "sku": "FZ-PFX-001",
+      "name": "Parche Flexible",
+      "price": 900.0,
+      "peso_gr": 25.0,
+      "stock": 0,
+      "categoria": "identidad",
+      "description": "Aplique 3D para mochila/campera personalizable"
+    },
+    {
+      "sku": "FZ-SGB-U",
+      "name": "Soporte Gaming Bicolor",
+      "price": 12000.0,
+      "peso_gr": 1161.0,
+      "stock": 0,
+      "categoria": "gamer",
+      "description": "Soporte gaming multicolor K2 Plus CFS, diseno propio Fer"
+    },
+    {
+      "sku": "FZ-TRO-001",
+      "name": "Trofeo Mini",
+      "price": 2200.0,
+      "peso_gr": 65.0,
+      "stock": 0,
+      "categoria": "trofeos",
+      "description": "Trofeo impreso personalizable nombre y deporte"
+    }
+  ],
+  "productos_linea": [],
+  "kits": []
+}

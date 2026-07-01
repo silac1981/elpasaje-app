@@ -92,3 +92,7 @@ magnitud19-backend-share/
 # Excepción: módulos de la arquitectura modular EPCC v2
 !modules/inventario.py
 !modules/cargar_pedido.py
+
+# Excepción: catálogos web (JSON públicos servidos por GitHub Pages)
+!exports/
+!exports/*.json

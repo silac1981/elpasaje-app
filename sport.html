@@ -757,6 +757,15 @@ footer{padding:20px 80px;background:var(--deep);border-top:1px solid var(--brd2)
   <a href="coquette.html" class="mama-btn">Línea Coquette · Para vos →</a>
 </div>
 
+<!-- CATÁLOGO DINÁMICO DESDE EPCC -->
+<section id="s-catalog-json" style="display:none;background:var(--surface,#0D1117);padding:56px 80px;border-top:1px solid var(--brd2,rgba(0,243,255,.12))">
+  <div style="font-family:'Orbitron',sans-serif;font-size:.5rem;letter-spacing:5px;text-transform:uppercase;color:var(--cyan,#00F3FF);display:flex;align-items:center;gap:12px;margin-bottom:8px">
+    <span style="width:20px;height:1px;background:var(--cyan,#00F3FF);display:inline-block"></span>CATÁLOGO COMPLETO · ACTUALIZADO DESDE SISTEMA
+  </div>
+  <h2 style="font-family:'Orbitron',sans-serif;font-size:clamp(1.4rem,2.5vw,2rem);font-weight:900;color:var(--white,#F0F6FC);margin-bottom:32px">Todos los productos <em style="font-style:normal;color:var(--cyan,#00F3FF)">F-Zone</em></h2>
+  <div id="sport-catalog-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1px;background:var(--brd2,rgba(0,243,255,.12))"></div>
+</section>
+
 <!-- CIERRE -->
 <section class="cierre">
   <div class="c-line"></div>
@@ -932,5 +941,48 @@ async function callIA(tipo){
   }
 }
 </script>
+
+<script>
+/* Catalogo dinamico Sport — carga desde exports/sport-catalog.json */
+(async function loadCatalogoSport() {
+  const section = document.getElementById('s-catalog-json');
+  const grid = document.getElementById('sport-catalog-grid');
+  if (!section || !grid) return;
+  const WA = '541165497234';
+  function fmt(n) { return new Intl.NumberFormat('es-AR').format(n); }
+  function waLink(nom, sku, precio) {
+    return `https://wa.me/${WA}?text=${encodeURIComponent(`Hola! Me interesa ${nom} (SKU: ${sku}) — $${fmt(precio)}. ¿Está disponible?`)}`;
+  }
+  try {
+    const r = await fetch('./exports/sport-catalog.json?v=' + Date.now());
+    if (!r.ok) return;
+    const data = await r.json();
+    const prods = [...(data.productos_3d || []), ...(data.productos_linea || [])];
+    if (!prods.length) return;
+    let html = '';
+    prods.forEach(p => {
+      const stk = p.stock > 0 ? `${p.stock} u` : 'A pedido';
+      const stkC = p.stock > 5 ? 'var(--green,#3FB950)' : (p.stock > 0 ? '#F59E0B' : 'var(--muted,#6B7280)');
+      html += `<div style="background:var(--carbon,#080C10);padding:24px 20px;transition:background .3s"
+                    onmouseenter="this.style.background='var(--surface,#0D1117)'"
+                    onmouseleave="this.style.background='var(--carbon,#080C10)'">
+  <div style="font-family:'Orbitron',sans-serif;font-size:.45rem;color:var(--cyan,#00F3FF);letter-spacing:3px;margin-bottom:6px">${p.sku}</div>
+  <div style="font-family:'Orbitron',sans-serif;font-size:.9rem;font-weight:700;color:var(--white,#F0F6FC);margin-bottom:6px;line-height:1.2">${p.name}</div>
+  <div style="font-size:.75rem;color:var(--muted,#6B7280);line-height:1.5;margin-bottom:14px">${(p.description || '').substring(0, 90)}</div>
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <span style="font-family:'Orbitron',sans-serif;font-size:1rem;font-weight:700;color:var(--cyan,#00F3FF)">$${fmt(p.price)}</span>
+    <span style="font-size:.6rem;color:${stkC}">${stk}</span>
+  </div>
+  <a href="${waLink(p.name, p.sku, p.price)}" target="_blank" rel="noopener"
+     style="display:inline-block;margin-top:12px;font-family:'Orbitron',sans-serif;font-size:.45rem;letter-spacing:3px;text-transform:uppercase;color:var(--muted,#6B7280);text-decoration:none;transition:color .2s"
+     onmouseenter="this.style.color='var(--cyan,#00F3FF)'" onmouseleave="this.style.color='var(--muted,#6B7280)'">Consultar →</a>
+</div>`;
+    });
+    grid.innerHTML = html;
+    section.style.display = 'block';
+  } catch (e) { /* JSON no disponible — silencioso */ }
+})();
+</script>
+
 </body>
 </html>

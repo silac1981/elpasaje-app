@@ -1,0 +1,66 @@
+{
+  "linea": "pharma_delux",
+  "slug": "pharma-delux",
+  "nombre": "Pharma DeLux",
+  "color": "#0E7490",
+  "emoji": "💊",
+  "generado": "2026-07-01T19:03:46",
+  "productos_3d": [
+    {
+      "sku": "PD-GIF-001",
+      "name": "Gift Set Laboratorio",
+      "price": 4500.0,
+      "peso_gr": 125.0,
+      "stock": 0,
+      "categoria": "gift",
+      "description": "Kit 3 piezas personalizado para laboratorio"
+    },
+    {
+      "sku": "PD-MUE-001",
+      "name": "Muestrero Medico",
+      "price": 2800.0,
+      "peso_gr": 75.0,
+      "stock": 0,
+      "categoria": "medico",
+      "description": "Soporte tarjetas muestras medicas escritorio"
+    },
+    {
+      "sku": "PD-ORG-001",
+      "name": "Organizador Consultorio",
+      "price": 5200.0,
+      "peso_gr": 140.0,
+      "stock": 0,
+      "categoria": "medico",
+      "description": "Soporte instrumental medico escritorio consultorio"
+    },
+    {
+      "sku": "PD-ORL-001",
+      "name": "Organizador con Logo Lab",
+      "price": 6000.0,
+      "peso_gr": 155.0,
+      "stock": 0,
+      "categoria": "medico",
+      "description": "Organizador con logo laboratorio farmaceutico"
+    },
+    {
+      "sku": "PD-PAS-001",
+      "name": "Porta-Pastillas Semanal",
+      "price": 1800.0,
+      "peso_gr": 50.0,
+      "stock": 0,
+      "categoria": "salud",
+      "description": "Pastillero 7 compartimentos etiquetado"
+    },
+    {
+      "sku": "PD-SER-001",
+      "name": "Soporte Seringa",
+      "price": 3800.0,
+      "peso_gr": 100.0,
+      "stock": 0,
+      "categoria": "medico",
+      "description": "Porta-jeringas organizador tecnico"
+    }
+  ],
+  "productos_linea": [],
+  "kits": []
+}

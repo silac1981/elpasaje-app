@@ -1,0 +1,156 @@
+{
+  "linea": "admin",
+  "slug": "magnitud19",
+  "nombre": "Administración",
+  "color": "#FF4B4B",
+  "emoji": "⚡",
+  "generado": "2026-07-01T19:03:46",
+  "productos_3d": [
+    {
+      "sku": "M19-BAN-U",
+      "name": "Bandeja de objetos personales",
+      "price": 12000.0,
+      "peso_gr": 220.0,
+      "stock": 0,
+      "categoria": "Oficina",
+      "description": "Ancla de escritorio. Diseño para llaves, reloj, airpods, tarjetas."
+    },
+    {
+      "sku": "M19-FCO-U",
+      "name": "Fidget corporal — Reuniones",
+      "price": 6500.0,
+      "peso_gr": 28.0,
+      "stock": 0,
+      "categoria": "Fidgets",
+      "description": "Para sostener en la mano durante presentaciones. Discreto, premium, efectivo."
+    },
+    {
+      "sku": "M19-FDE-S",
+      "name": "Fidget de escritorio — Botones",
+      "price": 8500.0,
+      "peso_gr": 45.0,
+      "stock": 0,
+      "categoria": "Fidgets",
+      "description": "Botones táctiles de diferentes resistencias. Anclaje para el hiperfoco. Respaldo Aldana."
+    },
+    {
+      "sku": "M19-FDE-R",
+      "name": "Fidget de escritorio — Rueda",
+      "price": 9500.0,
+      "peso_gr": 52.0,
+      "stock": 0,
+      "categoria": "Fidgets",
+      "description": "Rueda giratoria de precisión. Mecanismo silencioso para reuniones y trabajo profundo."
+    },
+    {
+      "sku": "M19-FDE-T",
+      "name": "Fidget de escritorio — Texturas",
+      "price": 8000.0,
+      "peso_gr": 38.0,
+      "stock": 0,
+      "categoria": "Fidgets",
+      "description": "Placa de texturas multisensorial. Para regulación sensorial en escritorio."
+    },
+    {
+      "sku": "VC-FJG-U",
+      "name": "Fletcher Jig 360°",
+      "price": 15000.0,
+      "peso_gr": 120.0,
+      "stock": 0,
+      "categoria": "Vuelo Certero",
+      "description": "Jig de emplumado ajustable shafts 4-10mm. PETG + imanes."
+    },
+    {
+      "sku": "M19-KRS-U",
+      "name": "Kit Regulación Sensorial Niños",
+      "price": 22000.0,
+      "peso_gr": 0.0,
+      "stock": 0,
+      "categoria": "Kits",
+      "description": "Set validado por Aldana para niños neurodivergentes. 3 piezas + guía de uso."
+    },
+    {
+      "sku": "M19-ORD-U",
+      "name": "Organizador de escritorio modular",
+      "price": 15000.0,
+      "peso_gr": 290.0,
+      "stock": 0,
+      "categoria": "Oficina",
+      "description": "Sistema modular expandible. Negro con detalles oro."
+    },
+    {
+      "sku": "M19-PNE-U",
+      "name": "Porta-notebook ejecutivo",
+      "price": 18000.0,
+      "peso_gr": 380.0,
+      "stock": 0,
+      "categoria": "Oficina",
+      "description": "Negro/oro. Acabado premium. Para laptop 13-15 pulgadas."
+    },
+    {
+      "sku": "VC-PPT-U",
+      "name": "Porta-pelotas tenis (3u)",
+      "price": 10000.0,
+      "peso_gr": 90.0,
+      "stock": 0,
+      "categoria": "Vuelo Certero",
+      "description": "Soporte de pared o escritorio para 3 pelotas de tenis."
+    },
+    {
+      "sku": "VC-PRA-U",
+      "name": "Porta-raqueta de pared premium",
+      "price": 16000.0,
+      "peso_gr": 150.0,
+      "stock": 0,
+      "categoria": "Vuelo Certero",
+      "description": "Diseño premium. Sin el genérico de Amazon."
+    },
+    {
+      "sku": "VC-QPR-U",
+      "name": "Quiver Pro — soporte arco + 12 flechas",
+      "price": 42000.0,
+      "peso_gr": 380.0,
+      "stock": 0,
+      "categoria": "Vuelo Certero",
+      "description": "Soporte vertical arco + tubo 12 flechas + bandeja accesorios."
+    },
+    {
+      "sku": "M19-STB-U",
+      "name": "Stand de tablet — consultorio",
+      "price": 14000.0,
+      "peso_gr": 260.0,
+      "stock": 0,
+      "categoria": "Oficina",
+      "description": "Para consultorios de Aldana y escritorios ejecutivos. Ajustable."
+    },
+    {
+      "sku": "M19-TKN-M",
+      "name": "Tirador Knurling M",
+      "price": 3500.0,
+      "peso_gr": 339.0,
+      "stock": 0,
+      "categoria": "tiradores",
+      "description": "Tirador cilindrico knurling M, prototipo B2B carpinteria"
+    },
+    {
+      "sku": "M19-TKN-S",
+      "name": "Tirador Knurling S",
+      "price": 2500.0,
+      "peso_gr": 242.0,
+      "stock": 0,
+      "categoria": "tiradores",
+      "description": "Tirador cilindrico knurling S, prototipo B2B carpinteria"
+    },
+    {
+      "sku": "VC-TBX-U",
+      "name": "Tournament Box — ajedrez",
+      "price": 55000.0,
+      "peso_gr": 0.0,
+      "stock": 0,
+      "categoria": "Vuelo Certero",
+      "description": "Caja magnética con tablero + compartimentos. Multicolor CFS."
+    }
+  ],
+  "productos_linea": [],
+  "kits": []
+}

@@ -1,0 +1,75 @@
+{
+  "linea": "fer_produccion",
+  "slug": "melomano",
+  "nombre": "Producción",
+  "color": "#C9A84C",
+  "emoji": "🛠",
+  "generado": "2026-07-01T19:03:46",
+  "productos_3d": [
+    {
+      "sku": "MEL-ADH-U",
+      "name": "Audiophile Desk Hub",
+      "price": 42000.0,
+      "peso_gr": 480.0,
+      "stock": 0,
+      "categoria": "Escritorio",
+      "description": "Auriculares + porta-cartuchos + cables + bandeja stylus. Para el escritorio del melómano serio."
+    },
+    {
+      "sku": "MEL-HWS-U",
+      "name": "Heavyweight Stabilizer",
+      "price": 30000.0,
+      "peso_gr": 335.0,
+      "stock": 0,
+      "categoria": "Audio técnico",
+      "description": "Peso de plato 320-350g cargado con monedas de peso real. Iniciales grabadas. Mejora la reproducción."
+    },
+    {
+      "sku": "MEL-ISQ-U",
+      "name": "Iso-Spike Quartet — 4 spikes",
+      "price": 27000.0,
+      "peso_gr": 180.0,
+      "stock": 0,
+      "categoria": "Audio técnico",
+      "description": "Desacoplantes para parlantes. Base PETG + punta TPU. Reducción de vibración real y medible."
+    },
+    {
+      "sku": "MEL-NPP-U",
+      "name": "Now Playing Premium",
+      "price": 23000.0,
+      "peso_gr": 160.0,
+      "stock": 0,
+      "categoria": "Display",
+      "description": "Expone el vinilo que está sonando. Base de corcho. Silueta tocadiscos o guitarra."
+    },
+    {
+      "sku": "MEL-PNB-U",
+      "name": "Porta-notebook Melómano",
+      "price": 16000.0,
+      "peso_gr": 350.0,
+      "stock": 0,
+      "categoria": "Escritorio",
+      "description": "Negro/cobre. El escritorio del que trabaja escuchando vinilo."
+    },
+    {
+      "sku": "MEL-SAU-U",
+      "name": "Stand armónica y ukelele",
+      "price": 15000.0,
+      "peso_gr": 140.0,
+      "stock": 0,
+      "categoria": "Instrumento",
+      "description": "Para el músico con instrumentos pequeños en el espacio de escucha."
+    },
+    {
+      "sku": "MEL-VSO-U",
+      "name": "Vinyl Sommelier — 27 divisores A-Z+#",
+      "price": 67000.0,
+      "peso_gr": 420.0,
+      "stock": 0,
+      "categoria": "Organización",
+      "description": "Divisores con letras doradas fabricados en CFS. Para estante Ikea Kallax. El set completo."
+    }
+  ],
+  "productos_linea": [],
+  "kits": []
+}

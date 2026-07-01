@@ -1,0 +1,102 @@
+{
+  "linea": "oasis_animal",
+  "slug": "oasis-animal",
+  "nombre": "Oasis Animal",
+  "color": "#F472B6",
+  "emoji": "🐾",
+  "generado": "2026-07-01T19:03:46",
+  "productos_3d": [
+    {
+      "sku": "OA-EEA-U",
+      "name": "Estacion Evolutiva Alto",
+      "price": 10000.0,
+      "peso_gr": 968.0,
+      "stock": 0,
+      "categoria": "mascotas",
+      "description": "Modulo alto expansion estacion evolutiva nivel 2"
+    },
+    {
+      "sku": "OA-EEI-U",
+      "name": "Estacion Evolutiva Inicial",
+      "price": 8000.0,
+      "peso_gr": 774.0,
+      "stock": 0,
+      "categoria": "mascotas",
+      "description": "Modulo inicial comedero/juguete expandible por niveles"
+    },
+    {
+      "sku": "OA-GTG-U",
+      "name": "Guardian Tag QR Emergencia",
+      "price": 800.0,
+      "peso_gr": 77.0,
+      "stock": 0,
+      "categoria": "identificacion",
+      "description": "Tag QR datos emergencia mascota, producto de entrada"
+    },
+    {
+      "sku": "OA-KIT-C",
+      "name": "Kit Bienvenida Completo",
+      "price": 28000.0,
+      "peso_gr": 1000.0,
+      "stock": 0,
+      "categoria": "kits",
+      "description": "Esencial + Llavero Perrito + Soporte Comedero + Snack"
+    },
+    {
+      "sku": "OA-KIT-E",
+      "name": "Kit Bienvenida Esencial",
+      "price": 15000.0,
+      "peso_gr": 900.0,
+      "stock": 0,
+      "categoria": "kits",
+      "description": "Guardian Tag + Bandeja Oval S + Tarjeta + Guia 7 dias"
+    },
+    {
+      "sku": "OA-KIT-P",
+      "name": "Kit Bienvenida Premium",
+      "price": 45000.0,
+      "peso_gr": 2000.0,
+      "stock": 0,
+      "categoria": "kits",
+      "description": "Completo + Estacion Evolutiva + Caja nombre + Certificado"
+    },
+    {
+      "sku": "OA-LPG-U",
+      "name": "Llavero Perrito Globo",
+      "price": 1000.0,
+      "peso_gr": 97.0,
+      "stock": 0,
+      "categoria": "accesorios",
+      "description": "Llavero 3D perro globo acabado mate, precio mayorista El Pasaje"
+    },
+    {
+      "sku": "OA-MLI-U",
+      "name": "Memory Litophany",
+      "price": 35000.0,
+      "peso_gr": 3386.0,
+      "stock": 0,
+      "categoria": "memoria",
+      "description": "Litofania personalizada foto mascota, 16hs de impresion"
+    },
+    {
+      "sku": "OA-SCH-U",
+      "name": "Soporte Comedero Huesito",
+      "price": 9000.0,
+      "peso_gr": 871.0,
+      "stock": 0,
+      "categoria": "mascotas",
+      "description": "Soporte comedero con cuenco forma huesito, talla S/M"
+    },
+    {
+      "sku": "OA-SCP-U",
+      "name": "Soporte Comedero Patita",
+      "price": 9000.0,
+      "peso_gr": 871.0,
+      "stock": 0,
+      "categoria": "mascotas",
+      "description": "Soporte comedero con cuenco forma patita, talla S/M"
+    }
+  ],
+  "productos_linea": [],
+  "kits": []
+}

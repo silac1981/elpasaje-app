@@ -1,0 +1,75 @@
+{
+  "linea": "olivia_coquette",
+  "slug": "coquette",
+  "nombre": "Coquette",
+  "color": "#DB2777",
+  "emoji": "🎀",
+  "generado": "2026-07-01T19:03:46",
+  "productos_3d": [
+    {
+      "sku": "COQ-ARG-001",
+      "name": "Argolla Coquette",
+      "price": 1800.0,
+      "peso_gr": 20.0,
+      "stock": 0,
+      "categoria": "joyeria",
+      "description": "Aro decorativo 3D personalizable"
+    },
+    {
+      "sku": "COQ-CAJ-001",
+      "name": "Cajita Corazon",
+      "price": 2200.0,
+      "peso_gr": 45.0,
+      "stock": 0,
+      "categoria": "regaleria",
+      "description": "Cajita regalo 3D acabado mate"
+    },
+    {
+      "sku": "COQ-XVA-001",
+      "name": "Kit Quinceanyera",
+      "price": 4500.0,
+      "peso_gr": 120.0,
+      "stock": 0,
+      "categoria": "especiales",
+      "description": "Set 3 piezas personalizado XV anios"
+    },
+    {
+      "sku": "COQ-LLA-001",
+      "name": "Llavero Peonia",
+      "price": 1200.0,
+      "peso_gr": 15.0,
+      "stock": 0,
+      "categoria": "accesorios",
+      "description": "Llavero floral detalle fino"
+    },
+    {
+      "sku": "COQ-MON-002",
+      "name": "Monedero Silk Coquette",
+      "price": 2800.0,
+      "peso_gr": 60.0,
+      "stock": 0,
+      "categoria": "accesorios",
+      "description": "Monedero 3D cierre magnetico acabado silk"
+    },
+    {
+      "sku": "COQ-MON-001",
+      "name": "Mono Textil Silk",
+      "price": 1500.0,
+      "peso_gr": 22.0,
+      "stock": 0,
+      "categoria": "accesorios",
+      "description": "Mono artesanal impresion 3D acabado seda"
+    },
+    {
+      "sku": "COQ-PRE-001",
+      "name": "Prendedor Floral",
+      "price": 1400.0,
+      "peso_gr": 18.0,
+      "stock": 0,
+      "categoria": "accesorios",
+      "description": "Prendedor 3D estilo romantico"
+    }
+  ],
+  "productos_linea": [],
+  "kits": []
+}

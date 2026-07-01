@@ -666,6 +666,18 @@ footer{padding:20px 80px;background:var(--dark);border-top:1px solid rgba(45,90,
   </div>
 </section>
 
+<!-- CATÁLOGO DINÁMICO DESDE EPCC -->
+<section id="oe-catalog-section" style="display:none;background:var(--pale,#E8F0E4);padding:56px 80px;border-top:1px solid var(--brd,rgba(45,90,39,.15))">
+  <div class="sec-head reveal">
+    <div>
+      <div class="eye" style="margin-bottom:8px">Sistema · EPCC</div>
+      <h2 class="sec-ttl">Catálogo completo <em>actualizado</em></h2>
+    </div>
+    <div class="sec-note">Productos desde el sistema interno · precios y stock en tiempo real.</div>
+  </div>
+  <div id="oe-catalog-grid" class="prod-grid" style="margin-top:32px"></div>
+</section>
+
 <!-- CIERRE -->
 <section class="cierre">
   <div class="c-line"></div>
@@ -784,5 +796,49 @@ async function callIA(tipo){
   }
 }
 </script>
+
+<script>
+/* Catalogo dinamico Oasis del Estero — carga desde exports/oasis-estero-catalog.json */
+(async function loadCatalogoOE() {
+  const section = document.getElementById('oe-catalog-section');
+  const grid = document.getElementById('oe-catalog-grid');
+  if (!section || !grid) return;
+  const WA = '541165497234';
+  function fmt(n) { return new Intl.NumberFormat('es-AR').format(n); }
+  function waLink(nom, sku, precio) {
+    return `https://wa.me/${WA}?text=${encodeURIComponent(`Hola! Me interesa ${nom} (SKU: ${sku}) — $${fmt(precio)} 🌿. ¿Está disponible?`)}`;
+  }
+  try {
+    const r = await fetch('./exports/oasis-estero-catalog.json?v=' + Date.now());
+    if (!r.ok) return;
+    const data = await r.json();
+    const prods = [...(data.productos_3d || []), ...(data.productos_linea || [])];
+    if (!prods.length) return;
+    let html = '';
+    prods.forEach(p => {
+      const stk = p.stock > 0 ? `● ${p.stock} u` : '○ A pedido';
+      const stkC = p.stock > 5 ? 'var(--leaf,#4CAF50)' : (p.stock > 0 ? '#E0902A' : 'var(--text3,#7A9478)');
+      html += `<div class="pcard reveal" style="background:var(--surface,#fff);padding:0;overflow:hidden;border:1px solid var(--brd,rgba(45,90,39,.15))">
+  <div class="pimg" style="background:var(--pale,#E8F0E4);">
+    <div class="pimg-sym" style="font-family:inherit;font-size:.7rem;letter-spacing:2px;color:var(--leaf,#4CAF50);opacity:.5">${p.sku}</div>
+  </div>
+  <div class="pbadge" style="color:${stkC}">${stk}</div>
+  <div class="pinfo">
+    <div class="pname">${p.name}</div>
+    <div class="pdesc">${(p.description || '').substring(0, 85)}</div>
+    <div class="pfoot">
+      <div class="pprice">$${fmt(p.price)}</div>
+      <div class="psku">${p.sku}</div>
+    </div>
+  </div>
+  <div class="poverlay"><button class="pbtn" onclick="window.open('${waLink(p.name, p.sku, p.price)}','_blank')">Consultar →</button></div>
+</div>`;
+    });
+    grid.innerHTML = html;
+    section.style.display = 'block';
+  } catch (e) { /* JSON no disponible — silencioso */ }
+})();
+</script>
+
 </body>
 </html>

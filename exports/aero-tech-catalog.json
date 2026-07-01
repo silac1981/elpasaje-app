@@ -1,0 +1,129 @@
+{
+  "linea": "aviation",
+  "slug": "aero-tech",
+  "nombre": "Aviation Pro",
+  "color": "#1E5A8A",
+  "emoji": "✈",
+  "generado": "2026-07-01T19:03:47",
+  "productos_3d": [
+    {
+      "sku": "AVP-003",
+      "name": "Clip Seguridad EPP",
+      "price": 2200.0,
+      "peso_gr": 35.0,
+      "stock": 0,
+      "categoria": "Taller",
+      "description": "Clip naranja alta visibilidad para EPP personal."
+    },
+    {
+      "sku": "AVP-006",
+      "name": "Dock Checklist",
+      "price": 4200.0,
+      "peso_gr": 75.0,
+      "stock": 0,
+      "categoria": "Oficina",
+      "description": "Soporte post-its y lapicera. Forma de pista de aterrizaje."
+    },
+    {
+      "sku": "AVP-013",
+      "name": "Hub Organizador USB",
+      "price": 4500.0,
+      "peso_gr": 95.0,
+      "stock": 0,
+      "categoria": "Tech",
+      "description": "Soporte para hub USB y cables de carga."
+    },
+    {
+      "sku": "AVP-002",
+      "name": "Mate-Carro",
+      "price": 3800.0,
+      "peso_gr": 70.0,
+      "stock": 0,
+      "categoria": "Taller",
+      "description": "Accesorio para carro personal. Sostiene mate y termo."
+    },
+    {
+      "sku": "AVP-005",
+      "name": "Organizador Banco Personal",
+      "price": 5500.0,
+      "peso_gr": 120.0,
+      "stock": 0,
+      "categoria": "Taller",
+      "description": "Bandeja modular: llaves, documentos y mate."
+    },
+    {
+      "sku": "AVP-007",
+      "name": "Organizador Fuselaje",
+      "price": 3500.0,
+      "peso_gr": 60.0,
+      "stock": 0,
+      "categoria": "Oficina",
+      "description": "Clips forma remaches aeronáuticos para cables escritorio."
+    },
+    {
+      "sku": "AVP-009",
+      "name": "Placa Analista Senior",
+      "price": 4800.0,
+      "peso_gr": 90.0,
+      "stock": 0,
+      "categoria": "Oficina",
+      "description": "Placa escritorio con nombre y legajo. Estética cabina."
+    },
+    {
+      "sku": "AVP-004",
+      "name": "Porta-Credencial Pro",
+      "price": 2800.0,
+      "peso_gr": 45.0,
+      "stock": 0,
+      "categoria": "Taller",
+      "description": "Funda rígida 3D con legajo. Protege tarjeta magnética."
+    },
+    {
+      "sku": "AVP-010",
+      "name": "Portabotella Aero",
+      "price": 3200.0,
+      "peso_gr": 55.0,
+      "stock": 0,
+      "categoria": "Oficina",
+      "description": "Soporte botella/termo con base antideslizante."
+    },
+    {
+      "sku": "AVP-012",
+      "name": "Portacelular 360",
+      "price": 3800.0,
+      "peso_gr": 65.0,
+      "stock": 0,
+      "categoria": "Tech",
+      "description": "Porta celular articulado 360° base pesada antideslizante."
+    },
+    {
+      "sku": "AVP-001",
+      "name": "Rampa-Safe",
+      "price": 4500.0,
+      "peso_gr": 85.0,
+      "stock": 0,
+      "categoria": "Taller",
+      "description": "Soporte celular/radio con base pesada. Legajo en relieve."
+    },
+    {
+      "sku": "AVP-011",
+      "name": "Soporte Monitor Desk",
+      "price": 7500.0,
+      "peso_gr": 180.0,
+      "stock": 0,
+      "categoria": "Tech",
+      "description": "Elevador de monitor con bandeja inferior."
+    },
+    {
+      "sku": "AVP-008",
+      "name": "Torre de Control",
+      "price": 5800.0,
+      "peso_gr": 110.0,
+      "stock": 0,
+      "categoria": "Oficina",
+      "description": "Soporte auriculares inspirado en torres EZE/AEP."
+    }
+  ],
+  "productos_linea": [],
+  "kits": []
+}

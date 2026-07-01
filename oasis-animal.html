@@ -505,6 +505,14 @@ footer {
     </article>
 
   </div>
+
+  <!-- Catálogo dinámico desde EPCC — se llena con JS desde exports/ -->
+  <div id="oa-catalog-json" style="display:none;margin-top:40px;padding-top:32px;border-top:1px solid var(--line)">
+    <div style="font-size:.55rem;letter-spacing:5px;text-transform:uppercase;color:var(--accent,#F472B6);font-weight:700;margin-bottom:24px;display:flex;align-items:center;gap:10px">
+      <span style="width:18px;height:1px;background:currentColor;display:inline-block"></span>MÁS PRODUCTOS · DESDE SISTEMA
+    </div>
+    <div id="oa-catalog-grid" class="grid"></div>
+  </div>
 </section>
 
 <!-- ── DIRECTORIO DE LÍNEAS ── -->
@@ -539,6 +547,53 @@ footer {
   </nav>
   <span>Línea 04 · Oasis Animal</span>
 </footer>
+
+<script>
+/* Catalogo dinamico OA — carga desde exports/oasis-animal-catalog.json */
+(async function loadCatalogoOA() {
+  const wrap = document.getElementById('oa-catalog-json');
+  const grid = document.getElementById('oa-catalog-grid');
+  if (!wrap || !grid) return;
+  const WA = '5491165497234';
+  function fmt(n) { return new Intl.NumberFormat('es-AR').format(n); }
+  function waLink(nom, sku, precio) {
+    return `https://wa.me/${WA}?text=${encodeURIComponent(`Hola! Me interesa ${nom} (SKU: ${sku}) — $${fmt(precio)}. ¿Está disponible?`)}`;
+  }
+  try {
+    const r = await fetch('./exports/oasis-animal-catalog.json?v=' + Date.now());
+    if (!r.ok) return;
+    const data = await r.json();
+    const prods = [...(data.productos_3d || []), ...(data.productos_linea || [])];
+    if (!prods.length) return;
+    // SKUs ya hardcodeados en la pagina — no duplicar
+    const hardcoded = new Set(['OA-001','OA-002','OA-003','OA-003B','OA-004']);
+    const extras = prods.filter(p => !hardcoded.has(p.sku));
+    if (!extras.length) return; // todos ya están
+    let html = '';
+    extras.forEach(p => {
+      const stk = p.stock > 0 ? `${p.stock} u` : 'A pedido';
+      const stkC = p.stock > 5 ? '#2F9E54' : (p.stock > 0 ? '#E0902A' : '#74798A');
+      html += `<article class="card">
+  <div class="card-img" style="background:var(--surface-2,#F2EEE5);display:flex;align-items:center;justify-content:center;min-height:160px;">
+    <span style="font-family:inherit;font-size:2rem;opacity:.4">🐾</span>
+    <span class="card-flag">Oasis Animal</span>
+    <span class="card-sku">${p.sku}</span>
+  </div>
+  <div class="card-body">
+    <div class="card-name">${p.name}</div>
+    <div class="card-spec">${(p.description || '').substring(0, 80)}</div>
+    <div class="card-footer">
+      <span class="card-price">$ ${fmt(p.price)}</span>
+      <a class="card-cta" href="${waLink(p.name, p.sku, p.price)}" target="_blank" rel="noopener">Consultar</a>
+    </div>
+  </div>
+</article>`;
+    });
+    grid.innerHTML = html;
+    wrap.style.display = 'block';
+  } catch (e) { /* JSON no disponible — fallback silencioso */ }
+})();
+</script>
 
 </body>
 </html>

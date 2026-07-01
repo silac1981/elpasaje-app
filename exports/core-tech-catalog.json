@@ -1,0 +1,66 @@
+{
+  "linea": "constantino_tech",
+  "slug": "core-tech",
+  "nombre": "Core Tech",
+  "color": "#0E7E78",
+  "emoji": "⚙",
+  "generado": "2026-07-01T19:03:46",
+  "productos_3d": [
+    {
+      "sku": "CT-RPI-001",
+      "name": "Case Raspberry Pi 5",
+      "price": 4500.0,
+      "peso_gr": 120.0,
+      "stock": 0,
+      "categoria": "electronica",
+      "description": "Carcasa ventilada RPi5 soporte activo"
+    },
+    {
+      "sku": "CT-CUB-001",
+      "name": "Cubo Infinito Magnetico",
+      "price": 3800.0,
+      "peso_gr": 90.0,
+      "stock": 0,
+      "categoria": "juguete",
+      "description": "Cubo articulado 8 segmentos imanes integrados"
+    },
+    {
+      "sku": "CT-GAB-001",
+      "name": "Gabinete Microelectronica",
+      "price": 3800.0,
+      "peso_gr": 100.0,
+      "stock": 0,
+      "categoria": "electronica",
+      "description": "Carcasa Arduino/ESP32/RaspberryPi"
+    },
+    {
+      "sku": "CT-ORG-001",
+      "name": "Organizador Anti-Estatico",
+      "price": 4200.0,
+      "peso_gr": 110.0,
+      "stock": 0,
+      "categoria": "electronica",
+      "description": "Bandeja componentes electronicos anti-ESD"
+    },
+    {
+      "sku": "CT-KAI-001",
+      "name": "Organizador Kaizen",
+      "price": 5500.0,
+      "peso_gr": 150.0,
+      "stock": 0,
+      "categoria": "productividad",
+      "description": "Sistema modular 5S estacion de trabajo"
+    },
+    {
+      "sku": "CT-SIM-001",
+      "name": "Soporte Instrumento Medicion",
+      "price": 2400.0,
+      "peso_gr": 70.0,
+      "stock": 0,
+      "categoria": "educativo",
+      "description": "Base calibres micrometros laboratorio escuela"
+    }
+  ],
+  "productos_linea": [],
+  "kits": []
+}

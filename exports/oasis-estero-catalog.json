@@ -1,0 +1,146 @@
+{
+  "linea": "oasis_del_estero",
+  "slug": "oasis-estero",
+  "nombre": "Oasis del Estero",
+  "color": "#3E9B53",
+  "emoji": "🌱",
+  "generado": "2026-07-01T19:03:46",
+  "productos_3d": [],
+  "productos_linea": [
+    {
+      "sku": "ODE-CAR-U",
+      "name": "Cartelito Identificador de Maceta",
+      "price": 600.0,
+      "stock": 0,
+      "tipo_producto": "linea_propio",
+      "categoria": "Jardinería",
+      "description": "Plaquita con nombre del propietario + especie · personalizable · por unidad"
+    },
+    {
+      "sku": "ODE-MAC-BC-M",
+      "name": "Maceta Bicolor Diagonal M",
+      "price": 9500.0,
+      "stock": 0,
+      "tipo_producto": "linea_propio",
+      "categoria": "Macetas",
+      "description": "CFS bicolor gris/negro · franjas diagonales · diseño exclusivo K2 Plus"
+    },
+    {
+      "sku": "ODE-MAC-M",
+      "name": "Maceta Orgánica Textura M",
+      "price": 7500.0,
+      "stock": 0,
+      "tipo_producto": "linea_propio",
+      "categoria": "Macetas",
+      "description": "Textura topográfica en relieve · filamento stone/mármol · plantas medianas"
+    },
+    {
+      "sku": "ODE-MAC-S",
+      "name": "Maceta Orgánica Textura S",
+      "price": 4500.0,
+      "stock": 0,
+      "tipo_producto": "linea_propio",
+      "categoria": "Macetas",
+      "description": "Textura topográfica en relieve · filamento stone/mármol · ideal suculentas y cactus"
+    },
+    {
+      "sku": "ODE-SEM-U",
+      "name": "Organizador de Semillas (6 compartimentos)",
+      "price": 3500.0,
+      "stock": 0,
+      "tipo_producto": "linea_propio",
+      "categoria": "Jardinería",
+      "description": "Caja modular 6 divisiones con tapa y etiqueta · para almacenar semillas"
+    },
+    {
+      "sku": "ODE-TUT-3PK",
+      "name": "Pack 3 Tutores Espiral (surtido S+M+L)",
+      "price": 3200.0,
+      "stock": 0,
+      "tipo_producto": "linea_propio",
+      "categoria": "Jardinería",
+      "description": "Pack mixto ideal para jardín en balcón · 3 tamaños · color a elección"
+    },
+    {
+      "sku": "ODE-MRP-10",
+      "name": "Set 10 Marcadores Personalizados",
+      "price": 4500.0,
+      "stock": 0,
+      "tipo_producto": "linea_propio",
+      "categoria": "Jardinería",
+      "description": "Pack completo para colección de plantas · nombre + cuidados · por pedido"
+    },
+    {
+      "sku": "ODE-MRP-3",
+      "name": "Set 3 Marcadores de Plantas",
+      "price": 1800.0,
+      "stock": 0,
+      "tipo_producto": "linea_propio",
+      "categoria": "Jardinería",
+      "description": "Etiquetas identificadoras · palito + cartel · personalizables con nombre de planta"
+    },
+    {
+      "sku": "ODE-MRP-5",
+      "name": "Set 5 Marcadores Personalizados",
+      "price": 2800.0,
+      "stock": 0,
+      "tipo_producto": "linea_propio",
+      "categoria": "Jardinería",
+      "description": "Con nombre de planta grabado + fecha de siembra · ideal regalo jardinero"
+    },
+    {
+      "sku": "ODE-SEL-M",
+      "name": "Soporte Elevador para Maceta M",
+      "price": 4800.0,
+      "stock": 0,
+      "tipo_producto": "linea_propio",
+      "categoria": "Macetas",
+      "description": "Base con 3 patas bola · versión negra · combina con maceta bicolor"
+    },
+    {
+      "sku": "ODE-SEL-S",
+      "name": "Soporte Elevador para Maceta S",
+      "price": 3200.0,
+      "stock": 0,
+      "tipo_producto": "linea_propio",
+      "categoria": "Macetas",
+      "description": "Base con 3 patas bola · eleva maceta 8cm · evita charcos · interior/exterior"
+    },
+    {
+      "sku": "ODE-TUT-M",
+      "name": "Tutor Espiral M (plantas 40–70cm)",
+      "price": 1200.0,
+      "stock": 0,
+      "tipo_producto": "linea_propio",
+      "categoria": "Jardinería",
+      "description": "Soporte helicoidal · PETG resistente · tomates cherry, albahaca, trepadoras medianas"
+    },
+    {
+      "sku": "ODE-TUT-S",
+      "name": "Tutor Espiral S (plantas 20–40cm)",
+      "price": 800.0,
+      "stock": 0,
+      "tipo_producto": "linea_propio",
+      "categoria": "Jardinería",
+      "description": "Soporte helicoidal · PETG resistente · plantas trepadoras y aromáticas pequeñas"
+    }
+  ],
+  "kits": [
+    {
+      "sku": "ODE-KIT-JAR",
+      "nombre": "Kit Jardinero Urbano",
+      "precio": 12000.0,
+      "stock": 0,
+      "descripcion": "Maceta Orgánica S + Set 5 Marcadores + Tutor M · caja kraft · regalo completo",
+      "componentes": []
+    },
+    {
+      "sku": "ODE-KIT-SUC",
+      "nombre": "Kit Suculentas",
+      "precio": 18000.0,
+      "stock": 0,
+      "descripcion": "2x Maceta Orgánica S + Bandeja Oval S + Set 3 Marcadores · listo para regalar",
+      "componentes": []
+    }
+  ]
+}
