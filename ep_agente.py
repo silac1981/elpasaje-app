@@ -30,10 +30,39 @@ from email.mime.multipart import MIMEMultipart
 
 _DIR = os.path.dirname(os.path.abspath(__file__))
 
+
+def _load_secrets() -> dict:
+    """Lee credenciales desde env vars, luego desde secrets.toml si existen."""
+    secrets = {
+        "email_origen":  os.environ.get("EP_EMAIL_ORIGEN",   "elpasaje.3d.studio@gmail.com"),
+        "email_destino": os.environ.get("EP_EMAIL_DESTINO",  "elpasaje.3d.studio@gmail.com"),
+        "app_password":  os.environ.get("EP_EMAIL_PASSWORD", ""),
+    }
+    # Intentar leer desde .streamlit/secrets.toml si existe
+    _secrets_path = os.path.join(_DIR, ".streamlit", "secrets.toml")
+    if not secrets["app_password"] and os.path.exists(_secrets_path):
+        try:
+            import tomllib  # Python 3.11+
+        except ImportError:
+            try:
+                import tomli as tomllib
+            except ImportError:
+                tomllib = None
+        if tomllib:
+            with open(_secrets_path, "rb") as _f:
+                _data = tomllib.load(_f)
+            secrets["email_origen"]  = _data.get("email", {}).get("origen",   secrets["email_origen"])
+            secrets["email_destino"] = _data.get("email", {}).get("destino",  secrets["email_destino"])
+            secrets["app_password"]  = _data.get("email", {}).get("password", "")
+    return secrets
+
+
+_CREDS = _load_secrets()
+
 CONFIG = {
-    "email_origen":    "elpasaje.3d.studio@gmail.com",
-    "email_destino":   "elpasaje.3d.studio@gmail.com",
-    "app_password":    "ndguxauofxtedqrr",
+    "email_origen":    _CREDS["email_origen"],
+    "email_destino":   _CREDS["email_destino"],
+    "app_password":    _CREDS["app_password"],
     "db_path":         os.path.join(_DIR, "elpasaje_v2.db"),
     "modo_silencioso": "--silencioso" in sys.argv or "silencioso" in sys.argv,
 }
