@@ -286,6 +286,21 @@ details summary{color:#E6EDF3!important;padding:8px 12px!important}
                     _conn.execute(text("UPDATE orders SET status='Listo' WHERE id=:id"), {"id": int(_sel_oid_f)})
                 if "Fallo total" in _fab2_res and _sel_oid_f is not None:
                     _conn.execute(text("UPDATE orders SET status='Pendiente' WHERE id=:id"), {"id": int(_sel_oid_f)})
+                # Trazabilidad: stock_movements para produccion completada
+                if _sku_f and _sku_f != "LIBRE" and "Fallo total" not in _fab2_res:
+                    _qty_fab = 1
+                    if _sel_oid_f:
+                        _qi = pd.read_sql(
+                            text("SELECT cantidad FROM order_items WHERE order_id=:oid AND product_sku=:sku LIMIT 1"),
+                            _conn, params={"oid": _sel_oid_f, "sku": _sku_f}
+                        )
+                        if not _qi.empty:
+                            _qty_fab = int(_qi["cantidad"].iloc[0])
+                    _conn.execute(
+                        text("INSERT INTO stock_movements (product_sku, tipo, cantidad, fecha, referencia) VALUES (:sku, :tipo, :qty, :fecha, :ref)"),
+                        {"sku": _sku_f, "tipo": "produccion", "qty": _qty_fab,
+                         "fecha": _hoy_str, "ref": f"order_{_sel_oid_f or 'libre'}"},
+                    )
                 _conn.commit()
             st.success(f"Registrado Â· {_fab2_grams:.0f} g de {_fab2_mat_nom} descontados")
             st.rerun()

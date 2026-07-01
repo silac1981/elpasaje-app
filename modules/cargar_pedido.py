@@ -244,6 +244,16 @@ details{{background:#161B22!important;border:1px solid #21262D!important;border-
                 )
             except Exception:
                 pass
+            # Trazabilidad: reserva de stock al crear pedido
+            try:
+                _conn2.execute(
+                    text("INSERT INTO stock_movements (product_sku, tipo, cantidad, fecha, referencia) VALUES (:sku, :tipo, :qty, :fecha, :ref)"),
+                    {"sku": _sel_sku, "tipo": "pedido", "qty": -_cp_qty,
+                     "fecha": datetime.now().strftime("%Y-%m-%d"), "ref": f"order_{order_id}"},
+                )
+                _conn2.commit()
+            except Exception:
+                pass  # stock_movements no bloquea el flujo principal
             _conn2.commit()
         st.session_state.pop("cp_sel_sku", None)
         st.success(f"✅ Pedido #{order_id} enviado a Fer — {_cp_qty}x {_sel_prod['name']} · ${_total_est:,.0f}")

@@ -397,10 +397,12 @@ def _dash_main():
                             if _precio_nuevo != _precio_ant:
                                 _cn_g.execute(
                                     text("""INSERT INTO price_history
-                                            (product_sku, precio_anterior, precio_nuevo, motivo)
-                                            VALUES (:sku, :ant, :nvo, :mot)"""),
+                                            (product_sku, precio_anterior, precio_nuevo, fecha, motivo)
+                                            VALUES (:sku, :ant, :nvo, :fecha, :mot)"""),
                                     {"sku": _cr_g["sku"], "ant": _precio_ant,
-                                     "nvo": _precio_nuevo, "mot": "Admin"}
+                                     "nvo": _precio_nuevo,
+                                     "fecha": __import__("datetime").date.today().isoformat(),
+                                     "mot": "Admin"}
                                 )
                                 _n_precio += 1
                 from utils.pricing import cargar_productos as _cp_dash
