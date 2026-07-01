@@ -7,6 +7,37 @@ from sqlalchemy import text
 from utils.db import engine
 from utils.lineas import get_linea
 
+# ── Design system tokens (deben coincidir con main.py :root) ──────────────────
+_BG      = "#EBE6DC"   # --bg
+_SURFACE = "#FAF8F3"   # --surface
+_INK     = "#16181F"   # --ink
+_INK2    = "#3A3E4A"   # --ink-2
+_MUTED   = "#74798A"   # --muted
+_LINE    = "#DCD5C7"   # --line
+
+_PLOT_LAYOUT = dict(
+    paper_bgcolor=_BG,
+    plot_bgcolor=_SURFACE,
+    font=dict(family="Source Sans 3", color=_INK, size=11),
+    margin=dict(l=10, r=10, t=10, b=40),
+    xaxis=dict(gridcolor=_LINE, linecolor=_LINE, tickcolor=_LINE, zerolinecolor=_LINE),
+    yaxis=dict(gridcolor=_LINE, linecolor=_LINE, tickcolor=_LINE, zerolinecolor=_LINE),
+)
+
+_LINEA_COLORS = {
+    "Administración":   "#FF4B4B",
+    "Producción":       "#C9A84C",
+    "Oasis Animal":     "#F472B6",
+    "Oasis del Estero": "#3E9B53",
+    "Pharma DeLux":     "#0E7490",
+    "Aviation Pro":     "#1E5A8A",
+    "Coquette":         "#DB2777",
+    "F-Zone":           "#F97316",
+    "Core Tech":        "#0E7E78",
+    "VK-Home":          "#A78BFA",
+    "Agustina":         "#6366F1",
+}
+
 
 def _dash_main():
     st.markdown("<div class='main-header'><h1>📊 Dashboard de Magnitud</h1><p>Inteligencia de negocios en tiempo real · Ecosistema El Pasaje</p></div>", unsafe_allow_html=True)
@@ -35,20 +66,28 @@ def _dash_main():
         fig_bar = go.Figure()
         fig_bar.add_trace(go.Bar(name="Costo Produccion", x=df_linea["linea_nombre"], y=df_linea["costo"], marker_color="#EF4444", opacity=0.85))
         fig_bar.add_trace(go.Bar(name="Ganancia Neta", x=df_linea["linea_nombre"], y=df_linea["ganancia"], marker_color="#22C55E", opacity=0.85))
-        fig_bar.update_layout(barmode="stack", plot_bgcolor="white", paper_bgcolor="white", height=320, margin=dict(l=10,r=10,t=10,b=40), legend=dict(orientation="h",yanchor="bottom",y=1.02), xaxis=dict(tickangle=-20), yaxis=dict(tickprefix="$",tickformat=",.0f"))
+        fig_bar.update_layout(**{**_PLOT_LAYOUT, "barmode": "stack", "height": 320,
+            "legend": dict(orientation="h", yanchor="bottom", y=1.02, font=dict(color=_INK)),
+            "xaxis": dict(**_PLOT_LAYOUT["xaxis"], tickangle=-20),
+            "yaxis": dict(**_PLOT_LAYOUT["yaxis"], tickprefix="$", tickformat=",.0f")})
         st.plotly_chart(fig_bar, use_container_width=True)
     with col_b:
         st.markdown("<div class='section-title'>🥧 Distribucion del Ecosistema</div>", unsafe_allow_html=True)
-        fig_pie = px.pie(df_linea, values="valor_stock", names="linea_nombre", color_discrete_sequence=px.colors.qualitative.Set2, hole=0.45)
-        fig_pie.update_traces(textposition="inside", textinfo="percent+label", textfont_size=11)
-        fig_pie.update_layout(showlegend=False, height=320, margin=dict(l=10,r=10,t=10,b=10), paper_bgcolor="white")
+        fig_pie = px.pie(df_linea, values="valor_stock", names="linea_nombre",
+                         color="linea_nombre", color_discrete_map=_LINEA_COLORS, hole=0.45)
+        fig_pie.update_traces(textposition="inside", textinfo="percent+label", textfont_size=11,
+                              textfont_color="white")
+        fig_pie.update_layout(showlegend=False, height=320, margin=dict(l=10,r=10,t=10,b=10),
+                              paper_bgcolor=_BG, font=dict(color=_INK))
         st.plotly_chart(fig_pie, use_container_width=True)
     col_c, col_d = st.columns([1.6, 1])
     with col_c:
         st.markdown("<div class='section-title'>🎯 Ganancia Neta por Producto</div>", unsafe_allow_html=True)
         df_prod = df.sort_values("ganancia_stock", ascending=True)
         fig_h = go.Figure(go.Bar(x=df_prod["ganancia_stock"], y=df_prod["name"], orientation="h", marker_color=["#22C55E" if g > 0 else "#EF4444" for g in df_prod["ganancia_stock"]], text=[f"${v:,.0f}" for v in df_prod["ganancia_stock"]], textposition="outside"))
-        fig_h.update_layout(plot_bgcolor="white", paper_bgcolor="white", height=320, margin=dict(l=10,r=80,t=10,b=10), xaxis=dict(tickprefix="$",tickformat=",.0f"), yaxis=dict(automargin=True))
+        fig_h.update_layout(**{**_PLOT_LAYOUT, "height": 320, "margin": dict(l=10,r=80,t=10,b=10),
+            "xaxis": dict(**_PLOT_LAYOUT["xaxis"], tickprefix="$", tickformat=",.0f"),
+            "yaxis": dict(**_PLOT_LAYOUT["yaxis"], automargin=True)})
         st.plotly_chart(fig_h, use_container_width=True)
     with col_d:
         st.markdown("<div class='section-title'>🧵 Estado de Materiales</div>", unsafe_allow_html=True)
@@ -57,7 +96,7 @@ def _dash_main():
             color_m = "#22C55E" if pct > 30 else ("#F59E0B" if pct > 10 else "#EF4444")
             val_m = mat["stock_gr"] * mat["cost_kg"] / 1000
             alerta = " ⚠️ STOCK BAJO" if pct <= 10 else (" ⚡ Atención" if pct <= 30 else "")
-            st.markdown(f"<div style='background:white;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.06);margin-bottom:12px;'><div style='display:flex;justify-content:space-between;margin-bottom:8px;'><b style='color:#1a1a2e'>{mat['name']}</b><span style='color:{color_m};font-weight:600'>{mat['stock_gr']:.0f}g{alerta}</span></div><div style='background:#F3F4F6;border-radius:999px;height:8px;overflow:hidden;'><div style='width:{pct:.0f}%;background:{color_m};height:100%;border-radius:999px;'></div></div><div style='display:flex;justify-content:space-between;margin-top:6px;font-size:0.75rem;color:#6B7280;'><span>${mat['cost_kg']:,.0f}/kg</span><span>Valor: ${val_m:,.0f}</span></div></div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='background:{_SURFACE};border-radius:12px;padding:16px;border:1px solid {_LINE};margin-bottom:12px;'><div style='display:flex;justify-content:space-between;margin-bottom:8px;'><b style='color:{_INK}'>{mat['name']}</b><span style='color:{color_m};font-weight:600'>{mat['stock_gr']:.0f}g{alerta}</span></div><div style='background:{_LINE};border-radius:999px;height:8px;overflow:hidden;'><div style='width:{pct:.0f}%;background:{color_m};height:100%;border-radius:999px;'></div></div><div style='display:flex;justify-content:space-between;margin-top:6px;font-size:0.75rem;color:{_MUTED};'><span>${mat['cost_kg']:,.0f}/kg</span><span>Valor: ${val_m:,.0f}</span></div></div>", unsafe_allow_html=True)
     st.markdown("<div class='section-title'>📋 Analisis Completo por Producto</div>", unsafe_allow_html=True)
     df_show = df[["linea_emoji","linea_nombre","name","sku","weight_gr","costo_unit","price","ganancia_unit","margen_pct","stock","ganancia_stock"]].copy()
     df_show.columns = ["","Linea","Producto","SKU","Peso(g)","Costo Unit","Precio Venta","Ganancia Unit","Margen %","Stock","Ganancia Total"]
@@ -113,12 +152,12 @@ def _dash_main():
     ]:
         with _pcol:
             st.markdown(
-                f"<div style='background:#161B22;border-radius:12px;padding:14px 10px;"
-                f"border:1px solid #21262D;border-top:3px solid {_pcolor};"
+                f"<div style='background:{_SURFACE};border-radius:12px;padding:14px 10px;"
+                f"border:1px solid {_LINE};border-top:3px solid {_pcolor};"
                 f"text-align:center;margin-bottom:14px;'>"
                 f"<div style='font-size:1.2rem;font-weight:800;color:{_pcolor};line-height:1;'>{_pv}</div>"
-                f"<div style='font-size:0.65rem;font-weight:600;color:#C9D1D9;margin-top:6px;'>{_pl}</div>"
-                f"<div style='font-size:0.58rem;color:#6B7280;margin-top:3px;'>{_ps}</div></div>",
+                f"<div style='font-size:0.65rem;font-weight:600;color:{_INK};margin-top:6px;'>{_pl}</div>"
+                f"<div style='font-size:0.58rem;color:{_MUTED};margin-top:3px;'>{_ps}</div></div>",
                 unsafe_allow_html=True,
             )
 
@@ -156,8 +195,8 @@ def _dash_main():
             _fig_fac = go.Figure()
             _fig_fac.add_trace(go.Bar(x=_df_fac_mes["mes"], y=_df_fac_mes["facturado"],
                 marker_color="#3B82F6", name="Facturado"))
-            _fig_fac.update_layout(plot_bgcolor="white", paper_bgcolor="white", height=280,
-                margin=dict(l=10,r=10,t=10,b=40), yaxis=dict(tickprefix="$",tickformat=",.0f"))
+            _fig_fac.update_layout(**{**_PLOT_LAYOUT, "height": 280,
+                "yaxis": dict(**_PLOT_LAYOUT["yaxis"], tickprefix="$", tickformat=",.0f")})
             st.plotly_chart(_fig_fac, use_container_width=True)
         else:
             st.info("Sin pedidos completados aún.")
@@ -169,7 +208,8 @@ def _dash_main():
             _fac_por_linea = _fac_por_linea.sort_values("facturado", ascending=False)
             for _, _flr in _fac_por_linea.iterrows():
                 _lc = get_linea(_flr["client_id"])
-                st.markdown(f"<div style='background:white;border-radius:8px;padding:10px 14px;margin-bottom:6px;box-shadow:0 1px 4px rgba(0,0,0,0.06);display:flex;justify-content:space-between;align-items:center;'><span style='font-weight:600;color:#1a1a2e;'>{_lc['emoji']} {_lc['nombre']}</span><span style='font-weight:800;color:#1E3A8A;'>${_flr['facturado']:,.0f}</span></div>", unsafe_allow_html=True)
+                _lc_color = _lc["color"]
+                st.markdown(f"<div style='background:{_SURFACE};border-radius:8px;padding:10px 14px;margin-bottom:6px;border:1px solid {_LINE};display:flex;justify-content:space-between;align-items:center;'><span style='font-weight:600;color:{_INK};'>{_lc['emoji']} {_lc['nombre']}</span><span style='font-weight:800;color:{_lc_color};'>${_flr['facturado']:,.0f}</span></div>", unsafe_allow_html=True)
         else:
             st.info("Sin datos de facturación por línea.")
 
@@ -204,13 +244,13 @@ def _dash_main():
                 _cc = _canal_colors.get(_cr["canal"], "#6B7280")
                 _pct_cal = int(_cr["calientes"] / max(_cr["contactos"],1) * 100)
                 st.markdown(
-                    f"<div style='background:white;border-radius:8px;padding:10px 14px;margin-bottom:6px;box-shadow:0 1px 4px rgba(0,0,0,0.06);'>"
+                    f"<div style='background:{_SURFACE};border-radius:8px;padding:10px 14px;margin-bottom:6px;border:1px solid {_LINE};'>"
                     f"<div style='display:flex;justify-content:space-between;margin-bottom:4px;'>"
-                    f"<span style='font-weight:700;color:#1a1a2e;'>{_cr['canal']}</span>"
+                    f"<span style='font-weight:700;color:{_INK};'>{_cr['canal']}</span>"
                     f"<span style='color:{_cc};font-weight:700;'>{int(_cr['contactos'])} contactos</span></div>"
-                    f"<div style='background:#F3F4F6;border-radius:999px;height:6px;overflow:hidden;'>"
+                    f"<div style='background:{_LINE};border-radius:999px;height:6px;overflow:hidden;'>"
                     f"<div style='width:{_pct_cal}%;background:{_cc};height:100%;border-radius:999px;'></div></div>"
-                    f"<div style='font-size:0.68rem;color:#6B7280;margin-top:3px;'>{int(_cr['calientes'])} señales calientes ({_pct_cal}%)</div>"
+                    f"<div style='font-size:0.68rem;color:{_MUTED};margin-top:3px;'>{int(_cr['calientes'])} señales calientes ({_pct_cal}%)</div>"
                     f"</div>", unsafe_allow_html=True)
         else:
             st.info("Registrá señales de mercado para ver estadísticas de canal.")
@@ -223,10 +263,9 @@ def _dash_main():
                 color_discrete_sequence=px.colors.qualitative.Set2,
                 height=280
             )
-            _fig_react.update_layout(plot_bgcolor="white", paper_bgcolor="white",
-                margin=dict(l=10,r=10,t=10,b=40),
-                legend=dict(orientation="h", yanchor="bottom", y=1.02, font_size=10),
-                xaxis_title="", yaxis_title="Señales")
+            _fig_react.update_layout(**{**_PLOT_LAYOUT, "height": 280,
+                "legend": dict(orientation="h", yanchor="bottom", y=1.02, font_size=10, font=dict(color=_INK)),
+                "xaxis_title": "", "yaxis_title": "Señales"})
             st.plotly_chart(_fig_react, use_container_width=True)
         else:
             st.info("Sin señales registradas aún.")
@@ -253,11 +292,11 @@ def _dash_main():
             _rkl = get_linea(_rkr["client_id"])
             with _rk_cols[_rki]:
                 st.markdown(
-                    f"<div style='background:white;border-radius:14px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.07);text-align:center;border-top:4px solid {_rkl['color']};'>"
+                    f"<div style='background:{_SURFACE};border-radius:14px;padding:16px;border:1px solid {_LINE};text-align:center;border-top:4px solid {_rkl['color']};'>"
                     f"<div style='font-size:1.6rem;'>{_rkl['emoji']}</div>"
-                    f"<div style='font-weight:700;color:#1a1a2e;font-size:0.82rem;margin-top:4px;'>{_rkl['nombre']}</div>"
+                    f"<div style='font-weight:700;color:{_INK};font-size:0.82rem;margin-top:4px;'>{_rkl['nombre']}</div>"
                     f"<div style='font-size:1.3rem;font-weight:800;color:{_rkl['color']};margin-top:6px;'>${_rkr['facturado_total']:,.0f}</div>"
-                    f"<div style='font-size:0.68rem;color:#6B7280;margin-top:2px;'>{int(_rkr['pedidos_completados'])} pedidos · último {str(_rkr['ultimo_pedido'])[:10]}</div>"
+                    f"<div style='font-size:0.68rem;color:{_MUTED};margin-top:2px;'>{int(_rkr['pedidos_completados'])} pedidos · último {str(_rkr['ultimo_pedido'])[:10]}</div>"
                     f"</div>", unsafe_allow_html=True)
     else:
         st.info("Completá pedidos para ver el ranking de facturación.")
@@ -281,7 +320,7 @@ def _dash_main():
     _VIS_L_D      = {"publico": "Publico",  "borrador": "Borrador",  "pausado": "Pausado"}
 
     if _df_nov.empty:
-        st.markdown("<div style='background:#F9FAFB;border-radius:12px;padding:14px 20px;border:1px solid #E5E7EB;color:#6B7280;'>Sin productos nuevos de Capa 2 en los últimos 7 días.</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='background:{_SURFACE};border-radius:12px;padding:14px 20px;border:1px solid {_LINE};color:{_MUTED};'>Sin productos nuevos de Capa 2 en los últimos 7 días.</div>", unsafe_allow_html=True)
     else:
         _nov_cols = st.columns(3)
         for _ni, (_, _nr) in enumerate(_df_nov.head(6).iterrows()):
@@ -292,8 +331,8 @@ def _dash_main():
             _ntl  = _TIPO_LABEL_D.get(_nr.get("tipo_producto", ""), "Capa 2")
             with _nov_cols[_ni % 3]:
                 st.markdown(f"""
-<div style='background:white;border-radius:12px;padding:14px 16px;margin-bottom:10px;
-     box-shadow:0 2px 8px rgba(0,0,0,0.07);border-top:3px solid {_nl["color"]};'>
+<div style='background:{_SURFACE};border-radius:12px;padding:14px 16px;margin-bottom:10px;
+     border:1px solid {_LINE};border-top:3px solid {_nl["color"]};'>
   <div style='display:flex;justify-content:space-between;align-items:flex-start;'>
     <div style='font-size:0.75rem;color:{_nl["color"]};font-weight:700;'>{_nl["emoji"]} {_nl["nombre"]}</div>
     <div style='display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;'>
@@ -301,12 +340,12 @@ def _dash_main():
       <span style='background:#EEF2FF;color:#6366F1;border-radius:99px;padding:2px 7px;font-size:0.6rem;font-weight:700;'>{_ntl}</span>
     </div>
   </div>
-  <div style='font-size:0.88rem;font-weight:700;color:#1a1a2e;margin-top:6px;'>{_nr['name']}</div>
+  <div style='font-size:0.88rem;font-weight:700;color:{_INK};margin-top:6px;'>{_nr['name']}</div>
   <div style='display:flex;justify-content:space-between;margin-top:8px;align-items:center;'>
-    <span style='font-size:0.72rem;color:#6B7280;'>SKU: {_nr.get('sku','')}</span>
-    <span style='font-size:0.9rem;font-weight:800;color:#1E3A8A;'>${float(_nr.get('price', 0) or 0):,.0f}</span>
+    <span style='font-size:0.72rem;color:{_MUTED};'>SKU: {_nr.get('sku','')}</span>
+    <span style='font-size:0.9rem;font-weight:800;color:{_nl["color"]};'>${float(_nr.get('price', 0) or 0):,.0f}</span>
   </div>
-  <div style='font-size:0.63rem;color:#9CA3AF;margin-top:2px;'>Alta: {str(_nr.get('fecha_alta', ''))[:10]}</div>
+  <div style='font-size:0.63rem;color:{_MUTED};margin-top:2px;'>Alta: {str(_nr.get('fecha_alta', ''))[:10]}</div>
 </div>""", unsafe_allow_html=True)
 
     # ── Gestión de productos — Pausa y Visibilidad ─────────────────
@@ -429,7 +468,7 @@ def _dash_main():
         _df_rev = pd.DataFrame()
 
     if _df_rev.empty:
-        st.markdown("<div style='background:#F9FAFB;border-radius:12px;padding:16px 20px;border:1px solid #E5E7EB;color:#6B7280;'>Sin reglas de revenue sharing configuradas. Se agregan al crear un Producto Tipo C (compartido).</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='background:{_SURFACE};border-radius:12px;padding:16px 20px;border:1px solid {_LINE};color:{_MUTED};'>Sin reglas de revenue sharing configuradas. Se agregan al crear un Producto Tipo C (compartido).</div>", unsafe_allow_html=True)
     else:
         _df_rev_show = _df_rev.copy()
         _df_rev_show["linea_a"]    = _df_rev_show["linea_a"].apply(lambda x: f"{get_linea(x)['emoji']} {get_linea(x)['nombre']}")
@@ -604,8 +643,8 @@ def _dash_m19():
 def _dash_pagos():
     """Tab 💳 Pagos — acreditación manual de cobros."""
     st.markdown(
-        "<div style='font-size:1.4rem;font-weight:800;color:#E6EDF3;margin-bottom:4px;'>💳 Acreditación de Pagos</div>"
-        "<div style='font-size:0.75rem;color:#8B949E;margin-bottom:20px;'>Marcá como acreditados los cobros que ya recibiste</div>",
+        f"<div style='font-size:1.4rem;font-weight:800;color:{_INK};margin-bottom:4px;'>💳 Acreditación de Pagos</div>"
+        f"<div style='font-size:0.75rem;color:{_MUTED};margin-bottom:20px;'>Marcá como acreditados los cobros que ya recibiste</div>",
         unsafe_allow_html=True,
     )
 
@@ -632,11 +671,11 @@ def _dash_pagos():
     ]:
         with _col:
             st.markdown(
-                f"<div style='background:#161B22;border-radius:12px;padding:14px 10px;"
-                f"border:1px solid #21262D;border-top:3px solid {_color};text-align:center;margin-bottom:16px;'>"
+                f"<div style='background:{_SURFACE};border-radius:12px;padding:14px 10px;"
+                f"border:1px solid {_LINE};border-top:3px solid {_color};text-align:center;margin-bottom:16px;'>"
                 f"<div style='font-size:1.3rem;font-weight:800;color:{_color};line-height:1;'>{_val}</div>"
-                f"<div style='font-size:0.62rem;font-weight:600;color:#C9D1D9;margin-top:6px;'>{_lbl}</div>"
-                f"<div style='font-size:0.56rem;color:#6B7280;margin-top:3px;'>{_sub}</div></div>",
+                f"<div style='font-size:0.62rem;font-weight:600;color:{_INK};margin-top:6px;'>{_lbl}</div>"
+                f"<div style='font-size:0.56rem;color:{_MUTED};margin-top:3px;'>{_sub}</div></div>",
                 unsafe_allow_html=True,
             )
 
@@ -665,12 +704,12 @@ def _dash_pagos():
                 _metodo_color = {"efectivo": "#22C55E", "transferencia": "#3B82F6",
                                  "mercadopago": "#009EE3"}.get(str(_row["metodo"]).lower(), "#6B7280")
                 st.markdown(
-                    f"<div style='background:#161B22;border-radius:12px;padding:16px 20px;"
-                    f"border:1px solid #30363D;border-left:4px solid #F59E0B;margin-bottom:10px;'>"
+                    f"<div style='background:{_SURFACE};border-radius:12px;padding:16px 20px;"
+                    f"border:1px solid {_LINE};border-left:4px solid #F59E0B;margin-bottom:10px;'>"
                     f"<div style='display:flex;justify-content:space-between;align-items:center;'>"
                     f"<div>"
-                    f"<span style='font-weight:700;color:#E6EDF3;font-size:0.9rem;'>{_row['cliente']}</span>"
-                    f"<span style='color:#8B949E;font-size:0.72rem;margin-left:10px;'>Pedido #{int(_row['order_id'])}</span>"
+                    f"<span style='font-weight:700;color:{_INK};font-size:0.9rem;'>{_row['cliente']}</span>"
+                    f"<span style='color:{_MUTED};font-size:0.72rem;margin-left:10px;'>Pedido #{int(_row['order_id'])}</span>"
                     f"</div>"
                     f"<div style='font-size:1.1rem;font-weight:800;color:#F59E0B;'>${float(_row['monto']):,.0f}</div>"
                     f"</div>"
@@ -678,8 +717,8 @@ def _dash_pagos():
                     f"<span style='font-size:0.68rem;background:{_metodo_color}22;color:{_metodo_color};"
                     f"border:1px solid {_metodo_color}44;border-radius:99px;padding:2px 8px;font-weight:700;'>"
                     f"{str(_row['metodo']).capitalize()}</span>"
-                    f"<span style='font-size:0.68rem;color:#8B949E;'>{str(_row['fecha'])[:16]}</span>"
-                    f"{'<span style=\"font-size:0.68rem;color:#8B949E;\">' + str(_row['notas']) + '</span>' if _row['notas'] else ''}"
+                    f"<span style='font-size:0.68rem;color:{_MUTED};'>{str(_row['fecha'])[:16]}</span>"
+                    f"{'<span style=\"font-size:0.68rem;color:' + _MUTED + ';\">' + str(_row['notas']) + '</span>' if _row['notas'] else ''}"
                     f"</div></div>",
                     unsafe_allow_html=True,
                 )

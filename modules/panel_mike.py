@@ -85,10 +85,10 @@ def _tendencia_precios() -> pd.DataFrame:
             text("""
                 SELECT ph.product_sku, p.name AS producto,
                        ph.precio_anterior, ph.precio_nuevo,
-                       ph.fecha_cambio, ph.motivo
+                       ph.fecha, ph.motivo
                 FROM price_history ph
                 JOIN products p ON p.sku = ph.product_sku
-                ORDER BY ph.fecha_cambio DESC
+                ORDER BY ph.id DESC
                 LIMIT 20
             """), engine
         )
@@ -248,6 +248,42 @@ Cada una tiene un tipo que indica qué clase de información es:
                 unsafe_allow_html=True,
             )
 
+    # ── Sección E.5 — Stock movements recientes ───────────────
+    st.markdown(
+        "<div style='font-size:0.65rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;"
+        "color:#58A6FF;margin:24px 0 4px;'>E.5 · MOVIMIENTOS DE STOCK (últimos 20)</div>",
+        unsafe_allow_html=True,
+    )
+    try:
+        _mov = pd.read_sql(
+            text("""
+                SELECT sm.fecha, sm.product_sku, p.name AS producto,
+                       sm.tipo, sm.cantidad, sm.referencia
+                FROM stock_movements sm
+                LEFT JOIN products p ON p.sku = sm.product_sku
+                ORDER BY sm.id DESC LIMIT 20
+            """), engine
+        )
+        if _mov.empty:
+            st.caption("Sin movimientos de stock registrados todavía.")
+        else:
+            _tipo_c = {"produccion": "#3FB950", "pedido": "#F59E0B", "ajuste_manual": "#58A6FF"}
+            for _, _m in _mov.iterrows():
+                _tc = _tipo_c.get(str(_m.get("tipo", "")), "#8B949E")
+                _qty_disp = f"+{_m['cantidad']}" if int(_m.get('cantidad', 0)) > 0 else str(int(_m.get('cantidad', 0)))
+                st.markdown(
+                    f"<div style='background:#161B22;border-radius:10px;padding:10px 14px;"
+                    f"margin-bottom:5px;border:1px solid #21262D;border-left:3px solid {_tc};'>"
+                    f"<div style='display:flex;justify-content:space-between;align-items:center;'>"
+                    f"<span style='font-size:0.8rem;font-weight:700;color:#E6EDF3;'>{_m.get('producto') or _m['product_sku']}</span>"
+                    f"<span style='font-size:0.88rem;font-weight:700;color:{_tc};'>{_qty_disp}</span></div>"
+                    f"<div style='font-size:0.65rem;color:#6B7280;margin-top:3px;'>"
+                    f"{str(_m.get('fecha',''))[:10]} · {_m.get('tipo','')} · ref: {_m.get('referencia','')}</div></div>",
+                    unsafe_allow_html=True,
+                )
+    except Exception as _e:
+        st.caption(f"Sin datos: {_e}")
+
     # ── Sección E — Tendencia de precios ───────────────────────
     st.markdown(
         "<div style='font-size:0.65rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;"
@@ -282,7 +318,7 @@ Cada una tiene un tipo que indica qué clase de información es:
                 f"margin-bottom:6px;border:1px solid #21262D;'>"
                 f"<div style='display:flex;justify-content:space-between;align-items:center;'>"
                 f"<div><span style='font-size:0.82rem;font-weight:700;color:#E6EDF3;'>{_ph['producto']}</span>"
-                f"<span style='font-size:0.65rem;color:#6B7280;margin-left:8px;'>{str(_ph.get('fecha_cambio',''))[:10]}</span></div>"
+                f"<span style='font-size:0.65rem;color:#6B7280;margin-left:8px;'>{str(_ph.get('fecha',''))[:10]}</span></div>"
                 f"<span style='font-size:0.88rem;font-weight:700;color:{_dc};'>{_darrow} ${abs(_delta):,.0f}</span></div>"
                 f"<div style='font-size:0.72rem;color:#8B949E;margin-top:4px;'>"
                 f"${float(_ph['precio_anterior'] or 0):,.0f} → ${float(_ph['precio_nuevo'] or 0):,.0f}"

@@ -446,7 +446,7 @@ with st.sidebar:
 </div>""", unsafe_allow_html=True)
 
     if st.session_state["role"] == "admin":
-        menu = st.radio("", ["Control", "Stock", "Taller", "Líneas", "CRM", "Impacto"], label_visibility="collapsed")
+        menu = st.radio("", ["Control", "Stock", "Taller", "Líneas", "CRM", "Impacto", "Mike"], label_visibility="collapsed")
     elif st.session_state["role"] == "produccion":
         menu = st.radio("", ["Taller"], label_visibility="collapsed")
     elif st.session_state["role"] == "socio_multi":
@@ -536,4 +536,8 @@ elif menu == "CRM":
 
 elif menu == "Impacto":
     from modules.impacto import render
+    render()
+
+elif menu == "Mike":
+    from modules.panel_mike import render
     render()
