@@ -6,6 +6,7 @@ import plotly.graph_objects as go
 from sqlalchemy import text
 from utils.db import engine
 from utils.lineas import get_linea
+from utils.orders import avanzar_estado as _avanzar_estado
 
 # ── Design system tokens (deben coincidir con main.py :root) ──────────────────
 _BG      = "#EBE6DC"   # --bg
@@ -501,8 +502,309 @@ def _dash_main():
         )
 
 
+# ── Dialogs de acción de cola (modulo-level para estabilidad de clave) ────────
+
+@st.dialog("Iniciar fabricacion")
+def _dlg_iniciar(pid: int):
+    st.markdown(f"Iniciar fabricacion del **pedido #{pid}**?")
+    c1, c2 = st.columns(2)
+    with c1:
+        if st.button("Iniciar", type="primary", use_container_width=True, key="dlg_ini_ok"):
+            r = _avanzar_estado(pid, "En Proceso")
+            if r["ok"]:
+                st.success("Iniciado")
+                st.rerun()
+            else:
+                st.error(r.get("error", "Error"))
+    with c2:
+        if st.button("Volver", use_container_width=True, key="dlg_ini_no"):
+            st.rerun()
+
+
+@st.dialog("Registrar fabricacion")
+def _dlg_fabricar(pid: int):
+    st.markdown(f"**Pedido #{pid}** — completar fabricacion")
+    with engine.connect() as _c:
+        _mats = pd.read_sql(
+            text("SELECT material_id, name, stock_gr FROM materials WHERE activo=1 ORDER BY name"), _c
+        )
+    _mat_opts = {f"{r['name']} ({r['stock_gr']:.0f}g)": r["material_id"] for _, r in _mats.iterrows()}
+    if not _mat_opts:
+        st.warning("Sin materiales activos en inventario.")
+        return
+    _mat_sel   = st.selectbox("Material usado", list(_mat_opts.keys()), key="dlg_fab_mat")
+    _gramos    = st.number_input("Gramos reales usados", min_value=1, max_value=5000, value=50, key="dlg_fab_gr")
+    _tiempo    = st.number_input("Tiempo (minutos)", min_value=1, max_value=2000, value=60, key="dlg_fab_min")
+    _resultado = st.selectbox("Resultado", ["Exito", "Fallo parcial (reimpresion necesaria)", "Fallo total"], key="dlg_fab_res")
+    if st.button("Registrar", type="primary", use_container_width=True, key="dlg_fab_ok"):
+        r = _avanzar_estado(
+            pid, "Listo",
+            gramos_reales=float(_gramos),
+            tiempo_min=int(_tiempo),
+            material_id=_mat_opts[_mat_sel],
+            resultado=_resultado,
+        )
+        if r["ok"]:
+            _ef = r.get("estado_final", "Listo")
+            st.success(f"Registrado — estado: {_ef}")
+            st.rerun()
+        else:
+            st.error(r.get("error", "Error"))
+
+
+@st.dialog("Confirmar entrega")
+def _dlg_entregar(pid: int, monto: float):
+    st.markdown(f"**Pedido #{pid}** — marcar como entregado")
+    st.markdown(f"Monto a cobrar: **${monto:,.0f}**")
+    c1, c2 = st.columns(2)
+    with c1:
+        if st.button("Confirmar entrega", type="primary", use_container_width=True, key="dlg_ent_ok"):
+            r = _avanzar_estado(pid, "Entregado")
+            if r["ok"]:
+                st.success("Entregado y pago registrado")
+                st.rerun()
+            else:
+                st.error(r.get("error", "Error"))
+    with c2:
+        if st.button("Volver", use_container_width=True, key="dlg_ent_no"):
+            st.rerun()
+
+
+@st.dialog("Cancelar pedido")
+def _dlg_cancelar(pid: int):
+    st.markdown(f"**Pedido #{pid}** — cancelar")
+    _motivo = st.text_area("Motivo", placeholder="Ej: Cliente no retiro, error de fabricacion...", key="dlg_can_mot")
+    if st.button("Cancelar pedido", type="primary", use_container_width=True, key="dlg_can_ok"):
+        r = _avanzar_estado(pid, "Cancelado", motivo=_motivo)
+        if r["ok"]:
+            st.success("Pedido cancelado")
+            st.rerun()
+        else:
+            st.error(r.get("error", "Error"))
+
+
+def _dash_hoy():
+    """Tab Hoy — vista operacional: cola activa + ventas semana + stock critico."""
+    from utils.mike import get_alertas_dashboard
+
+    st.markdown(
+        "<div class='main-header'><h1>⚡ Vista de Hoy</h1>"
+        "<p>Cola activa · ventas recientes · stock critico — todo en una pantalla</p></div>",
+        unsafe_allow_html=True,
+    )
+
+    # ── KPIs ─────────────────────────────────────────────────
+    try:
+        _row_sem = pd.read_sql("""
+            SELECT COUNT(*) AS pedidos, COALESCE(SUM(monto_venta), 0) AS facturado
+            FROM orders WHERE status='Entregado'
+              AND delivered_at >= date('now', '-7 days')
+        """, engine).iloc[0]
+        _ped_sem = int(_row_sem["pedidos"])
+        _fac_sem = float(_row_sem["facturado"])
+    except Exception:
+        _ped_sem = 0; _fac_sem = 0.0
+
+    try:
+        _cola_n = int(pd.read_sql(
+            "SELECT COUNT(*) AS n FROM orders WHERE status IN ('Pendiente','En Proceso')", engine
+        ).iloc[0]["n"])
+    except Exception:
+        _cola_n = 0
+
+    try:
+        _mat_crit = int(pd.read_sql(
+            "SELECT COUNT(*) AS n FROM materials WHERE stock_gr < 500 AND activo=1", engine
+        ).iloc[0]["n"])
+    except Exception:
+        _mat_crit = 0
+
+    _alertas = get_alertas_dashboard()
+    _n_crit  = sum(1 for a in _alertas if a["nivel"] == "critico")
+    _n_atc   = sum(1 for a in _alertas if a["nivel"] == "atencion")
+
+    _k1, _k2, _k3, _k4 = st.columns(4)
+    for _kcol, _kv, _kl, _ks, _kc in [
+        (_k1, f"${_fac_sem:,.0f}", "Vendido esta semana",    f"{_ped_sem} pedidos entregados",    "#2F9E54"),
+        (_k2, str(_cola_n),        "Pedidos en cola",         "Pendiente + En Proceso",             "#E0902A"),
+        (_k3, str(_mat_crit),      "Materiales criticos",     "Stock < 500 g",                      "#D7322B" if _mat_crit else "#2F9E54"),
+        (_k4, str(_n_crit),        "Alertas Mike",            f"{_n_atc} de atencion",              "#D7322B" if _n_crit else "#2F9E54"),
+    ]:
+        with _kcol:
+            st.markdown(
+                f"<div style='background:{_SURFACE};border-radius:12px;padding:18px 14px;"
+                f"border:1px solid {_LINE};border-top:3px solid {_kc};text-align:center;margin-bottom:16px;'>"
+                f"<div style='font-size:1.6rem;font-weight:800;color:{_kc};line-height:1;'>{_kv}</div>"
+                f"<div style='font-size:0.58rem;font-weight:700;color:{_INK};margin-top:6px;"
+                f"letter-spacing:.05em;text-transform:uppercase;'>{_kl}</div>"
+                f"<div style='font-size:0.62rem;color:{_MUTED};margin-top:3px;'>{_ks}</div></div>",
+                unsafe_allow_html=True,
+            )
+
+    # ── Cola + lateral ────────────────────────────────────────
+    _col_cola, _col_lat = st.columns([2, 1])
+
+    with _col_cola:
+        st.markdown("<div class='section-title'>⏳ Cola de Produccion Activa</div>", unsafe_allow_html=True)
+        try:
+            _df_cola = pd.read_sql("""
+                SELECT o.id, o.status, o.date, o.notas, o.client_id, o.started_at,
+                       oi.cantidad, oi.precio_unitario,
+                       p.name AS producto,
+                       COALESCE(pg.monto, oi.cantidad * oi.precio_unitario) AS monto_pago
+                FROM orders o
+                JOIN order_items oi ON oi.order_id = o.id
+                JOIN products p ON p.sku = oi.product_sku
+                LEFT JOIN pagos pg ON pg.order_id = o.id AND pg.estado='pendiente'
+                WHERE o.status IN ('Pendiente','En Proceso','Listo')
+                ORDER BY o.date ASC
+            """, engine)
+        except Exception:
+            _df_cola = pd.DataFrame()
+
+        if _df_cola.empty:
+            st.markdown(
+                f"<div style='background:{_SURFACE};border-radius:12px;padding:20px;border:1px solid {_LINE};"
+                f"text-align:center;color:{_MUTED};'>Cola vacia — sin pedidos activos</div>",
+                unsafe_allow_html=True,
+            )
+        else:
+            for _, _cr in _df_cola.iterrows():
+                _pid    = int(_cr["id"])
+                _st     = _cr["status"]
+                _lcfg   = get_linea(_cr["client_id"])
+                _stc    = {"Pendiente": "#E0902A", "En Proceso": "#3B82F6", "Listo": "#2F9E54"}.get(_st, _MUTED)
+                _monto  = float(_cr.get("monto_pago") or 0)
+                _notas  = str(_cr.get("notas") or "")
+
+                st.markdown(
+                    f"<div style='background:{_SURFACE};border-radius:12px;padding:14px 16px;"
+                    f"border:1px solid {_LINE};border-left:4px solid {_stc};margin-bottom:6px;'>"
+                    f"<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;'>"
+                    f"<div><span style='font-size:0.58rem;font-weight:700;letter-spacing:.1em;"
+                    f"text-transform:uppercase;color:{_lcfg['color']};'>"
+                    f"{_lcfg['emoji']} {_lcfg['nombre']}</span>"
+                    f"<span style='font-size:0.95rem;font-weight:800;color:{_INK};margin-left:8px;'>"
+                    f"#{_pid} — {int(_cr['cantidad'])}× {_cr['producto']}</span></div>"
+                    f"<span style='background:{_stc}18;color:{_stc};border-radius:6px;padding:2px 8px;"
+                    f"font-size:0.62rem;font-weight:700;'>{_st}</span></div>"
+                    f"<div style='font-size:0.68rem;color:{_MUTED};'>"
+                    f"${_monto:,.0f} · {str(_cr['date'])[:10]}"
+                    + (f" · {_notas[:60]}" if _notas else "")
+                    + "</div></div>",
+                    unsafe_allow_html=True,
+                )
+
+                _b1, _b2, _b3, _b4 = st.columns(4)
+                if _st == "Pendiente":
+                    with _b1:
+                        if st.button("▶ Iniciar", key=f"hoy_ini_{_pid}", use_container_width=True, type="primary"):
+                            _dlg_iniciar(_pid)
+                    with _b4:
+                        if st.button("✕ Cancelar", key=f"hoy_can_{_pid}", use_container_width=True):
+                            _dlg_cancelar(_pid)
+                elif _st == "En Proceso":
+                    with _b1:
+                        if st.button("✓ Registrar fab", key=f"hoy_fab_{_pid}", use_container_width=True, type="primary"):
+                            _dlg_fabricar(_pid)
+                    with _b4:
+                        if st.button("✕ Cancelar", key=f"hoy_can_{_pid}", use_container_width=True):
+                            _dlg_cancelar(_pid)
+                elif _st == "Listo":
+                    with _b1:
+                        if st.button("📦 Entregar", key=f"hoy_ent_{_pid}", use_container_width=True, type="primary"):
+                            _dlg_entregar(_pid, _monto)
+                    with _b4:
+                        if st.button("✕ Cancelar", key=f"hoy_can_{_pid}", use_container_width=True):
+                            _dlg_cancelar(_pid)
+
+        # ── Entregados esta semana ────────────────────────────
+        st.markdown("<div class='section-title' style='margin-top:24px;'>✅ Entregados esta semana</div>", unsafe_allow_html=True)
+        try:
+            _df_rec = pd.read_sql("""
+                SELECT o.id, o.client_id, o.delivered_at, o.monto_venta,
+                       oi.cantidad, p.name AS producto
+                FROM orders o
+                JOIN order_items oi ON oi.order_id = o.id
+                JOIN products p ON p.sku = oi.product_sku
+                WHERE o.status='Entregado' AND o.delivered_at >= date('now','-7 days')
+                ORDER BY o.delivered_at DESC
+            """, engine)
+        except Exception:
+            _df_rec = pd.DataFrame()
+
+        if _df_rec.empty:
+            st.markdown(
+                f"<div style='background:{_SURFACE};border-radius:8px;padding:12px 16px;"
+                f"border:1px solid {_LINE};color:{_MUTED};'>Sin entregas en los ultimos 7 dias.</div>",
+                unsafe_allow_html=True,
+            )
+        else:
+            for _, _rr in _df_rec.iterrows():
+                _rl = get_linea(_rr["client_id"])
+                st.markdown(
+                    f"<div style='background:{_SURFACE};border-radius:8px;padding:10px 14px;"
+                    f"border:1px solid {_LINE};border-left:3px solid {_rl['color']};margin-bottom:5px;"
+                    f"display:flex;justify-content:space-between;align-items:center;'>"
+                    f"<div><span style='color:{_rl['color']};font-weight:700;font-size:0.75rem;'>"
+                    f"{_rl['emoji']} #{int(_rr['id'])}</span>"
+                    f" <span style='color:{_INK};font-size:0.82rem;'>"
+                    f"{int(_rr['cantidad'])}× {_rr['producto']}</span></div>"
+                    f"<div style='text-align:right;'>"
+                    f"<div style='font-weight:800;color:#2F9E54;'>${float(_rr.get('monto_venta') or 0):,.0f}</div>"
+                    f"<div style='font-size:0.62rem;color:{_MUTED};'>{str(_rr.get('delivered_at',''))[:10]}</div>"
+                    f"</div></div>",
+                    unsafe_allow_html=True,
+                )
+
+    with _col_lat:
+        # ── Materiales ────────────────────────────────────────
+        st.markdown("<div class='section-title'>🧵 Materiales</div>", unsafe_allow_html=True)
+        try:
+            _df_mats = pd.read_sql(
+                "SELECT name, stock_gr FROM materials WHERE activo=1 ORDER BY stock_gr ASC", engine
+            )
+        except Exception:
+            _df_mats = pd.DataFrame()
+
+        for _, _mr in _df_mats.iterrows():
+            _mc = "#D7322B" if _mr["stock_gr"] < 200 else ("#E0902A" if _mr["stock_gr"] < 500 else "#2F9E54")
+            _ml = "CRITICO" if _mr["stock_gr"] < 200 else ("BAJO" if _mr["stock_gr"] < 500 else "OK")
+            st.markdown(
+                f"<div style='background:{_SURFACE};border-radius:10px;padding:10px 14px;"
+                f"border:1px solid {_LINE};border-left:3px solid {_mc};margin-bottom:5px;'>"
+                f"<div style='display:flex;justify-content:space-between;align-items:center;'>"
+                f"<span style='font-size:0.82rem;font-weight:700;color:{_INK};'>{_mr['name']}</span>"
+                f"<span style='font-size:0.58rem;font-weight:700;color:{_mc};'>{_ml}</span></div>"
+                f"<div style='font-size:0.78rem;color:{_mc};font-weight:600;margin-top:2px;'>"
+                f"{_mr['stock_gr']:.0f} g</div></div>",
+                unsafe_allow_html=True,
+            )
+
+        # ── Alertas Mike ─────────────────────────────────────
+        st.markdown("<div class='section-title' style='margin-top:16px;'>🤖 Mike</div>", unsafe_allow_html=True)
+        if _alertas:
+            for _a in _alertas[:6]:
+                _ac = "#D7322B" if _a["nivel"] == "critico" else ("#E0902A" if _a["nivel"] == "atencion" else _MUTED)
+                st.markdown(
+                    f"<div style='background:{_SURFACE};border-radius:8px;padding:8px 12px;"
+                    f"border-left:3px solid {_ac};margin-bottom:5px;'>"
+                    f"<div style='font-size:0.75rem;font-weight:700;color:{_ac};'>{_a['titulo']}</div>"
+                    f"<div style='font-size:0.68rem;color:{_MUTED};margin-top:1px;'>{_a['accion']}</div>"
+                    f"</div>",
+                    unsafe_allow_html=True,
+                )
+        else:
+            st.markdown(
+                f"<div style='background:#F0FDF4;border-radius:8px;padding:10px 14px;"
+                f"border:1px solid #D1FAE5;font-size:0.75rem;font-weight:600;color:#2F9E54;'>"
+                f"Sin alertas — todo en orden</div>",
+                unsafe_allow_html=True,
+            )
+
+
 def _dash_m19():
-    """Tab ⚡ Magnitud 19 — panel de línea madre y Vuelo Certero."""
+    """Tab Magnitud 19 — panel de linea madre y Vuelo Certero."""
     _LC = "#C9A84C"
     st.markdown(
         f"<div style='background:linear-gradient(135deg,{_LC}22,{_LC}08);border-radius:16px;"
@@ -792,7 +1094,9 @@ def _dash_pagos():
 
 
 def render():
-    _tab_dash, _tab_mike, _tab_m19, _tab_pagos = st.tabs(["📊 Dashboard", "🤖 Mike", "⚡ Magnitud 19", "💳 Pagos"])
+    _tab_hoy, _tab_dash, _tab_mike, _tab_m19, _tab_pagos = st.tabs(["⚡ Hoy", "📊 Dashboard", "🤖 Mike", "⚡ Magnitud 19", "💳 Pagos"])
+    with _tab_hoy:
+        _dash_hoy()
     with _tab_dash:
         _dash_main()
     with _tab_mike:

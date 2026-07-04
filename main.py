@@ -450,7 +450,7 @@ with st.sidebar:
 </div>""", unsafe_allow_html=True)
 
     if st.session_state["role"] == "admin":
-        menu = st.radio("", ["Control", "Stock", "Taller", "Líneas", "CRM", "Impacto", "Mike"], label_visibility="collapsed")
+        menu = st.radio("", ["Control", "Venta", "Taller", "Stock", "Líneas", "CRM", "Impacto", "Mike"], label_visibility="collapsed")
     elif st.session_state["role"] == "socio_multi":
         _lids = get_lineas_usuario(st.session_state["uid"])
         _nombre_a_id = {LINEAS[l]["nombre"]: l for l in _lids if l in LINEAS}
@@ -510,6 +510,10 @@ with st.sidebar:
 # ── Router ─────────────────────────────────────────────────────────────────
 if menu == "Control":
     from modules.dashboard_admin import render
+    render()
+
+elif menu == "Venta":
+    from modules.nueva_venta import render
     render()
 
 elif menu == "Stock":
