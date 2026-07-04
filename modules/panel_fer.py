@@ -6,6 +6,7 @@ from sqlalchemy import text
 from utils.db import engine
 from utils.lineas import LINEAS, _EC, get_linea, IP_RESTRINGIDA
 from utils.mike import get_alertas_dashboard, preguntar_mike as _preguntar_mike
+from utils.orders import avanzar_estado as _avanzar_estado, verificar_material_disponible as _verificar_mat
 
 
 def render():
@@ -100,14 +101,15 @@ details summary{color:#E6EDF3!important;padding:8px 12px!important}
             _es2.metric("Material mÃ¡s usado", _mat_nom)
             _es3.metric("Ãšltima fabricaciÃ³n", _ult_f)
         else:
+            _fab_modal_pid = st.session_state.get("_fab_modal_pid")
             for _, _p in _pedidos_activos.iterrows():
                 _ecfg  = _EC.get(_p["status"], _EC["Pendiente"])
                 _socio = get_linea(_p["client_id"])["nombre"]
                 _fecha = str(_p["date"])[:10]
-                _pid   = _p["id"]
-                _prod  = _p.get("product_name") or "â€”"
-                _gramos  = f"{_p['weight_gr']:.0f} g" if pd.notna(_p.get("weight_gr")) else "â€”"
-                _entrega = _p.get("fecha_entrega_est") or "â€”"
+                _pid   = int(_p["id"])
+                _prod  = _p.get("product_name") or "-"
+                _gramos  = f"{_p['weight_gr']:.0f} g" if pd.notna(_p.get("weight_gr")) else "-"
+                _entrega = _p.get("fecha_entrega_est") or "-"
                 with st.expander(f"{_ecfg['emoji']} Pedido #{_pid} Â· {_prod} Â· {_socio}"):
                     _c1, _c2, _c3, _c4 = st.columns(4)
                     _c1.metric("LÃ­nea", _socio)
@@ -116,14 +118,40 @@ details summary{color:#E6EDF3!important;padding:8px 12px!important}
                     _c4.metric("Cargado", _fecha)
                     if _p.get("notas"):
                         st.caption(f"Notas: {_p['notas']}")
-                    _nuevo_est = st.selectbox("Cambiar estado", ["Pendiente","En Proceso","Listo","Cancelado"],
-                                              index=["Pendiente","En Proceso","Listo","Cancelado"].index(_p["status"]),
-                                              key=f"panel_est_{_pid}")
-                    if _nuevo_est != _p["status"]:
-                        if st.button("Confirmar cambio", key=f"panel_btn_{_pid}", type="primary"):
-                            with engine.connect() as _conn:
-                                _conn.execute(text("UPDATE orders SET status=:s WHERE id=:id"), {"s": _nuevo_est, "id": _pid})
-                                _conn.commit()
+                    # Verificar material disponible
+                    _mat_ok = _verificar_mat(_pid)
+                    if not _mat_ok["ok"]:
+                        st.warning(f"Material insuficiente: falta {_mat_ok.get('faltante_gr',0):.0f} g de {_mat_ok.get('material','?')}")
+
+                    # Botones de accion directa (<=1 click)
+                    _btn1, _btn2, _btn3 = st.columns(3)
+                    if _p["status"] == "Pendiente":
+                        if _btn1.button("Iniciar", key=f"ini_{_pid}", type="primary", use_container_width=True):
+                            _r = _avanzar_estado(_pid, "En Proceso")
+                            if _r["ok"]:
+                                st.success(f"#{_pid} -> En Proceso")
+                                st.rerun()
+                            else:
+                                st.error(_r["error"])
+                    elif _p["status"] == "En Proceso":
+                        if _btn1.button("Registrar Fab", key=f"fab_{_pid}", type="primary", use_container_width=True):
+                            st.session_state["_fab_modal_pid"] = _pid
+                            st.rerun()
+                    elif _p["status"] == "Listo":
+                        if _btn1.button("Entregar", key=f"ent_{_pid}", type="primary", use_container_width=True):
+                            _r = _avanzar_estado(_pid, "Entregado")
+                            if _r["ok"]:
+                                st.success(f"#{_pid} -> Entregado - Venta registrada")
+                                st.rerun()
+                            else:
+                                st.error(_r["error"])
+                    if _p["status"] not in ("Entregado", "Cancelado"):
+                        if _btn3.button("Cancelar", key=f"canc_{_pid}", use_container_width=True):
+                            _r = _avanzar_estado(_pid, "Cancelado", motivo="Cancelado desde panel")
+                            if _r["ok"]:
+                                st.rerun()
+                            else:
+                                st.error(_r["error"])
                             st.success(f"Pedido #{_pid} â†’ {_nuevo_est}")
                             st.rerun()
 
@@ -162,6 +190,50 @@ details summary{color:#E6EDF3!important;padding:8px 12px!important}
                         )
 
     # â•â• TAB 2 â€” CARGAR FABRICACION (simplificado) â•â•
+
+            # Form inline: aparece cuando se presiona "Registrar Fab"
+            if _fab_modal_pid:
+                _p_fab = _pedidos_all[_pedidos_all["id"] == _fab_modal_pid]
+                if not _p_fab.empty:
+                    _p_fab = _p_fab.iloc[0]
+                    st.markdown("---")
+                    st.markdown(f"**Fabricacion Pedido #{_fab_modal_pid} - {_p_fab.get('product_name','?')}**")
+                    _mat_nombres = mats["name"].tolist() if not mats.empty else []
+                    _mat_ids = mats["material_id"].tolist() if not mats.empty else []
+                    _mid_auto = str(_p_fab.get("material_id") or "")
+                    _wdef = max(float(_p_fab.get("weight_gr") or 50), 1.0)
+                    _mid_idx = _mat_ids.index(_mid_auto) if _mid_auto in _mat_ids else 0
+                    _mf1, _mf2 = st.columns(2)
+                    with _mf1:
+                        _fab_grams = st.number_input("Gramos consumidos", min_value=1.0, max_value=2000.0, value=_wdef, step=5.0, key="mfab_grams")
+                        _fab_horas = st.number_input("Tiempo (horas)", min_value=0.5, max_value=24.0, value=1.0, step=0.5, key="mfab_horas")
+                    with _mf2:
+                        _fab_mat_nom = st.selectbox("Material", _mat_nombres, index=_mid_idx, key="mfab_mat")
+                        _fab_res = st.radio("Resultado", ["Exito", "Fallo parcial", "Fallo total"], horizontal=True, key="mfab_res")
+                    _mfbc1, _mfbc2 = st.columns(2)
+                    if _mfbc1.button("Confirmar fabricacion", type="primary", key="mfab_confirm", use_container_width=True):
+                        _fab_mid = mats.loc[mats["name"] == _fab_mat_nom, "material_id"].iloc[0] if not mats.empty else ""
+                        _r = _avanzar_estado(
+                            _fab_modal_pid, "Listo",
+                            gramos_reales=_fab_grams,
+                            tiempo_min=int(_fab_horas * 60),
+                            material_id=_fab_mid,
+                            resultado=_fab_res,
+                        )
+                        if _r["ok"]:
+                            st.session_state.pop("_fab_modal_pid", None)
+                            estado_final = _r["estado_final"]
+                            fallo = _r.get("fallo", False)
+                            msg = f"Fabricacion #{_fab_modal_pid} -> {estado_final}"
+                            if fallo:
+                                msg += " (fallo - regresa a Pendiente)"
+                            st.success(msg)
+                            st.rerun()
+                        else:
+                            st.error(_r["error"])
+                    if _mfbc2.button("Cancelar", key="mfab_cancel", use_container_width=True):
+                        st.session_state.pop("_fab_modal_pid", None)
+                        st.rerun()
     with tab_fab:
         st.markdown(
             "<div style='font-size:0.65rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;"
@@ -261,48 +333,45 @@ details summary{color:#E6EDF3!important;padding:8px 12px!important}
         if "Ã‰xito" in _fab2_res and _sel_oid_f is not None:
             _marcar_listo = st.checkbox("Marcar pedido como Listo al guardar", value=True, key="fab2_marcar_listo")
 
-        if st.button("Registrar fabricaciÃ³n", type="primary", key="fab2_submit", use_container_width=True):
-            _fab2_mid   = mats.loc[mats["name"] == _fab2_mat_nom, "material_id"].iloc[0] if not mats.empty else ""
-            _fab2_min   = int(_fab2_horas * 60)
-            _res_clean  = _fab2_res.split(" ", 1)[1] if " " in _fab2_res else _fab2_res
-            _res_str    = _res_clean + (f" â€” {_fab2_notas}" if _fab2_notas else "")
-            with engine.connect() as _conn:
-                _conn.execute(
-                    text("""
-                        INSERT INTO production_log
-                        (order_id, product_sku, material_id, gramos_usados,
-                         tiempo_real_min, fecha_inicio, fecha_fin, resultado)
-                        VALUES (:oid, :sku, :mid, :grams, :tiempo, :fi, :ff, :res)
-                    """),
-                    {"oid": _sel_oid_f, "sku": _sku_f, "mid": _fab2_mid,
-                     "grams": _fab2_grams, "tiempo": _fab2_min,
-                     "fi": _hoy_str, "ff": _hoy_str, "res": _res_str},
+        if st.button("Registrar fabricacion", type="primary", key="fab2_submit", use_container_width=True):
+            _fab2_mid = mats.loc[mats["name"] == _fab2_mat_nom, "material_id"].iloc[0] if not mats.empty else ""
+            _fab2_min = int(_fab2_horas * 60)
+            _res_clean = _fab2_res.split(" ", 1)[1] if " " in _fab2_res else _fab2_res
+            _res_str = _res_clean + (f" - {_fab2_notas}" if _fab2_notas else "")
+            if _sel_oid_f is not None and _marcar_listo:
+                _r2 = _avanzar_estado(
+                    int(_sel_oid_f), "Listo",
+                    gramos_reales=_fab2_grams,
+                    tiempo_min=_fab2_min,
+                    material_id=_fab2_mid,
+                    resultado=_res_str,
                 )
-                _conn.execute(
-                    text("UPDATE materials SET stock_gr = stock_gr - :g WHERE material_id = :mid"),
-                    {"g": _fab2_grams, "mid": _fab2_mid},
-                )
-                if _marcar_listo and _sel_oid_f is not None:
-                    _conn.execute(text("UPDATE orders SET status='Listo' WHERE id=:id"), {"id": int(_sel_oid_f)})
-                if "Fallo total" in _fab2_res and _sel_oid_f is not None:
-                    _conn.execute(text("UPDATE orders SET status='Pendiente' WHERE id=:id"), {"id": int(_sel_oid_f)})
-                # Trazabilidad: stock_movements para produccion completada
-                if _sku_f and _sku_f != "LIBRE" and "Fallo total" not in _fab2_res:
-                    _qty_fab = 1
-                    if _sel_oid_f:
-                        _qi = pd.read_sql(
-                            text("SELECT cantidad FROM order_items WHERE order_id=:oid AND product_sku=:sku LIMIT 1"),
-                            _conn, params={"oid": _sel_oid_f, "sku": _sku_f}
-                        )
-                        if not _qi.empty:
-                            _qty_fab = int(_qi["cantidad"].iloc[0])
-                    _conn.execute(
-                        text("INSERT INTO stock_movements (product_sku, tipo, cantidad, fecha, referencia) VALUES (:sku, :tipo, :qty, :fecha, :ref)"),
-                        {"sku": _sku_f, "tipo": "produccion", "qty": _qty_fab,
-                         "fecha": _hoy_str, "ref": f"order_{_sel_oid_f or 'libre'}"},
+                if _r2["ok"]:
+                    msg2 = f"Fabricacion: {_fab2_grams:.0f} g de {_fab2_mat_nom}"
+                    if _r2.get("fallo"):
+                        msg2 += " - Fallo total, pedido a Pendiente"
+                    else:
+                        msg2 += f" - Pedido #{_sel_oid_f} -> {_r2['estado_final']}"
+                    st.success(msg2)
+                else:
+                    st.error(_r2["error"])
+            else:
+                with engine.connect() as _conn2:
+                    _conn2.execute(
+                        text("""INSERT INTO production_log
+                               (order_id, product_sku, material_id, gramos_usados,
+                                tiempo_real_min, fecha_inicio, fecha_fin, resultado)
+                               VALUES (:oid, :sku, :mid, :grams, :tiempo, :fi, :ff, :res)"""),
+                        {"oid": _sel_oid_f, "sku": _sku_f, "mid": _fab2_mid,
+                         "grams": _fab2_grams, "tiempo": _fab2_min,
+                         "fi": _hoy_str, "ff": _hoy_str, "res": _res_str},
                     )
-                _conn.commit()
-            st.success(f"Registrado Â· {_fab2_grams:.0f} g de {_fab2_mat_nom} descontados")
+                    _conn2.execute(
+                        text("UPDATE materials SET stock_gr = stock_gr - :g WHERE material_id = :mid"),
+                        {"g": _fab2_grams, "mid": _fab2_mid},
+                    )
+                    _conn2.commit()
+                st.success(f"Registrado: {_fab2_grams:.0f} g de {_fab2_mat_nom} descontados")
             st.rerun()
 
         st.markdown("<div style='margin-top:24px;font-size:0.65rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#58A6FF;'>ÃšLTIMAS 20 FABRICACIONES</div>", unsafe_allow_html=True)

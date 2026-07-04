@@ -102,7 +102,7 @@ def render():
     # ── Sección A — Estado del ecosistema ──────────────────────
     st.markdown(
         "<div style='font-size:0.65rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;"
-        "color:#58A6FF;margin-bottom:4px;'>A · ESTADO DEL ECOSISTEMA</div>",
+        "color:#FF4B4B;margin-bottom:4px;'>A · ESTADO DEL ECOSISTEMA</div>",
         unsafe_allow_html=True,
     )
     with st.expander("ℹ️ Qué analizar acá"):
@@ -127,49 +127,49 @@ Cada uno en rojo es una fabricación que Fer no puede completar. Acción inmedia
         _c = "#EF4444" if _warn else "#3FB950"
         with _col:
             st.markdown(
-                f"<div style='background:#161B22;border-radius:14px;padding:20px 16px;"
-                f"border:1px solid #21262D;border-top:3px solid {_c};text-align:center;margin-bottom:8px;'>"
+                f"<div style='background:#FAF8F3;border-radius:14px;padding:20px 16px;"
+                f"border:1px solid #DCD5C7;border-top:3px solid {_c};text-align:center;margin-bottom:8px;'>"
                 f"<div style='font-size:2.2rem;font-weight:800;color:{_c};line-height:1;'>{_val}</div>"
-                f"<div style='font-size:0.75rem;font-weight:600;color:#C9D1D9;margin-top:8px;'>{_label}</div>"
-                f"<div style='font-size:0.64rem;color:#6B7280;margin-top:4px;'>{_sub}</div></div>",
+                f"<div style='font-size:0.75rem;font-weight:600;color:#3A3E4A;margin-top:8px;'>{_label}</div>"
+                f"<div style='font-size:0.64rem;color:#74798A;margin-top:4px;'>{_sub}</div></div>",
                 unsafe_allow_html=True,
             )
 
     # ── Sección B — Alertas activas ────────────────────────────
     st.markdown(
         "<div style='font-size:0.65rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;"
-        "color:#58A6FF;margin:24px 0 12px;'>B · ALERTAS ACTIVAS</div>",
+        "color:#FF4B4B;margin:24px 0 12px;'>B · ALERTAS ACTIVAS</div>",
         unsafe_allow_html=True,
     )
     _alertas = get_alertas_dashboard()
-    _cm = {"critico": "#EF4444", "atencion": "#F59E0B", "info": "#58A6FF"}
-    _bm = {"critico": "#2D1117", "atencion": "#2D2007", "info": "#0D1B2E"}
-    _dm = {"critico": "#451B1B", "atencion": "#3D2B0A", "info": "#1B2D4A"}
+    _cm = {"critico": "#D7322B", "atencion": "#E0902A", "info": "#1E5A8A"}
+    _bm = {"critico": "#FEF2F2", "atencion": "#FEF3C7", "info": "#EFF6FF"}
+    _dm = {"critico": "#FECACA", "atencion": "#FDE68A", "info": "#BFDBFE"}
     if not _alertas:
         st.markdown(
-            "<div style='background:#0D2818;border-radius:12px;padding:14px 20px;border:1px solid #238636;'>"
-            "<span style='color:#3FB950;font-weight:700;'>✅ Sin alertas activas</span>"
-            "<span style='color:#8B949E;margin-left:12px;font-size:0.8rem;'>El ecosistema está en orden.</span></div>",
+            "<div style='background:#ECFDF5;border-radius:12px;padding:14px 20px;border:1px solid #A7F3D0;'>"
+            "<span style='color:#2F9E54;font-weight:700;'>✅ Sin alertas activas</span>"
+            "<span style='color:#74798A;margin-left:12px;font-size:0.8rem;'>El ecosistema está en orden.</span></div>",
             unsafe_allow_html=True,
         )
     else:
         for _a in _alertas:
-            _c  = _cm.get(_a["nivel"], "#8B949E")
-            _bg = _bm.get(_a["nivel"], "#161B22")
-            _bd = _dm.get(_a["nivel"], "#21262D")
+            _c  = _cm.get(_a["nivel"], "#74798A")
+            _bg = _bm.get(_a["nivel"], "#FAF8F3")
+            _bd = _dm.get(_a["nivel"], "#DCD5C7")
             st.markdown(
                 f"<div style='background:{_bg};border-radius:12px;padding:14px 18px;"
                 f"border:1px solid {_bd};border-left:4px solid {_c};margin-bottom:8px;'>"
                 f"<div style='font-size:0.88rem;font-weight:700;color:{_c};'>{_a['titulo']}</div>"
-                f"<div style='font-size:0.75rem;color:#8B949E;margin-top:4px;'>{_a['detalle']}</div>"
-                f"<div style='font-size:0.7rem;color:#6B7280;margin-top:3px;'>→ {_a['accion']}</div></div>",
+                f"<div style='font-size:0.75rem;color:#74798A;margin-top:4px;'>{_a['detalle']}</div>"
+                f"<div style='font-size:0.7rem;color:#74798A;margin-top:3px;'>→ {_a['accion']}</div></div>",
                 unsafe_allow_html=True,
             )
 
     # ── Sección C — Top 5 productos ────────────────────────────
     st.markdown(
         "<div style='font-size:0.65rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;"
-        "color:#58A6FF;margin:24px 0 4px;'>C · TOP 5 PRODUCTOS (últimos 30 días · unidades)</div>",
+        "color:#FF4B4B;margin:24px 0 4px;'>C · TOP 5 PRODUCTOS (últimos 30 días · unidades)</div>",
         unsafe_allow_html=True,
     )
     with st.expander("ℹ️ Qué analizar acá"):
@@ -191,16 +191,16 @@ No incluye precios para mantener privacidad de márgenes.
         _max_u = int(_top["unidades"].max()) or 1
         for _, _r in _top.iterrows():
             _linea_nom = LINEAS.get(_r["linea_id"], {}).get("nombre", _r["linea_id"])
-            _linea_color = LINEAS.get(_r["linea_id"], {}).get("color", "#8B949E")
+            _linea_color = LINEAS.get(_r["linea_id"], {}).get("color", "#74798A")
             _pct = min(100, int(_r["unidades"]) / _max_u * 100)
             st.markdown(
-                f"<div style='background:#161B22;border-radius:10px;padding:12px 16px;"
-                f"margin-bottom:6px;border:1px solid #21262D;'>"
+                f"<div style='background:#FAF8F3;border-radius:10px;padding:12px 16px;"
+                f"margin-bottom:6px;border:1px solid #DCD5C7;'>"
                 f"<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;'>"
-                f"<span style='font-size:0.82rem;font-weight:700;color:#E6EDF3;'>{_r['producto']}</span>"
+                f"<span style='font-size:0.82rem;font-weight:700;color:#16181F;'>{_r['producto']}</span>"
                 f"<span style='font-size:0.75rem;font-weight:700;color:{_linea_color};'>{int(_r['unidades'])} u</span></div>"
-                f"<div style='font-size:0.65rem;color:#6B7280;margin-bottom:4px;'>{_linea_nom}</div>"
-                f"<div style='background:#21262D;border-radius:4px;height:5px;'>"
+                f"<div style='font-size:0.65rem;color:#74798A;margin-bottom:4px;'>{_linea_nom}</div>"
+                f"<div style='background:#DCD5C7;border-radius:4px;height:5px;'>"
                 f"<div style='background:{_linea_color};height:5px;border-radius:4px;width:{_pct:.0f}%;'></div></div></div>",
                 unsafe_allow_html=True,
             )
@@ -208,7 +208,7 @@ No incluye precios para mantener privacidad de márgenes.
     # ── Sección D — Señales de mercado ─────────────────────────
     st.markdown(
         "<div style='font-size:0.65rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;"
-        "color:#58A6FF;margin:24px 0 4px;'>D · SEÑALES DE MERCADO (últimos 7 días)</div>",
+        "color:#FF4B4B;margin:24px 0 4px;'>D · SEÑALES DE MERCADO (últimos 7 días)</div>",
         unsafe_allow_html=True,
     )
     with st.expander("ℹ️ Qué analizar acá"):
@@ -233,25 +233,25 @@ Cada una tiene un tipo que indica qué clase de información es:
         _tipos = ["Todos"] + sorted(_senales["tipo"].dropna().unique().tolist())
         _filtro = st.selectbox("Filtrar por tipo", _tipos, key="mike_filtro_senal")
         _df_s = _senales if _filtro == "Todos" else _senales[_senales["tipo"] == _filtro]
-        _tipo_colors = {"demanda": "#22C55E", "competencia": "#F59E0B", "tendencia": "#58A6FF", "riesgo": "#EF4444"}
+        _tipo_colors = {"demanda": "#2F9E54", "competencia": "#E0902A", "tendencia": "#1E5A8A", "riesgo": "#D7322B"}
         for _, _s in _df_s.iterrows():
-            _tc = _tipo_colors.get(str(_s.get("tipo", "")).lower(), "#8B949E")
+            _tc = _tipo_colors.get(str(_s.get("tipo", "")).lower(), "#74798A")
             _linea_nom = LINEAS.get(str(_s.get("cliente_id", "")), {}).get("nombre", str(_s.get("cliente_id", "—")))
             st.markdown(
-                f"<div style='background:#161B22;border-radius:10px;padding:12px 16px;"
-                f"margin-bottom:6px;border:1px solid #21262D;border-left:3px solid {_tc};'>"
+                f"<div style='background:#FAF8F3;border-radius:10px;padding:12px 16px;"
+                f"margin-bottom:6px;border:1px solid #DCD5C7;border-left:3px solid {_tc};'>"
                 f"<div style='display:flex;justify-content:space-between;'>"
                 f"<span style='font-size:0.7rem;font-weight:700;color:{_tc};text-transform:uppercase;'>{_s.get('tipo','')}</span>"
-                f"<span style='font-size:0.65rem;color:#6B7280;'>{str(_s.get('fecha',''))[:10]}</span></div>"
-                f"<div style='font-size:0.82rem;color:#C9D1D9;margin-top:4px;'>{_s.get('descripcion','')}</div>"
-                f"<div style='font-size:0.65rem;color:#6B7280;margin-top:3px;'>{_linea_nom}</div></div>",
+                f"<span style='font-size:0.65rem;color:#74798A;'>{str(_s.get('fecha',''))[:10]}</span></div>"
+                f"<div style='font-size:0.82rem;color:#3A3E4A;margin-top:4px;'>{_s.get('descripcion','')}</div>"
+                f"<div style='font-size:0.65rem;color:#74798A;margin-top:3px;'>{_linea_nom}</div></div>",
                 unsafe_allow_html=True,
             )
 
     # ── Sección E.5 — Stock movements recientes ───────────────
     st.markdown(
         "<div style='font-size:0.65rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;"
-        "color:#58A6FF;margin:24px 0 4px;'>E.5 · MOVIMIENTOS DE STOCK (últimos 20)</div>",
+        "color:#FF4B4B;margin:24px 0 4px;'>E.5 · MOVIMIENTOS DE STOCK (últimos 20)</div>",
         unsafe_allow_html=True,
     )
     try:
@@ -267,17 +267,17 @@ Cada una tiene un tipo que indica qué clase de información es:
         if _mov.empty:
             st.caption("Sin movimientos de stock registrados todavía.")
         else:
-            _tipo_c = {"produccion": "#3FB950", "pedido": "#F59E0B", "ajuste_manual": "#58A6FF"}
+            _tipo_c = {"produccion": "#2F9E54", "pedido": "#E0902A", "ajuste_manual": "#1E5A8A"}
             for _, _m in _mov.iterrows():
-                _tc = _tipo_c.get(str(_m.get("tipo", "")), "#8B949E")
+                _tc = _tipo_c.get(str(_m.get("tipo", "")), "#74798A")
                 _qty_disp = f"+{_m['cantidad']}" if int(_m.get('cantidad', 0)) > 0 else str(int(_m.get('cantidad', 0)))
                 st.markdown(
-                    f"<div style='background:#161B22;border-radius:10px;padding:10px 14px;"
-                    f"margin-bottom:5px;border:1px solid #21262D;border-left:3px solid {_tc};'>"
+                    f"<div style='background:#FAF8F3;border-radius:10px;padding:10px 14px;"
+                    f"margin-bottom:5px;border:1px solid #DCD5C7;border-left:3px solid {_tc};'>"
                     f"<div style='display:flex;justify-content:space-between;align-items:center;'>"
-                    f"<span style='font-size:0.8rem;font-weight:700;color:#E6EDF3;'>{_m.get('producto') or _m['product_sku']}</span>"
+                    f"<span style='font-size:0.8rem;font-weight:700;color:#16181F;'>{_m.get('producto') or _m['product_sku']}</span>"
                     f"<span style='font-size:0.88rem;font-weight:700;color:{_tc};'>{_qty_disp}</span></div>"
-                    f"<div style='font-size:0.65rem;color:#6B7280;margin-top:3px;'>"
+                    f"<div style='font-size:0.65rem;color:#74798A;margin-top:3px;'>"
                     f"{str(_m.get('fecha',''))[:10]} · {_m.get('tipo','')} · ref: {_m.get('referencia','')}</div></div>",
                     unsafe_allow_html=True,
                 )
@@ -287,7 +287,7 @@ Cada una tiene un tipo que indica qué clase de información es:
     # ── Sección E — Tendencia de precios ───────────────────────
     st.markdown(
         "<div style='font-size:0.65rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;"
-        "color:#58A6FF;margin:24px 0 4px;'>E · HISTORIAL DE PRECIOS</div>",
+        "color:#FF4B4B;margin:24px 0 4px;'>E · HISTORIAL DE PRECIOS</div>",
         unsafe_allow_html=True,
     )
     with st.expander("ℹ️ Qué analizar acá"):
@@ -304,23 +304,23 @@ Cada una tiene un tipo que indica qué clase de información es:
     _precios = _tendencia_precios()
     if _precios.empty:
         st.markdown(
-            "<div style='background:#161B22;border-radius:12px;padding:16px 20px;border:1px solid #21262D;'>"
-            "<span style='color:#8B949E;font-size:0.82rem;'>Sin cambios de precios registrados.</span></div>",
+            "<div style='background:#FAF8F3;border-radius:12px;padding:16px 20px;border:1px solid #DCD5C7;'>"
+            "<span style='color:#74798A;font-size:0.82rem;'>Sin cambios de precios registrados.</span></div>",
             unsafe_allow_html=True,
         )
     else:
         for _, _ph in _precios.iterrows():
             _delta = float(_ph["precio_nuevo"] or 0) - float(_ph["precio_anterior"] or 0)
-            _dc = "#22C55E" if _delta >= 0 else "#EF4444"
+            _dc = "#2F9E54" if _delta >= 0 else "#EF4444"
             _darrow = "▲" if _delta >= 0 else "▼"
             st.markdown(
-                f"<div style='background:#161B22;border-radius:10px;padding:12px 16px;"
-                f"margin-bottom:6px;border:1px solid #21262D;'>"
+                f"<div style='background:#FAF8F3;border-radius:10px;padding:12px 16px;"
+                f"margin-bottom:6px;border:1px solid #DCD5C7;'>"
                 f"<div style='display:flex;justify-content:space-between;align-items:center;'>"
-                f"<div><span style='font-size:0.82rem;font-weight:700;color:#E6EDF3;'>{_ph['producto']}</span>"
-                f"<span style='font-size:0.65rem;color:#6B7280;margin-left:8px;'>{str(_ph.get('fecha',''))[:10]}</span></div>"
+                f"<div><span style='font-size:0.82rem;font-weight:700;color:#16181F;'>{_ph['producto']}</span>"
+                f"<span style='font-size:0.65rem;color:#74798A;margin-left:8px;'>{str(_ph.get('fecha',''))[:10]}</span></div>"
                 f"<span style='font-size:0.88rem;font-weight:700;color:{_dc};'>{_darrow} ${abs(_delta):,.0f}</span></div>"
-                f"<div style='font-size:0.72rem;color:#8B949E;margin-top:4px;'>"
+                f"<div style='font-size:0.72rem;color:#74798A;margin-top:4px;'>"
                 f"${float(_ph['precio_anterior'] or 0):,.0f} → ${float(_ph['precio_nuevo'] or 0):,.0f}"
                 f"{(' · ' + str(_ph['motivo'])) if _ph.get('motivo') else ''}</div></div>",
                 unsafe_allow_html=True,

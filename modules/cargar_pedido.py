@@ -5,6 +5,7 @@ from datetime import datetime
 from sqlalchemy import text
 from utils.db import engine
 from utils.lineas import LINEAS, get_linea, get_lineas_usuario
+from utils.orders import verificar_material_disponible as _verificar_mat_cp
 
 
 def render():
@@ -255,8 +256,16 @@ details{{background:#161B22!important;border:1px solid #21262D!important;border-
             except Exception:
                 pass  # stock_movements no bloquea el flujo principal
             _conn2.commit()
+        # Verificar material disponible para el pedido recién creado
+        _mat_check = _verificar_mat_cp(order_id)
         st.session_state.pop("cp_sel_sku", None)
         st.success(f"✅ Pedido #{order_id} enviado a Fer — {_cp_qty}x {_sel_prod['name']} · ${_total_est:,.0f}")
+        if not _mat_check["ok"]:
+            st.warning(
+                f"⚠️ Alerta de material: falta {_mat_check.get('faltante_gr',0):.0f} g de "
+                f"{_mat_check.get('material','?')} para fabricar este pedido. "
+                f"(Necesario: {_mat_check.get('requerido_gr',0):.0f} g · Disponible: {_mat_check.get('disponible_gr',0):.0f} g)"
+            )
         if _cp_urgente:
             st.warning("🔴 Marcado como urgente — Fer lo verá al tope de su cola.")
         st.balloons()

@@ -314,6 +314,10 @@ from migration_v9 import run as _migration_v9
 _migration_v9()
 from migration_v10 import run as _migration_v10
 _migration_v10()
+from migration_v11 import run as _migration_v11
+_migration_v11()
+from migration_v12 import run as _migration_v12
+_migration_v12()
 
 # ── Autenticación ──────────────────────────────────────────────────────────
 if "auth" not in st.session_state:
@@ -360,7 +364,7 @@ if not st.session_state["auth"]:
             if not row.empty:
                 uid  = row["id"].iloc[0]
                 tipo = row["tipo"].iloc[0] if "tipo" in row.columns else "socio"
-                role = "admin" if uid == "admin" else ("produccion" if tipo == "produccion" else ("socio_multi" if tipo == "socio_multi" else "socio"))
+                role = "admin" if (uid == "admin" or tipo == "admin") else ("socio_multi" if tipo == "socio_multi" else "socio")
                 st.session_state.update({"auth": True, "user": row["name"].iloc[0], "role": role, "uid": uid})
                 st.rerun()
             else:
@@ -395,7 +399,7 @@ _set_accent(_accent)
 # ── Sidebar ────────────────────────────────────────────────────────────────
 with st.sidebar:
     _sb_nombre  = _linea_cfg["nombre"]
-    _sb_rol_map = {"admin": "Administración", "produccion": "Producción", "socio_multi": "Multi-Línea", "socio": "Socio"}
+    _sb_rol_map = {"admin": "Administración", "socio_multi": "Multi-Línea", "socio": "Socio"}
     _sb_rol     = _sb_rol_map.get(st.session_state["role"], "Socio")
 
     st.html(f"""<style>
@@ -447,8 +451,6 @@ with st.sidebar:
 
     if st.session_state["role"] == "admin":
         menu = st.radio("", ["Control", "Stock", "Taller", "Líneas", "CRM", "Impacto", "Mike"], label_visibility="collapsed")
-    elif st.session_state["role"] == "produccion":
-        menu = st.radio("", ["Taller"], label_visibility="collapsed")
     elif st.session_state["role"] == "socio_multi":
         _lids = get_lineas_usuario(st.session_state["uid"])
         _nombre_a_id = {LINEAS[l]["nombre"]: l for l in _lids if l in LINEAS}
@@ -464,7 +466,7 @@ with st.sidebar:
         st.session_state.update({"auth": False, "user": None, "role": None, "uid": None})
         st.rerun()
 
-    if st.session_state["role"] in ("admin", "produccion"):
+    if st.session_state["role"] == "admin":
         _alertas = get_alertas_dashboard()
         if _alertas:
             _n_crit = sum(1 for a in _alertas if a["nivel"] == "critico")

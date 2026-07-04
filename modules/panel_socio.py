@@ -17,29 +17,18 @@ def render():
     uid  = st.session_state["uid"]
     role = st.session_state["role"]
 
-    st.markdown("""<style>
-.stApp,[data-testid="stAppViewContainer"],[data-testid="stMain"]{background-color:#0D1117!important}
-.stTabs [data-baseweb="tab-list"]{background:#161B22!important;border-radius:12px!important;padding:4px!important;gap:2px!important}
-.stTabs [data-baseweb="tab"]{color:#8B949E!important;font-weight:600!important;border-radius:8px!important}
-.stTabs [aria-selected="true"]{background:#21262D!important;color:#F0F6FC!important}
-[data-testid="stMetricValue"]{color:#E6EDF3!important}
-[data-testid="stMetricLabel"]{color:#8B949E!important}
-[data-testid="stMetricDelta"]{font-size:0.8rem!important}
-.stDataFrame,[data-testid="stDataFrame"]{background:#161B22!important}
-.stSelectbox [data-baseweb="select"]{background:#161B22!important;border-color:#30363D!important}
-[data-testid="stChatMessage"]{background:#161B22!important;border-radius:12px!important}
-[data-testid="stChatMessageContent"] p{color:#E6EDF3!important}
-[data-testid="stFileUploaderDropzone"]{background:#161B22!important;border-color:#30363D!important}
-.stMarkdown p,.stMarkdown span{color:#C9D1D9!important}
-.stMarkdown strong,.stMarkdown b{color:#F0F6FC!important}
-.stSelectbox label,.stTextInput label,.stTextArea label{color:#8B949E!important;font-weight:500!important}
-[data-testid="stAlert"] p,[data-testid="stAlert"] div{color:#C9D1D9!important}
-[data-testid="stAlert"]{background:#1a2332!important;border-color:#30363D!important}
-[data-testid="stTextInput"] input,[data-testid="stNumberInput"] input,[data-testid="stTextArea"] textarea{background:#161B22!important;color:#E6EDF3!important;border-color:#30363D!important}
-[data-testid="stSelectbox"] div[data-baseweb="select"] div{background:#161B22!important;color:#E6EDF3!important;border-color:#30363D!important}
-[data-testid="stDateInput"] input{background:#161B22!important;color:#E6EDF3!important;border-color:#30363D!important}
-[data-testid="stTextInput"] input::placeholder,[data-testid="stTextArea"] textarea::placeholder{color:#6B7280!important}
-</style>""", unsafe_allow_html=True)
+    st.html(f"""<style>
+.stTabs [data-baseweb="tab-list"]{{background:#F2EEE5!important;border-radius:12px!important;padding:4px!important;gap:2px!important}}
+.stTabs [data-baseweb="tab"]{{color:#74798A!important;font-weight:600!important;border-radius:8px!important;font-family:"Source Sans 3",sans-serif!important}}
+.stTabs [aria-selected="true"]{{background:#FFFFFF!important;color:{hdr_color}!important;font-weight:700!important}}
+[data-testid="stMetricValue"]{{color:#16181F!important;font-family:"Bricolage Grotesque",sans-serif!important;font-weight:700!important}}
+[data-testid="stMetricLabel"]{{color:#74798A!important}}
+[data-testid="stMetricDelta"]{{font-size:0.8rem!important}}
+.stDataFrame,[data-testid="stDataFrame"]{{background:#FAF8F3!important}}
+[data-testid="stChatMessage"]{{background:#FAF8F3!important;border-radius:12px!important;border:1px solid #DCD5C7!important}}
+[data-testid="stChatMessageContent"] p{{color:#16181F!important}}
+[data-testid="stFileUploaderDropzone"]{{background:#FAF8F3!important;border-color:#DCD5C7!important}}
+</style>""")
 
     if role == "socio_multi":
         lineas_activas = st.session_state.get("linea_filtro", get_lineas_usuario(uid))
@@ -186,13 +175,13 @@ def render():
     if _page_slug_s:
         _page_url_s = f"{_BASE_PAGES}/{_page_slug_s}.html"
         st.markdown(f"""<a href="{_page_url_s}" target="_blank" style="text-decoration:none;">
-<div style="background:linear-gradient(90deg,#161B22,{hdr_color}22);border-radius:12px;
+<div style="background:linear-gradient(90deg,#FAF8F3,{hdr_color}22);border-radius:12px;
      padding:12px 20px;border:1px solid {hdr_color}44;margin-bottom:12px;
      display:flex;align-items:center;gap:12px;">
   <span style="font-size:1.2rem;">🌐</span>
   <div>
     <div style="font-size:0.72rem;font-weight:700;color:{hdr_color};letter-spacing:1px;">TU PÁGINA WEB</div>
-    <div style="font-size:0.78rem;color:#8B949E;margin-top:1px;">{_page_url_s}</div>
+    <div style="font-size:0.78rem;color:#74798A;margin-top:1px;">{_page_url_s}</div>
   </div>
   <div style="margin-left:auto;background:{hdr_color}22;color:{hdr_color};padding:6px 16px;
        border-radius:99px;font-size:0.7rem;font-weight:700;border:1px solid {hdr_color}44;">
@@ -208,11 +197,11 @@ def render():
         (_sk4, str(_n_activos),        "🏭 En Producción",   "pedidos activos hoy",       "#F59E0B"),
     ]:
         with _sc_col:
-            st.markdown(f"<div style='background:#161B22;border-radius:14px;padding:18px 14px;border:1px solid #21262D;border-top:3px solid {_scolor};text-align:center;margin-bottom:8px;'><div style='font-size:1.5rem;font-weight:800;color:{_scolor};line-height:1;'>{_sv}</div><div style='font-size:0.72rem;font-weight:600;color:#C9D1D9;margin-top:8px;'>{_sl}</div><div style='font-size:0.62rem;color:#8B949E;margin-top:3px;'>{_ss}</div></div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='background:#FAF8F3;border-radius:14px;padding:18px 14px;border:1px solid #DCD5C7;border-top:3px solid {_scolor};text-align:center;margin-bottom:8px;'><div style='font-size:1.5rem;font-weight:800;color:{_scolor};line-height:1;'>{_sv}</div><div style='font-size:0.72rem;font-weight:600;color:#3A3E4A;margin-top:8px;'>{_sl}</div><div style='font-size:0.62rem;color:#74798A;margin-top:3px;'>{_ss}</div></div>", unsafe_allow_html=True)
 
-    _t_res, _t_stats, _t_prod, _t_ped, _t_tienda, _t_presup, _t_mike, _t_linea = st.tabs([
+    _t_res, _t_stats, _t_prod, _t_ped, _t_tienda, _t_presup, _t_mike, _t_pub, _t_linea = st.tabs([
         "🏠 Resumen", "📊 Estadísticas", "📦 Productos", "🛒 Pedidos",
-        "🏪 Mi Tienda", "🧮 Presupuesto", "🤖 Mike", "⚙️ Mi Línea",
+        "🏪 Mi Tienda", "🧮 Presupuesto", "🤖 Mike", "📲 Publicar", "⚙️ Mi Línea",
     ])
 
     # ══ TAB RESUMEN ══
@@ -221,7 +210,7 @@ def render():
         if role == "socio_multi" and len(lineas_activas) > 1:
             st.markdown(
                 "<div style='font-size:0.6rem;font-weight:700;letter-spacing:2px;"
-                "text-transform:uppercase;color:#8B949E;margin-bottom:10px;'>"
+                "text-transform:uppercase;color:#74798A;margin-bottom:10px;'>"
                 "TUS LÍNEAS — elegí cuál querés ver o navegá el panel completo</div>",
                 unsafe_allow_html=True,
             )
@@ -240,21 +229,21 @@ def render():
                         f"border-radius:16px;padding:18px 16px;border:1px solid {_lcc['color']}44;"
                         f"box-shadow:{_lc_glow};margin-bottom:8px;'>"
                         f"<div style='font-size:1.6rem;line-height:1;'>{_lcc['emoji']}</div>"
-                        f"<div style='font-size:1rem;font-weight:800;color:#E6EDF3;margin-top:6px;'>"
+                        f"<div style='font-size:1rem;font-weight:800;color:#16181F;margin-top:6px;'>"
                         f"{_lcc['nombre']}</div>"
                         f"<div style='margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:6px;'>"
-                        f"<div style='background:#0D1117;border-radius:8px;padding:8px;text-align:center;'>"
+                        f"<div style='background:#EBE6DC;border-radius:8px;padding:8px;text-align:center;'>"
                         f"<div style='font-size:1.1rem;font-weight:800;color:{_lcc['color']};'>{_lcp_n}</div>"
-                        f"<div style='font-size:0.58rem;color:#555;text-transform:uppercase;letter-spacing:0.5px;margin-top:1px;'>productos</div></div>"
-                        f"<div style='background:#0D1117;border-radius:8px;padding:8px;text-align:center;'>"
+                        f"<div style='font-size:0.58rem;color:#74798A;text-transform:uppercase;letter-spacing:0.5px;margin-top:1px;'>productos</div></div>"
+                        f"<div style='background:#EBE6DC;border-radius:8px;padding:8px;text-align:center;'>"
                         f"<div style='font-size:1.1rem;font-weight:800;color:#F59E0B;'>{_lcp_ped}</div>"
-                        f"<div style='font-size:0.58rem;color:#555;text-transform:uppercase;letter-spacing:0.5px;margin-top:1px;'>en producc.</div></div>"
-                        f"<div style='background:#0D1117;border-radius:8px;padding:8px;text-align:center;'>"
+                        f"<div style='font-size:0.58rem;color:#74798A;text-transform:uppercase;letter-spacing:0.5px;margin-top:1px;'>en producc.</div></div>"
+                        f"<div style='background:#EBE6DC;border-radius:8px;padding:8px;text-align:center;'>"
                         f"<div style='font-size:0.85rem;font-weight:800;color:#10B981;'>${_lcp_stk:,.0f}</div>"
-                        f"<div style='font-size:0.58rem;color:#555;text-transform:uppercase;letter-spacing:0.5px;margin-top:1px;'>valor stock</div></div>"
-                        f"<div style='background:#0D1117;border-radius:8px;padding:8px;text-align:center;'>"
+                        f"<div style='font-size:0.58rem;color:#74798A;text-transform:uppercase;letter-spacing:0.5px;margin-top:1px;'>valor stock</div></div>"
+                        f"<div style='background:#EBE6DC;border-radius:8px;padding:8px;text-align:center;'>"
                         f"<div style='font-size:0.85rem;font-weight:800;color:#3B82F6;'>${_lcp_fac:,.0f}</div>"
-                        f"<div style='font-size:0.58rem;color:#555;text-transform:uppercase;letter-spacing:0.5px;margin-top:1px;'>facturado</div></div>"
+                        f"<div style='font-size:0.58rem;color:#74798A;text-transform:uppercase;letter-spacing:0.5px;margin-top:1px;'>facturado</div></div>"
                         f"</div></div>",
                         unsafe_allow_html=True,
                     )
@@ -266,14 +255,14 @@ def render():
                         st.session_state["linea_filtro"] = [_lid_c]
                         st.session_state["linea_sel"]    = _lcc["nombre"]
                         st.rerun()
-            st.markdown("<div style='height:8px;border-top:1px solid #21262D;margin-bottom:12px;'></div>", unsafe_allow_html=True)
+            st.markdown("<div style='height:8px;border-top:1px solid #DCD5C7;margin-bottom:12px;'></div>", unsafe_allow_html=True)
 
         _ra, _rb = st.columns([1.4, 1])
         with _ra:
-            st.markdown("<div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#58A6FF;margin-bottom:10px;'>PEDIDOS ACTIVOS</div>", unsafe_allow_html=True)
+            st.markdown("<div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#FF4B4B;margin-bottom:10px;'>PEDIDOS ACTIVOS</div>", unsafe_allow_html=True)
             _pact = _pedidos_s[_pedidos_s["status"].isin(["Pendiente","En Proceso"])] if not _pedidos_s.empty else pd.DataFrame()
             if _pact.empty:
-                st.markdown("<div style='background:#0D2818;border-radius:12px;padding:16px 20px;border:1px solid #238636;border-left:4px solid #3FB950;'><span style='color:#3FB950;font-weight:700;'>✅ Sin pedidos en curso</span><br><span style='color:#8B949E;font-size:0.8rem;'>Podés cargar un nuevo pedido desde el menú 🛒</span></div>", unsafe_allow_html=True)
+                st.markdown("<div style='background:#ECFDF5;border-radius:12px;padding:16px 20px;border:1px solid #A7F3D0;border-left:4px solid #2F9E54;'><span style='color:#2F9E54;font-weight:700;'>✅ Sin pedidos en curso</span><br><span style='color:#74798A;font-size:0.8rem;'>Podés cargar un nuevo pedido desde el menú 🛒</span></div>", unsafe_allow_html=True)
             else:
                 for _, _pr in _pact.iterrows():
                     _sc2      = _SC.get(_pr["status"], "#9CA3AF")
@@ -288,33 +277,33 @@ def render():
                     if not _res_items.empty:
                         _rparts = [
                             f"<span style='color:#F59E0B;font-weight:700;'>{int(_ri['cantidad'])}×</span>"
-                            f" <span style='color:#E6EDF3;'>{_ri['producto']}</span>"
-                            f"<span style='color:#6B7280;font-size:0.68rem;'> · ${float(_ri['precio_unitario']):,.0f}</span>"
+                            f" <span style='color:#16181F;'>{_ri['producto']}</span>"
+                            f"<span style='color:#74798A;font-size:0.68rem;'> · ${float(_ri['precio_unitario']):,.0f}</span>"
                             for _, _ri in _res_items.iterrows()
                         ]
                         _res_items_html = (
-                            "<div style='margin-top:7px;padding:7px 10px;background:#0D1117;"
-                            "border-radius:7px;border:1px solid #21262D;font-size:0.78rem;"
+                            "<div style='margin-top:7px;padding:7px 10px;background:#EBE6DC;"
+                            "border-radius:7px;border:1px solid #DCD5C7;font-size:0.78rem;"
                             "display:flex;flex-direction:column;gap:3px;'>"
                             + "".join(f"<div>{p}</div>" for p in _rparts)
                             + "</div>"
                         )
                     _not_r = (
-                        f"<div style='font-size:0.7rem;color:#8B949E;margin-top:5px;"
-                        f"padding:5px 8px;background:#161B22;border-radius:5px;"
-                        f"border:1px dashed #30363D;'><em>{_pr['notas']}</em></div>"
+                        f"<div style='font-size:0.7rem;color:#74798A;margin-top:5px;"
+                        f"padding:5px 8px;background:#FAF8F3;border-radius:5px;"
+                        f"border:1px dashed #DCD5C7;'><em>{_pr['notas']}</em></div>"
                     ) if _pr.get("notas") else ""
                     st.markdown(
-                        f"<div style='background:#161B22;border-radius:12px;padding:14px 18px;"
-                        f"margin-bottom:8px;border-left:4px solid {_sc2};border:1px solid #21262D;'>"
+                        f"<div style='background:#FAF8F3;border-radius:12px;padding:14px 18px;"
+                        f"margin-bottom:8px;border-left:4px solid {_sc2};border:1px solid #DCD5C7;'>"
                         f"<div style='display:flex;justify-content:space-between;align-items:flex-start;'>"
                         f"<div style='flex:1;min-width:0;'>"
-                        f"<div style='font-weight:700;font-size:0.95rem;color:#E6EDF3;'>"
+                        f"<div style='font-weight:700;font-size:0.95rem;color:#16181F;'>"
                         f"Pedido #{_oid_r} "
                         f"<span style='background:{_sc2}22;color:{_sc2};border:1px solid {_sc2}44;"
                         f"border-radius:99px;padding:2px 10px;font-size:0.7rem;font-weight:600;"
                         f"margin-left:6px;'>{_pr['status']}</span></div>"
-                        f"<div style='font-size:0.73rem;color:#8B949E;margin-top:3px;'>"
+                        f"<div style='font-size:0.73rem;color:#74798A;margin-top:3px;'>"
                         f"📅 {_fecha2} &nbsp;·&nbsp; 🎯 entrega {_entrega2}</div>"
                         f"{_res_items_html}"
                         f"{_not_r}"
@@ -326,18 +315,18 @@ def render():
                         unsafe_allow_html=True,
                     )
         with _rb:
-            st.markdown("<div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#58A6FF;margin-bottom:10px;'>ESTADO DE TU CATÁLOGO</div>", unsafe_allow_html=True)
+            st.markdown("<div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#FF4B4B;margin-bottom:10px;'>ESTADO DE TU CATÁLOGO</div>", unsafe_allow_html=True)
             if not prod.empty:
                 _top3 = prod.sort_values("price", ascending=False).head(3)
                 for _, _p3 in _top3.iterrows():
                     _pstk3 = int(_p3.get("stock", 0) or 0)
                     _stk_c3 = "#10B981" if _pstk3 > 5 else ("#F59E0B" if _pstk3 > 0 else "#EF4444")
-                    st.markdown(f"<div style='background:#161B22;border-radius:10px;padding:10px 14px;margin-bottom:6px;border:1px solid #21262D;'><div style='font-size:0.8rem;font-weight:600;color:#E6EDF3;'>{_p3['name']}</div><div style='font-size:0.72rem;color:#8B949E;margin-top:3px;'>${_p3['price']:,.0f} · <span style='color:{_stk_c3};font-weight:700;'>{_pstk3} u stock</span></div></div>", unsafe_allow_html=True)
+                    st.markdown(f"<div style='background:#FAF8F3;border-radius:10px;padding:10px 14px;margin-bottom:6px;border:1px solid #DCD5C7;'><div style='font-size:0.8rem;font-weight:600;color:#16181F;'>{_p3['name']}</div><div style='font-size:0.72rem;color:#74798A;margin-top:3px;'>${_p3['price']:,.0f} · <span style='color:{_stk_c3};font-weight:700;'>{_pstk3} u stock</span></div></div>", unsafe_allow_html=True)
                 _stock_bajo = prod[prod["stock"] <= 2] if "stock" in prod.columns else pd.DataFrame()
                 if not _stock_bajo.empty:
-                    st.markdown(f"<div style='background:#2D2007;border-radius:10px;padding:10px 14px;border-left:3px solid #F59E0B;margin-top:6px;border:1px solid #3D2B0A;'><span style='color:#F59E0B;font-weight:700;font-size:0.8rem;'>⚠️ Stock bajo: {', '.join(_stock_bajo['name'].tolist()[:3])}</span></div>", unsafe_allow_html=True)
+                    st.markdown(f"<div style='background:#FEF3C7;border-radius:10px;padding:10px 14px;border-left:3px solid #F59E0B;margin-top:6px;border:1px solid #3D2B0A;'><span style='color:#F59E0B;font-weight:700;font-size:0.8rem;'>⚠️ Stock bajo: {', '.join(_stock_bajo['name'].tolist()[:3])}</span></div>", unsafe_allow_html=True)
         if not _fab_socio.empty:
-            st.markdown("<div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#58A6FF;margin-top:20px;margin-bottom:10px;'>ÚLTIMAS FABRICACIONES</div>", unsafe_allow_html=True)
+            st.markdown("<div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#FF4B4B;margin-top:20px;margin-bottom:10px;'>ÚLTIMAS FABRICACIONES</div>", unsafe_allow_html=True)
             _fab_show = _fab_socio.head(5).copy()
             _fab_show["resultado"]    = _fab_show["resultado"].fillna("ok")
             _fab_show["fecha_fin"]    = _fab_show["fecha_fin"].astype(str).str[:10]
@@ -391,16 +380,16 @@ def render():
 
         # ── Helper: KPI neon card ────────────────────────────────────
         def _neon_kpi(col, value, label, color, icon, sub=""):
-            _glow = f"0 0 14px {color}66, 0 0 28px {color}22"
-            _sub_h = f"<div style='font-size:0.68rem;color:#555;margin-top:3px;'>{sub}</div>" if sub else ""
+            _sub_h = f"<div style='font-size:0.68rem;color:#74798A;margin-top:3px;'>{sub}</div>" if sub else ""
             with col:
                 st.markdown(
-                    f"<div style='background:#050508;border-radius:16px;padding:22px 14px;"
-                    f"border:1px solid {color}44;box-shadow:{_glow};text-align:center;margin-bottom:4px;'>"
+                    f"<div style='background:#FFFFFF;border-radius:16px;padding:22px 14px;"
+                    f"border:1px solid {color}33;border-top:3px solid {color};"
+                    f"box-shadow:0 2px 12px {color}18;text-align:center;margin-bottom:4px;'>"
                     f"<div style='font-size:1.6rem;line-height:1;'>{icon}</div>"
                     f"<div style='font-size:1.55rem;font-weight:900;color:{color};line-height:1.1;"
-                    f"margin-top:6px;text-shadow:0 0 10px {color}88;'>{value}</div>"
-                    f"<div style='font-size:0.6rem;font-weight:700;color:#444;text-transform:uppercase;"
+                    f"margin-top:6px;font-family:\"Bricolage Grotesque\",sans-serif;'>{value}</div>"
+                    f"<div style='font-size:0.6rem;font-weight:700;color:#74798A;text-transform:uppercase;"
                     f"letter-spacing:1.5px;margin-top:7px;'>{label}</div>"
                     f"{_sub_h}</div>",
                     unsafe_allow_html=True,
@@ -408,18 +397,18 @@ def render():
 
         # ── Fila 1: KPIs neon ────────────────────────────────────────
         st.markdown(
-            "<div style='font-size:0.6rem;font-weight:700;letter-spacing:3px;color:#39FF14;"
+            "<div style='font-size:0.6rem;font-weight:700;letter-spacing:3px;color:#2F9E54;"
             "text-transform:uppercase;margin-bottom:12px;'>⚡ TUS NÚMEROS</div>",
             unsafe_allow_html=True,
         )
         _ka, _kb, _kc, _kd = st.columns(4)
-        _neon_kpi(_ka, f"${_fac_total_all:,.0f}", "Total facturado", "#39FF14", "💰",
+        _neon_kpi(_ka, f"${_fac_total_all:,.0f}", "Total facturado", hdr_color, "💰",
                   f"{_n_completados} pedidos completados")
-        _neon_kpi(_kb, f"${_ticket_prom:,.0f}", "Ticket promedio", "#00FFFF", "🎯",
+        _neon_kpi(_kb, f"${_ticket_prom:,.0f}", "Ticket promedio", "#1E5A8A", "🎯",
                   "por pedido completado")
-        _neon_kpi(_kc, f"${_best_mes_val:,.0f}", "Mejor mes", "#FF10F0", "🏆", _best_mes_nom)
+        _neon_kpi(_kc, f"${_best_mes_val:,.0f}", "Mejor mes", "#7C3AED", "🏆", _best_mes_nom)
         _gw_icon  = "📈" if _growth_pct >= 0 else "📉"
-        _gw_color = "#39FF14" if _growth_pct >= 0 else "#FF4444"
+        _gw_color = "#2F9E54" if _growth_pct >= 0 else "#D7322B"
         _gw_str   = f"+{_growth_pct:.0f}%" if _growth_pct >= 0 else f"{_growth_pct:.0f}%"
         _neon_kpi(_kd, _gw_str, "vs mes anterior", _gw_color, _gw_icon, "tendencia mensual")
 
@@ -429,7 +418,7 @@ def render():
         _sc1, _sc2 = st.columns([3, 2])
         with _sc1:
             st.markdown(
-                "<div style='font-size:0.6rem;font-weight:700;letter-spacing:2px;color:#00FFFF;"
+                "<div style='font-size:0.6rem;font-weight:700;letter-spacing:2px;color:#1E5A8A;"
                 "text-transform:uppercase;margin-bottom:8px;'>📊 FACTURACIÓN MENSUAL</div>",
                 unsafe_allow_html=True,
             )
@@ -437,33 +426,33 @@ def render():
                 _chart_df = _hist_mes.sort_values("mes").set_index("mes")[["facturado"]].rename(
                     columns={"facturado": "$ Facturado"}
                 )
-                st.bar_chart(_chart_df, color="#00FFFF", height=200)
+                st.bar_chart(_chart_df, color=hdr_color, height=200)
             else:
                 st.markdown(
-                    "<div style='background:#050508;border-radius:12px;padding:40px;text-align:center;"
-                    "border:1px dashed #222;color:#444;font-size:0.8rem;'>Sin pedidos completados aún</div>",
+                    "<div style='background:#FAF8F3;border-radius:12px;padding:40px;text-align:center;"
+                    "border:1px dashed #DCD5C7;color:#74798A;font-size:0.8rem;'>Sin pedidos completados aún</div>",
                     unsafe_allow_html=True,
                 )
         with _sc2:
             st.markdown(
-                "<div style='font-size:0.6rem;font-weight:700;letter-spacing:2px;color:#FF10F0;"
+                "<div style='font-size:0.6rem;font-weight:700;letter-spacing:2px;color:#DB2777;"
                 "text-transform:uppercase;margin-bottom:8px;'>📡 DE DÓNDE VIENEN TUS CLIENTES</div>",
                 unsafe_allow_html=True,
             )
             _canal_colors_map = {
                 "Instagram":                "#E1306C",
-                "TikTok":                   "#00F2EA",
-                "Recomendación personal":   "#39FF14",
+                "TikTok":                   "#0EA5E9",
+                "Recomendación personal":   "#2F9E54",
                 "WhatsApp directo":         "#25D366",
                 "WhatsApp":                 "#25D366",
-                "Ya era cliente / familia": "#FF10F0",
-                "Presencial / evento":      "#FFE600",
-                "Presencial":               "#FFE600",
-                "Otro":                     "#888",
+                "Ya era cliente / familia": "#7C3AED",
+                "Presencial / evento":      "#E0902A",
+                "Presencial":               "#E0902A",
+                "Otro":                     "#74798A",
             }
             if _canales_df.empty:
                 st.markdown(
-                    "<div style='color:#444;font-size:0.8rem;padding:12px;'>Sin datos de canal todavía.<br>"
+                    "<div style='color:#74798A;font-size:0.8rem;padding:12px;'>Sin datos de canal todavía.<br>"
                     "<span style='font-size:0.7rem;'>Se registran al cargar pedidos.</span></div>",
                     unsafe_allow_html=True,
                 )
@@ -475,10 +464,10 @@ def render():
                     st.markdown(
                         f"<div style='margin-bottom:8px;'>"
                         f"<div style='display:flex;justify-content:space-between;margin-bottom:3px;'>"
-                        f"<span style='font-size:0.78rem;color:#C9D1D9;'>{_cr['canal_origen']}</span>"
+                        f"<span style='font-size:0.78rem;color:#3A3E4A;'>{_cr['canal_origen']}</span>"
                         f"<span style='font-size:0.75rem;font-weight:800;color:{_cc};'>"
                         f"{int(_cr['n'])} · {_pct_c}%</span></div>"
-                        f"<div style='background:#0D0D12;border-radius:99px;height:5px;'>"
+                        f"<div style='background:#EBE6DC;border-radius:99px;height:5px;'>"
                         f"<div style='background:{_cc};width:{_pct_c}%;height:5px;border-radius:99px;"
                         f"box-shadow:0 0 6px {_cc}99;'></div></div></div>",
                         unsafe_allow_html=True,
@@ -490,51 +479,50 @@ def render():
         _st1, _st2 = st.columns([3, 2])
         with _st1:
             st.markdown(
-                "<div style='font-size:0.6rem;font-weight:700;letter-spacing:2px;color:#FFE600;"
+                "<div style='font-size:0.6rem;font-weight:700;letter-spacing:2px;color:#E0902A;"
                 "text-transform:uppercase;margin-bottom:8px;'>🏅 TUS PRODUCTOS MÁS PEDIDOS</div>",
                 unsafe_allow_html=True,
             )
             if _top_prods.empty:
                 st.markdown(
-                    "<div style='color:#444;font-size:0.8rem;padding:12px;'>Aún sin items de pedidos.</div>",
+                    "<div style='color:#74798A;font-size:0.8rem;padding:12px;'>Aún sin items de pedidos.</div>",
                     unsafe_allow_html=True,
                 )
             else:
                 _max_u = float(_top_prods["unidades"].max())
-                _rank_c = ["#FFE600", "#C0C0C0", "#CD7F32", "#6B7280", "#444"]
+                _rank_c = ["#E0902A", "#74798A", "#C9A84C", "#74798A", "#DCD5C7"]
                 for _ri, (_, _tp) in enumerate(_top_prods.iterrows()):
                     _rc    = _rank_c[min(_ri, 4)]
                     _bw    = int(_tp["unidades"] / _max_u * 100) if _max_u > 0 else 0
                     _nom_t = str(_tp["producto"])[:32]
                     st.markdown(
-                        f"<div style='margin-bottom:7px;padding:10px 14px;background:#050508;"
+                        f"<div style='margin-bottom:7px;padding:10px 14px;background:#FAF8F3;"
                         f"border-radius:10px;border:1px solid {_rc}33;"
                         f"box-shadow:0 0 8px {_rc}22;'>"
                         f"<div style='display:flex;justify-content:space-between;align-items:center;'>"
                         f"<div style='display:flex;align-items:center;gap:10px;'>"
                         f"<span style='font-size:1rem;font-weight:900;color:{_rc};min-width:22px;'>#{_ri+1}</span>"
-                        f"<div><div style='font-size:0.82rem;color:#E6EDF3;font-weight:600;'>{_nom_t}</div>"
-                        f"<div style='font-size:0.65rem;color:#555;'>${float(_tp['ingresos']):,.0f} facturado</div></div>"
+                        f"<div><div style='font-size:0.82rem;color:#16181F;font-weight:600;'>{_nom_t}</div>"
+                        f"<div style='font-size:0.65rem;color:#74798A;'>${float(_tp['ingresos']):,.0f} facturado</div></div>"
                         f"</div>"
-                        f"<span style='font-size:1.1rem;font-weight:900;color:{_rc};"
-                        f"text-shadow:0 0 8px {_rc}88;'>{int(_tp['unidades'])} u</span></div>"
-                        f"<div style='margin-top:6px;background:#0D0D12;border-radius:99px;height:4px;'>"
+                        f"<span style='font-size:1.1rem;font-weight:900;color:{_rc};'>{int(_tp['unidades'])} u</span></div>"
+                        f"<div style='margin-top:6px;background:#EBE6DC;border-radius:99px;height:4px;'>"
                         f"<div style='background:{_rc};width:{_bw}%;height:4px;border-radius:99px;"
                         f"box-shadow:0 0 5px {_rc}99;'></div></div></div>",
                         unsafe_allow_html=True,
                     )
         with _st2:
             st.markdown(
-                "<div style='font-size:0.6rem;font-weight:700;letter-spacing:2px;color:#FF6B35;"
+                "<div style='font-size:0.6rem;font-weight:700;letter-spacing:2px;color:#F97316;"
                 "text-transform:uppercase;margin-bottom:8px;'>🔄 ESTADO DEL PIPELINE</div>",
                 unsafe_allow_html=True,
             )
             _pipe_cfg = [
-                ("Pendiente",  "#FFE600", "⏳"),
-                ("En Proceso", "#00FFFF", "🖨️"),
-                ("Listo",      "#39FF14", "✅"),
-                ("Entregado",  "#FF10F0", "📦"),
-                ("Cancelado",  "#FF4444", "❌"),
+                ("Pendiente",  "#E0902A", "⏳"),
+                ("En Proceso", "#1E5A8A", "🖨️"),
+                ("Listo",      "#2F9E54", "✅"),
+                ("Entregado",  "#7C3AED", "📦"),
+                ("Cancelado",  "#D7322B", "❌"),
             ]
             if not _pedidos_s.empty:
                 for _dst, _dc_n, _dc_e in _pipe_cfg:
@@ -543,11 +531,10 @@ def render():
                         continue
                     st.markdown(
                         f"<div style='display:flex;align-items:center;justify-content:space-between;"
-                        f"background:#050508;border-radius:10px;padding:10px 14px;"
+                        f"background:#FAF8F3;border-radius:10px;padding:10px 14px;"
                         f"border:1px solid {_dc_n}33;box-shadow:0 0 8px {_dc_n}22;margin-bottom:6px;'>"
-                        f"<span style='font-size:0.82rem;color:#C9D1D9;'>{_dc_e} {_dst}</span>"
-                        f"<span style='font-size:1.35rem;font-weight:900;color:{_dc_n};"
-                        f"text-shadow:0 0 8px {_dc_n}88;'>{_dn2}</span></div>",
+                        f"<span style='font-size:0.82rem;color:#3A3E4A;'>{_dc_e} {_dst}</span>"
+                        f"<span style='font-size:1.35rem;font-weight:900;color:{_dc_n};'>{_dn2}</span></div>",
                         unsafe_allow_html=True,
                     )
 
@@ -555,13 +542,13 @@ def render():
                 st.markdown("<div style='height:10px;'></div>", unsafe_allow_html=True)
                 _kg = _total_gramos_fab / 1000
                 st.markdown(
-                    f"<div style='background:#050508;border-radius:12px;padding:14px;"
+                    f"<div style='background:#FAF8F3;border-radius:12px;padding:14px;"
                     f"border:1px solid #FF6B3544;box-shadow:0 0 10px #FF6B3522;text-align:center;'>"
-                    f"<div style='font-size:0.55rem;color:#555;text-transform:uppercase;letter-spacing:1.5px;'>"
+                    f"<div style='font-size:0.55rem;color:#74798A;text-transform:uppercase;letter-spacing:1.5px;'>"
                     f"imprimimos para vos</div>"
-                    f"<div style='font-size:1.4rem;font-weight:900;color:#FF6B35;"
-                    f"text-shadow:0 0 8px #FF6B3588;margin-top:4px;'>{_kg:.2f} kg</div>"
-                    f"<div style='font-size:0.62rem;color:#444;margin-top:2px;'>de filamento 3D</div>"
+                    f"<div style='font-size:1.4rem;font-weight:900;color:#F97316;"
+                    f"margin-top:4px;font-family:\"Bricolage Grotesque\",sans-serif;'>{_kg:.2f} kg</div>"
+                    f"<div style='font-size:0.62rem;color:#74798A;margin-top:2px;'>de filamento 3D</div>"
                     f"</div>",
                     unsafe_allow_html=True,
                 )
@@ -589,19 +576,19 @@ def render():
                     _mot = str(_ph.get("motivo") or "")[:48]
                     _fec = str(_ph["fecha"])[:10]
                     st.markdown(
-                        f"<div style='background:#050508;border-radius:10px;padding:10px 14px;"
+                        f"<div style='background:#FAF8F3;border-radius:10px;padding:10px 14px;"
                         f"border:1px solid {_dc}33;box-shadow:0 0 8px {_dc}11;margin-bottom:6px;'>"
                         f"<div style='display:flex;justify-content:space-between;align-items:flex-start;'>"
                         f"<div style='flex:1;min-width:0;'>"
-                        f"<div style='font-size:0.8rem;font-weight:700;color:#E6EDF3;'>{_ph['producto']}</div>"
-                        f"<div style='font-size:0.62rem;color:#555;margin-top:2px;'>{_fec} · {_mot}</div>"
-                        f"<div style='font-size:0.7rem;color:#8B949E;margin-top:4px;'>"
+                        f"<div style='font-size:0.8rem;font-weight:700;color:#16181F;'>{_ph['producto']}</div>"
+                        f"<div style='font-size:0.62rem;color:#74798A;margin-top:2px;'>{_fec} · {_mot}</div>"
+                        f"<div style='font-size:0.7rem;color:#74798A;margin-top:4px;'>"
                         f"<span style='text-decoration:line-through;'>${_pa:,.0f}</span>"
-                        f" <span style='color:#C9D1D9;font-weight:700;margin-left:4px;'>${_pn:,.0f}</span>"
+                        f" <span style='color:#3A3E4A;font-weight:700;margin-left:4px;'>${_pn:,.0f}</span>"
                         f"</div>"
                         f"</div>"
                         f"<div style='font-size:1.2rem;font-weight:900;color:{_dc};"
-                        f"text-shadow:0 0 8px {_dc}88;white-space:nowrap;margin-left:10px;padding-top:2px;'>"
+                        f"white-space:nowrap;margin-left:10px;padding-top:2px;'>"
                         f"{_arr} {_sig}{_pct:.0f}%</div>"
                         f"</div></div>",
                         unsafe_allow_html=True,
@@ -609,7 +596,7 @@ def render():
         with _exp2:
             if not _fab_socio.empty:
                 st.markdown(
-                    "<div style='font-size:0.6rem;font-weight:700;letter-spacing:2px;color:#FF6B35;"
+                    "<div style='font-size:0.6rem;font-weight:700;letter-spacing:2px;color:#F97316;"
                     "text-transform:uppercase;margin-bottom:8px;'>🏭 PRODUCCIÓN POR PRODUCTO</div>",
                     unsafe_allow_html=True,
                 )
@@ -620,13 +607,13 @@ def render():
                 for _, _vp in _vol_prod.iterrows():
                     _kg_vp = float(_vp["gramos_total"]) / 1000
                     st.markdown(
-                        f"<div style='background:#050508;border-radius:8px;padding:8px 12px;"
+                        f"<div style='background:#FAF8F3;border-radius:8px;padding:8px 12px;"
                         f"border:1px solid #FF6B3522;margin-bottom:5px;display:flex;"
                         f"justify-content:space-between;align-items:center;'>"
-                        f"<div style='font-size:0.78rem;color:#C9D1D9;'>{_vp['producto']}</div>"
+                        f"<div style='font-size:0.78rem;color:#3A3E4A;'>{_vp['producto']}</div>"
                         f"<div style='text-align:right;'>"
-                        f"<div style='font-size:0.82rem;font-weight:800;color:#FF6B35;'>{int(_vp['fabricaciones'])}x</div>"
-                        f"<div style='font-size:0.62rem;color:#555;'>{_kg_vp:.2f} kg</div>"
+                        f"<div style='font-size:0.82rem;font-weight:800;color:#F97316;'>{int(_vp['fabricaciones'])}x</div>"
+                        f"<div style='font-size:0.62rem;color:#74798A;'>{_kg_vp:.2f} kg</div>"
                         f"</div></div>",
                         unsafe_allow_html=True,
                     )
@@ -635,7 +622,7 @@ def render():
         if not _senales_sm.empty:
             st.markdown("<div style='height:12px;'></div>", unsafe_allow_html=True)
             st.markdown(
-                "<div style='font-size:0.6rem;font-weight:700;letter-spacing:3px;color:#A855F7;"
+                "<div style='font-size:0.6rem;font-weight:700;letter-spacing:3px;color:#7C3AED;"
                 "text-transform:uppercase;margin-bottom:10px;'>🔮 SEÑALES DE MERCADO</div>",
                 unsafe_allow_html=True,
             )
@@ -646,24 +633,24 @@ def render():
                 _sm_seg  = str(_sm.get("segmento_detectado") or "")
                 _sm_op   = str(_sm.get("oportunidad") or "")
                 _sm_can  = str(_sm.get("canal") or "")
-                _seg_color = "#A855F7" if "B2B" in _sm_seg else ("#39FF14" if "Retail" in _sm_seg else "#00FFFF")
+                _seg_color = "#7C3AED" if "B2B" in _sm_seg else ("#2F9E54" if "Retail" in _sm_seg else "#1E5A8A")
                 st.markdown(
-                    f"<div style='background:linear-gradient(135deg,#0D0D18,#150D20);"
+                    f"<div style='background:linear-gradient(135deg,#FAF8F3,#F2EEE5);"
                     f"border-radius:12px;padding:14px 18px;border:1px solid #A855F744;"
                     f"box-shadow:0 0 12px #A855F722;margin-bottom:8px;'>"
                     f"<div style='display:flex;justify-content:space-between;align-items:flex-start;'>"
                     f"<div style='flex:1;'>"
                     f"<div style='display:flex;align-items:center;gap:8px;margin-bottom:4px;'>"
-                    f"<span style='font-size:0.85rem;font-weight:800;color:#E6EDF3;'>{_sm_prod}</span>"
+                    f"<span style='font-size:0.85rem;font-weight:800;color:#16181F;'>{_sm_prod}</span>"
                     f"<span style='background:{_seg_color}22;color:{_seg_color};border:1px solid {_seg_color}44;"
                     f"border-radius:99px;padding:1px 8px;font-size:0.6rem;font-weight:700;'>{_sm_seg}</span>"
                     f"</div>"
-                    f"<div style='font-size:0.73rem;color:#A855F7;font-style:italic;'>✨ {_sm_reac}</div>"
-                    f"<div style='font-size:0.72rem;color:#C9D1D9;margin-top:5px;line-height:1.4;'>{_sm_op}</div>"
+                    f"<div style='font-size:0.73rem;color:#7C3AED;font-style:italic;'>✨ {_sm_reac}</div>"
+                    f"<div style='font-size:0.72rem;color:#3A3E4A;margin-top:5px;line-height:1.4;'>{_sm_op}</div>"
                     f"</div>"
                     f"<div style='text-align:right;margin-left:10px;'>"
-                    f"<div style='font-size:0.62rem;color:#555;'>{_sm_fec}</div>"
-                    f"<div style='font-size:0.65rem;color:#6B7280;margin-top:2px;'>{_sm_can}</div>"
+                    f"<div style='font-size:0.62rem;color:#74798A;'>{_sm_fec}</div>"
+                    f"<div style='font-size:0.65rem;color:#74798A;margin-top:2px;'>{_sm_can}</div>"
                     f"</div>"
                     f"</div></div>",
                     unsafe_allow_html=True,
@@ -684,8 +671,8 @@ def render():
                 with _pcols2[_pii % 3]:
                     _pdesc      = str(_prow.get("description", "") or "").strip()
                     _pdesc_html = (
-                        f"<div style='font-size:0.72rem;color:#C9D1D9;margin-top:6px;"
-                        f"line-height:1.45;font-style:italic;border-top:1px solid #21262D;"
+                        f"<div style='font-size:0.72rem;color:#3A3E4A;margin-top:6px;"
+                        f"line-height:1.45;font-style:italic;border-top:1px solid #DCD5C7;"
                         f"padding-top:6px;'>{_pdesc}</div>"
                     ) if _pdesc else ""
                     _tipo_tp    = str(_prow.get("tipo_producto") or "")
@@ -705,33 +692,33 @@ def render():
                     _lbl_precio = "PRECIO VENTA" if _tipo_tp == "propio_3d" else "PRECIO"
                     _nums_html = (
                         f"<div style='margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:4px;'>"
-                        f"<div style='background:#0D1117;border-radius:6px;padding:8px 4px;text-align:center;'>"
-                        f"<div style='font-size:0.56rem;color:#8B949E;margin-bottom:2px;'>{_lbl_precio}</div>"
+                        f"<div style='background:#EBE6DC;border-radius:6px;padding:8px 4px;text-align:center;'>"
+                        f"<div style='font-size:0.56rem;color:#74798A;margin-bottom:2px;'>{_lbl_precio}</div>"
                         f"<div style='font-size:0.84rem;font-weight:700;color:{_plincolor};'>${_precio_p:,.0f}</div></div>"
-                        f"<div style='background:#0D1117;border-radius:6px;padding:8px 4px;text-align:center;'>"
-                        f"<div style='font-size:0.56rem;color:#8B949E;margin-bottom:2px;'>STOCK</div>"
+                        f"<div style='background:#EBE6DC;border-radius:6px;padding:8px 4px;text-align:center;'>"
+                        f"<div style='font-size:0.56rem;color:#74798A;margin-bottom:2px;'>STOCK</div>"
                         f"<div style='font-size:0.84rem;font-weight:700;color:{_pstock_c};'>{_stk_p} u</div></div>"
                         + (
-                        f"<div style='background:#0D1117;border-radius:6px;padding:8px 4px;text-align:center;'>"
-                        f"<div style='font-size:0.56rem;color:#8B949E;margin-bottom:2px;'>COSTO</div>"
+                        f"<div style='background:#EBE6DC;border-radius:6px;padding:8px 4px;text-align:center;'>"
+                        f"<div style='font-size:0.56rem;color:#74798A;margin-bottom:2px;'>COSTO</div>"
                         f"<div style='font-size:0.84rem;font-weight:700;color:#F59E0B;'>${_costo_p:,.0f}</div></div>"
-                        f"<div style='background:#0D1117;border-radius:6px;padding:8px 4px;text-align:center;'>"
-                        f"<div style='font-size:0.56rem;color:#8B949E;margin-bottom:2px;'>GANANCIA · {_margen_p:.0f}%</div>"
+                        f"<div style='background:#EBE6DC;border-radius:6px;padding:8px 4px;text-align:center;'>"
+                        f"<div style='font-size:0.56rem;color:#74798A;margin-bottom:2px;'>GANANCIA · {_margen_p:.0f}%</div>"
                         f"<div style='font-size:0.84rem;font-weight:700;color:{_gan_color};'>${_gan_p:,.0f}</div></div>"
                         if _costo_p > 0 else ""
                         )
                         + f"</div>"
                     )
                     st.markdown(
-                        f"<div style='background:#161B22;border-radius:14px;padding:16px;"
-                        f"border:1px solid #21262D;margin-bottom:10px;border-top:3px solid {_plincolor};'>"
+                        f"<div style='background:#FAF8F3;border-radius:14px;padding:16px;"
+                        f"border:1px solid #DCD5C7;margin-bottom:10px;border-top:3px solid {_plincolor};'>"
                         f"<div style='display:flex;justify-content:space-between;align-items:flex-start;'>"
                         f"<div style='font-size:0.62rem;color:{_plincolor};font-weight:700;"
                         f"letter-spacing:1px;text-transform:uppercase;'>{_prow.get('sku','')} · {_peso_g}g</div>"
                         f"{_tipo_html}</div>"
-                        f"<div style='font-size:0.9rem;font-weight:700;color:#E6EDF3;margin-top:4px;"
+                        f"<div style='font-size:0.9rem;font-weight:700;color:#16181F;margin-top:4px;"
                         f"line-height:1.2;'>{_prow['name']}</div>"
-                        f"<div style='font-size:0.68rem;color:#8B949E;margin-top:2px;'>"
+                        f"<div style='font-size:0.68rem;color:#74798A;margin-top:2px;'>"
                         f"{_prow.get('categoria','') or ''}</div>"
                         f"{_pdesc_html}"
                         f"{_nums_html}"
@@ -752,9 +739,9 @@ def render():
                     _ls1, _ls2 = st.columns(2)
                     _n_act3 = len(_lp3[_lp3["activo"]==1]) if "activo" in _lp3.columns else len(_lp3)
                     with _ls1:
-                        st.markdown(f"<div style='background:#161B22;border-radius:10px;padding:10px;border:1px solid {_lc3['color']}33;text-align:center;'><div style='font-size:0.58rem;color:#8B949E;font-weight:600;letter-spacing:1px;'>PRODUCTOS</div><div style='font-size:1.5rem;font-weight:800;color:{_lc3['color']};'>{_n_act3}</div></div>", unsafe_allow_html=True)
+                        st.markdown(f"<div style='background:#FAF8F3;border-radius:10px;padding:10px;border:1px solid {_lc3['color']}33;text-align:center;'><div style='font-size:0.58rem;color:#74798A;font-weight:600;letter-spacing:1px;'>PRODUCTOS</div><div style='font-size:1.5rem;font-weight:800;color:{_lc3['color']};'>{_n_act3}</div></div>", unsafe_allow_html=True)
                     with _ls2:
-                        st.markdown(f"<div style='background:#161B22;border-radius:10px;padding:10px;border:1px solid {_lc3['color']}33;text-align:center;'><div style='font-size:0.58rem;color:#8B949E;font-weight:600;letter-spacing:1px;'>VALOR STOCK</div><div style='font-size:1.5rem;font-weight:800;color:{_lc3['color']};'>${_lp3['valor_stock'].sum():,.0f}</div></div>", unsafe_allow_html=True)
+                        st.markdown(f"<div style='background:#FAF8F3;border-radius:10px;padding:10px;border:1px solid {_lc3['color']}33;text-align:center;'><div style='font-size:0.58rem;color:#74798A;font-weight:600;letter-spacing:1px;'>VALOR STOCK</div><div style='font-size:1.5rem;font-weight:800;color:{_lc3['color']};'>${_lp3['valor_stock'].sum():,.0f}</div></div>", unsafe_allow_html=True)
                     st.markdown("<div style='height:12px;'></div>", unsafe_allow_html=True)
                     _render_cards_linea(_lp3, _lc3["color"])
         else:
@@ -825,7 +812,7 @@ def render():
                     _canal2     = _pr2.get("canal_origen") or ""
                     _canal_ico2 = _canal_icons_ped.get(_canal2, "")
                     _canal_html = (
-                        f"<span style='font-size:0.68rem;color:#6B7280;'>{_canal_ico2} {_canal2}</span>"
+                        f"<span style='font-size:0.68rem;color:#74798A;'>{_canal_ico2} {_canal2}</span>"
                     ) if _canal2 else ""
 
                     # Items del pedido con nombre del producto
@@ -839,35 +826,35 @@ def render():
                         for _, _ir in _ord_items.iterrows():
                             _parts.append(
                                 f"<span style='color:#F59E0B;font-weight:700;'>{int(_ir['cantidad'])}×</span>"
-                                f" <span style='color:#E6EDF3;font-weight:600;'>{_ir['producto']}</span>"
-                                f"<span style='color:#6B7280;font-size:0.7rem;'> · ${float(_ir['precio_unitario']):,.0f} c/u</span>"
+                                f" <span style='color:#16181F;font-weight:600;'>{_ir['producto']}</span>"
+                                f"<span style='color:#74798A;font-size:0.7rem;'> · ${float(_ir['precio_unitario']):,.0f} c/u</span>"
                             )
                         _items_html = (
-                            "<div style='margin-top:8px;padding:8px 12px;background:#0D1117;"
-                            "border-radius:8px;border:1px solid #21262D;font-size:0.8rem;"
+                            "<div style='margin-top:8px;padding:8px 12px;background:#EBE6DC;"
+                            "border-radius:8px;border:1px solid #DCD5C7;font-size:0.8rem;"
                             "display:flex;flex-direction:column;gap:3px;'>"
                             + "".join(f"<div>{p}</div>" for p in _parts)
                             + "</div>"
                         )
 
                     _not2 = (
-                        f"<div style='font-size:0.72rem;color:#8B949E;margin-top:6px;"
-                        f"padding:6px 10px;background:#161B22;border-radius:6px;"
-                        f"border:1px dashed #30363D;'><em>{_pr2['notas']}</em></div>"
+                        f"<div style='font-size:0.72rem;color:#74798A;margin-top:6px;"
+                        f"padding:6px 10px;background:#FAF8F3;border-radius:6px;"
+                        f"border:1px dashed #DCD5C7;'><em>{_pr2['notas']}</em></div>"
                     ) if _pr2.get("notas") else ""
 
                     st.markdown(
-                        f"<div style='background:#161B22;border-radius:14px;padding:16px 20px;"
-                        f"margin-bottom:6px;border-left:4px solid {_sc3};border:1px solid #21262D;'>"
+                        f"<div style='background:#FAF8F3;border-radius:14px;padding:16px 20px;"
+                        f"margin-bottom:6px;border-left:4px solid {_sc3};border:1px solid #DCD5C7;'>"
                         f"<div style='display:flex;justify-content:space-between;align-items:flex-start;'>"
                         f"<div style='flex:1;min-width:0;'>"
                         f"<div style='display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:4px;'>"
-                        f"<span style='font-weight:800;font-size:1rem;color:#E6EDF3;'>#{_oid2}</span>"
+                        f"<span style='font-weight:800;font-size:1rem;color:#16181F;'>#{_oid2}</span>"
                         f"<span style='background:{_sc3}22;color:{_sc3};border:1px solid {_sc3}44;"
                         f"border-radius:99px;padding:2px 10px;font-size:0.7rem;font-weight:700;'>{_pr2['status']}</span>"
                         f"{_badge2}{_pago_badge2}"
                         f"</div>"
-                        f"<div style='font-size:0.72rem;color:#8B949E;display:flex;gap:12px;flex-wrap:wrap;'>"
+                        f"<div style='font-size:0.72rem;color:#74798A;display:flex;gap:12px;flex-wrap:wrap;'>"
                         f"<span>📅 {_fec2}</span>"
                         f"<span>🎯 entrega {_ent2}</span>"
                         f"{_canal_html}"
@@ -902,9 +889,9 @@ def render():
 
             _tot_fac = float(_pedidos_s[_pedidos_s["status"].isin(["Listo", "Entregado"])]["total"].sum())
             st.markdown(
-                f"<div style='background:#0D1B2E;border-radius:10px;padding:12px 18px;"
-                f"margin-top:8px;border:1px solid #1B2D4A;text-align:right;'>"
-                f"<span style='color:#58A6FF;font-weight:700;'>"
+                f"<div style='background:#F2EEE5;border-radius:10px;padding:12px 18px;"
+                f"margin-top:8px;border:1px solid #DCD5C7;text-align:right;'>"
+                f"<span style='color:#FF4B4B;font-weight:700;'>"
                 f"Total facturado (Listo + Entregado): ${_tot_fac:,.0f}</span></div>",
                 unsafe_allow_html=True,
             )
@@ -922,8 +909,8 @@ def render():
      padding:18px 24px;border:1px solid {lcolor}33;margin-bottom:16px;'>
   <div style='font-size:0.62rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;
        color:{lcolor};'>CATÁLOGO COMPLETO · TU LÍNEA</div>
-  <div style='font-size:1.1rem;font-weight:800;color:#E6EDF3;margin-top:6px;'>🏪 Mi Tienda — {lnom}</div>
-  <div style='font-size:0.75rem;color:#8B949E;margin-top:4px;'>
+  <div style='font-size:1.1rem;font-weight:800;color:#16181F;margin-top:6px;'>🏪 Mi Tienda — {lnom}</div>
+  <div style='font-size:0.75rem;color:#74798A;margin-top:4px;'>
     Productos EP 3D = lo que El Pasaje fabrica para vos · Productos propios = los que vos creás y gestionás.
     Seteá tu precio de venta en cada uno para calcular tu margen.
   </div>
@@ -1014,10 +1001,10 @@ def render():
                 ]:
                     with _kc:
                         st.markdown(
-                            f"<div style='background:#161B22;border-radius:12px;padding:12px;border:1px solid #21262D;"
+                            f"<div style='background:#FAF8F3;border-radius:12px;padding:12px;border:1px solid #DCD5C7;"
                             f"border-top:3px solid {_kcol};text-align:center;margin-bottom:12px;'>"
                             f"<div style='font-size:1.1rem;font-weight:800;color:{_kcol};line-height:1;'>{_kv}</div>"
-                            f"<div style='font-size:0.55rem;color:#8B949E;margin-top:5px;text-transform:uppercase;"
+                            f"<div style='font-size:0.55rem;color:#74798A;margin-top:5px;text-transform:uppercase;"
                             f"letter-spacing:0.5px;'>{_kl}</div></div>",
                             unsafe_allow_html=True,
                         )
@@ -1046,7 +1033,7 @@ def render():
                     _ep_mrg_ep    = round(_ep_gan_ep / _ep_price * 100) if (_ep_price > 0 and _ep_costo > 0) else 0
                     _ep_gan_socio = round(_ep_gan_ep * 0.5) if _ep_gan_ep > 0 else 0
                     _ep_cat_html = (
-                        f"<span style='background:#21262D;color:#8B949E;border-radius:99px;"
+                        f"<span style='background:#DCD5C7;color:#74798A;border-radius:99px;"
                         f"padding:1px 8px;font-size:0.62rem;'>{_ep_cat}</span>"
                     ) if _ep_cat else ""
                     _ep_margen_line = (
@@ -1060,37 +1047,37 @@ def render():
                         f"padding:1px 7px;font-size:0.6rem;font-weight:700;'>×{_ep_markup:.1f}</span>"
                     ) if _ep_markup > 0 else ""
                     _ep_desc_html = (
-                        f"<div style='font-size:0.72rem;color:#C9D1D9;margin-top:6px;line-height:1.4;"
-                        f"font-style:italic;border-top:1px solid #21262D;padding-top:6px;'>{_ep_desc}</div>"
+                        f"<div style='font-size:0.72rem;color:#3A3E4A;margin-top:6px;line-height:1.4;"
+                        f"font-style:italic;border-top:1px solid #DCD5C7;padding-top:6px;'>{_ep_desc}</div>"
                     ) if _ep_desc else ""
                     with _ep_grid[_ep_i % 2]:
                         st.markdown(f"""
-<div style='background:#161B22;border-radius:12px;padding:14px 16px;
-     border:1px solid #21262D;border-top:3px solid #F59E0B;margin-bottom:4px;'>
+<div style='background:#FAF8F3;border-radius:12px;padding:14px 16px;
+     border:1px solid #DCD5C7;border-top:3px solid #F59E0B;margin-bottom:4px;'>
   <div style='display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:2px;'>
-    <span style='font-size:0.85rem;font-weight:700;color:#E6EDF3;'>{_ep_r['name']}</span>
+    <span style='font-size:0.85rem;font-weight:700;color:#16181F;'>{_ep_r['name']}</span>
     {_ep_cat_html}
   </div>
-  <div style='font-size:0.68rem;color:#8B949E;'>
+  <div style='font-size:0.68rem;color:#74798A;'>
     {_ep_r['sku']} · {_ep_wt:.0f}g ·
     <span style='color:{_ep_stk_c};font-weight:600;'>{_ep_stk} u stock</span>
   </div>
   {_ep_desc_html}
   <div style='margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:6px;'>
-    <div style='background:#0D1117;border-radius:7px;padding:8px 10px;'>
-      <div style='font-size:0.55rem;color:#8B949E;text-transform:uppercase;letter-spacing:0.4px;'>
+    <div style='background:#EBE6DC;border-radius:7px;padding:8px 10px;'>
+      <div style='font-size:0.55rem;color:#74798A;text-transform:uppercase;letter-spacing:0.4px;'>
         Precio EP <span style='font-size:0.5rem;opacity:.6;'>(lo que pagas)</span></div>
       <div style='font-size:0.92rem;font-weight:800;color:#F59E0B;'>${_ep_price:,.0f}</div>
     </div>
-    <div style='background:#0D1117;border-radius:7px;padding:8px 10px;'>
-      <div style='font-size:0.55rem;color:#8B949E;text-transform:uppercase;letter-spacing:0.4px;
+    <div style='background:#EBE6DC;border-radius:7px;padding:8px 10px;'>
+      <div style='font-size:0.55rem;color:#74798A;text-transform:uppercase;letter-spacing:0.4px;
                   display:flex;align-items:center;gap:4px;'>
         Tu precio {_ep_markup_badge}</div>
       <div style='font-size:0.92rem;font-weight:800;color:#10B981;'>${_ep_pr:,.0f}</div>
     </div>
-    {f"<div style='background:#0D1117;border-radius:7px;padding:8px 10px;'><div style='font-size:0.55rem;color:#8B949E;text-transform:uppercase;letter-spacing:0.4px;'>Costo fabricación</div><div style='font-size:0.92rem;font-weight:800;color:#94A3B8;'>${_ep_costo:,.0f}</div></div><div style='background:#0D1117;border-radius:7px;padding:8px 10px;'><div style='font-size:0.55rem;color:#8B949E;text-transform:uppercase;letter-spacing:0.4px;'>Ganancia EP total</div><div style='font-size:0.92rem;font-weight:800;color:#6366F1;'>${_ep_gan_ep:,.0f}</div></div>" if _ep_costo > 0 else ""}
+    {f"<div style='background:#EBE6DC;border-radius:7px;padding:8px 10px;'><div style='font-size:0.55rem;color:#74798A;text-transform:uppercase;letter-spacing:0.4px;'>Costo fabricación</div><div style='font-size:0.92rem;font-weight:800;color:#94A3B8;'>${_ep_costo:,.0f}</div></div><div style='background:#EBE6DC;border-radius:7px;padding:8px 10px;'><div style='font-size:0.55rem;color:#74798A;text-transform:uppercase;letter-spacing:0.4px;'>Ganancia EP total</div><div style='font-size:0.92rem;font-weight:800;color:#6366F1;'>${_ep_gan_ep:,.0f}</div></div>" if _ep_costo > 0 else ""}
   </div>
-  {f"<div style='margin-top:6px;background:#2D1B69;border-radius:7px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;'><div style='font-size:0.6rem;color:#C4B5FD;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;'>Tu ganancia por unidad · 50%</div><div style='font-size:1.05rem;font-weight:800;color:#A855F7;'>${_ep_gan_socio:,.0f}</div></div>" if _ep_gan_socio > 0 else ""}
+  {f"<div style='margin-top:6px;background:#F3EFFB;border-radius:7px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;'><div style='font-size:0.6rem;color:#7C3AED;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;'>Tu ganancia por unidad · 50%</div><div style='font-size:1.05rem;font-weight:800;color:#7C3AED;'>${_ep_gan_socio:,.0f}</div></div>" if _ep_gan_socio > 0 else ""}
   <div style='margin-top:6px;font-size:0.78rem;'>{_ep_margen_line}</div>
 </div>""", unsafe_allow_html=True)
                         _ep_inp = st.number_input(
@@ -1121,7 +1108,12 @@ def render():
                                         )
                                 get_productos_capa2.clear()
                                 _cp_tienda.clear()
-                                st.success(f"${_ep_inp:,.0f} guardado")
+                                try:
+                                    from utils.exports import exportar_catalogo_json
+                                    exportar_catalogo_json(lid)
+                                except Exception:
+                                    pass
+                                st.success(f"${_ep_inp:,.0f} guardado · catálogo web actualizado")
                                 st.rerun()
                         if _ep_pr > 0 and _wa_configured:
                             _ep_wa_lnk = _wa_link_producto(
@@ -1135,8 +1127,8 @@ def render():
             # ── Sección: Productos propios (Capa 2) ───────────────────
             if df_c2.empty:
                 st.markdown(
-                    "<div style='background:#161B22;border-radius:12px;padding:16px 20px;"
-                    "border:1px dashed #30363D;color:#8B949E;margin-bottom:16px;'>"
+                    "<div style='background:#FAF8F3;border-radius:12px;padding:16px 20px;"
+                    "border:1px dashed #DCD5C7;color:#74798A;margin-bottom:16px;'>"
                     "Sin productos propios agregados todavía.<br>"
                     "Usá el formulario de abajo para agregar el primero.</div>",
                     unsafe_allow_html=True,
@@ -1144,7 +1136,7 @@ def render():
             else:
                 st.markdown(
                     "<div style='font-size:0.62rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;"
-                    "color:#58A6FF;margin-bottom:10px;'>✨ TUS PRODUCTOS PROPIOS</div>",
+                    "color:#FF4B4B;margin-bottom:10px;'>✨ TUS PRODUCTOS PROPIOS</div>",
                     unsafe_allow_html=True,
                 )
                 df_c2["_cat"] = df_c2["categoria"].fillna("Sin categoría").replace("", "Sin categoría")
@@ -1166,8 +1158,8 @@ def render():
                             _has_img     = _img_url.startswith("http") or _img_url.startswith("data:")
 
                             _desc2_html = (
-                                f"<div style='font-size:0.73rem;color:#C9D1D9;margin-top:7px;"
-                                f"line-height:1.4;font-style:italic;border-top:1px solid #21262D;"
+                                f"<div style='font-size:0.73rem;color:#3A3E4A;margin-top:7px;"
+                                f"line-height:1.4;font-style:italic;border-top:1px solid #DCD5C7;"
                                 f"padding-top:7px;'>{_desc2}</div>"
                             ) if _desc2 else ""
 
@@ -1182,16 +1174,16 @@ def render():
                             with _c2main:
                                 # ── Tarjeta informativa ─────────────────────
                                 st.markdown(f"""
-<div style='background:#161B22;border-radius:12px;padding:12px 16px;
-     border:1px solid #21262D;border-left:3px solid {_vc2};margin-bottom:6px;'>
+<div style='background:#FAF8F3;border-radius:12px;padding:12px 16px;
+     border:1px solid #DCD5C7;border-left:3px solid {_vc2};margin-bottom:6px;'>
   <div style='display:flex;align-items:center;gap:8px;flex-wrap:wrap;'>
-    <span style='font-size:0.84rem;font-weight:700;color:#E6EDF3;'>{_r2['name']}</span>
+    <span style='font-size:0.84rem;font-weight:700;color:#16181F;'>{_r2['name']}</span>
     <span style='background:{_vc2}22;color:{_vc2};border:1px solid {_vc2}44;border-radius:99px;
          padding:2px 9px;font-size:0.65rem;font-weight:700;'>{_vl2}</span>
-    <span style='background:#21262D;color:#8B949E;border-radius:99px;
+    <span style='background:#DCD5C7;color:#74798A;border-radius:99px;
          padding:2px 9px;font-size:0.62rem;'>{_tipo2}</span>
   </div>
-  <div style='font-size:0.72rem;color:#8B949E;margin-top:3px;'>
+  <div style='font-size:0.72rem;color:#74798A;margin-top:3px;'>
     {_r2.get('sku','')} &nbsp;·&nbsp;
     <b style='color:#F59E0B;'>${_precio_actual:,.0f}</b> &nbsp;·&nbsp;
     {int(_r2.get('stock',0) or 0)} u stock{_kit_badge}
@@ -1266,9 +1258,9 @@ def render():
                                             for _, _kc_r in _kc_this.iterrows():
                                                 _kcp = float(_kc_r.get("comp_price", 0) or 0) * int(_kc_r.get("cantidad", 1))
                                                 st.markdown(
-                                                    f"<div style='font-size:0.78rem;color:#C9D1D9;padding:5px 0;"
-                                                    f"border-bottom:1px solid #21262D;'>"
-                                                    f"<span style='font-family:monospace;color:#58A6FF;'>"
+                                                    f"<div style='font-size:0.78rem;color:#3A3E4A;padding:5px 0;"
+                                                    f"border-bottom:1px solid #DCD5C7;'>"
+                                                    f"<span style='font-family:monospace;color:#FF4B4B;'>"
                                                     f"{_kc_r.get('component_sku','')}</span>"
                                                     f" — {_kc_r.get('comp_name','')} "
                                                     f"× {int(_kc_r.get('cantidad',1))}"
@@ -1279,7 +1271,7 @@ def render():
                                                 (_kc_this["comp_price"].fillna(0) * _kc_this["cantidad"].fillna(1)).sum()
                                             )
                                             st.markdown(
-                                                f"<div style='font-size:0.8rem;font-weight:700;color:#E6EDF3;"
+                                                f"<div style='font-size:0.8rem;font-weight:700;color:#16181F;"
                                                 f"text-align:right;margin-top:6px;'>"
                                                 f"Total componentes: ${_kit_total:,.0f}</div>",
                                                 unsafe_allow_html=True,
@@ -1311,7 +1303,7 @@ def render():
             st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
             with st.expander("➕ Agregar nuevo producto (Tipo B — Propio de Línea)"):
                 with st.form(f"form_tipob_{lid}"):
-                    st.markdown("<div style='font-size:0.72rem;color:#8B949E;margin-bottom:10px;'>Tipo B: producto propio de tu línea. Quedará en borrador hasta que vos lo publiques.</div>", unsafe_allow_html=True)
+                    st.markdown("<div style='font-size:0.72rem;color:#74798A;margin-bottom:10px;'>Tipo B: producto propio de tu línea. Quedará en borrador hasta que vos lo publiques.</div>", unsafe_allow_html=True)
                     _fc1, _fc2 = st.columns(2)
                     with _fc1:
                         _fn   = st.text_input("Nombre *", placeholder="Ej: Porta auriculares gaming")
@@ -1375,7 +1367,7 @@ def render():
             # ── Formulario nuevo Kit Tipo D ──────────────────────────────
             st.markdown("<div style='height:4px;'></div>", unsafe_allow_html=True)
             with st.expander("🧩 Crear Kit Mixto (Tipo D — varios componentes)"):
-                st.markdown("<div style='font-size:0.72rem;color:#8B949E;margin-bottom:10px;'>Tipo D: kit que agrupa productos existentes. El precio se calcula de la suma de componentes pero podés ajustarlo.</div>", unsafe_allow_html=True)
+                st.markdown("<div style='font-size:0.72rem;color:#74798A;margin-bottom:10px;'>Tipo D: kit que agrupa productos existentes. El precio se calcula de la suma de componentes pero podés ajustarlo.</div>", unsafe_allow_html=True)
 
                 # Carga de productos disponibles (fuera del form = live price update)
                 try:
@@ -1397,7 +1389,7 @@ def render():
                     row = r.iloc[0]
                     return f"{row['sku']} — {row['name']}  ${float(row['price']):,.0f}"
 
-                st.markdown("<div style='font-size:0.72rem;font-weight:700;color:#58A6FF;margin-bottom:6px;'>COMPONENTES (hasta 5)</div>", unsafe_allow_html=True)
+                st.markdown("<div style='font-size:0.72rem;font-weight:700;color:#FF4B4B;margin-bottom:6px;'>COMPONENTES (hasta 5)</div>", unsafe_allow_html=True)
                 _kf_live = []
                 for _ki in range(5):
                     _kfc1, _kfc2 = st.columns([5, 1])
@@ -1429,9 +1421,9 @@ def render():
 
                 if _kf_live:
                     st.markdown(
-                        f"<div style='background:#0D2E10;border-radius:8px;padding:8px 14px;"
-                        f"border:1px solid #1a4a20;margin:8px 0;'>"
-                        f"<span style='color:#3FB950;font-weight:700;'>Precio calculado: ${_kf_auto:,.0f}</span>"
+                        f"<div style='background:#ECFDF5;border-radius:8px;padding:8px 14px;"
+                        f"border:1px solid #A7F3D0;margin:8px 0;'>"
+                        f"<span style='color:#2F9E54;font-weight:700;'>Precio calculado: ${_kf_auto:,.0f}</span>"
                         f" &nbsp;·&nbsp; {len(_kf_live)} componente(s) seleccionado(s)</div>",
                         unsafe_allow_html=True
                     )
@@ -1529,7 +1521,7 @@ def render():
             st.markdown("<div style='height:16px;'></div>", unsafe_allow_html=True)
             st.markdown(
                 "<div style='font-size:0.6rem;font-weight:700;letter-spacing:2px;"
-                "text-transform:uppercase;color:#58A6FF;margin-bottom:8px;'>EXPORTAR A WEB</div>",
+                "text-transform:uppercase;color:#FF4B4B;margin-bottom:8px;'>EXPORTAR A WEB</div>",
                 unsafe_allow_html=True,
             )
             if st.button(f"📤 Exportar catálogo web — {lnom}", key=f"export_{lid}", use_container_width=True):
@@ -1638,11 +1630,11 @@ def render():
                         st.caption(f"Subtotal: ${_pb_sub:,.0f}")
 
                     st.markdown(
-                        f"<div style='background:#0D2E10;border-radius:12px;padding:14px 20px;"
-                        f"border:1px solid #1a4a20;margin:12px 0;text-align:center;'>"
-                        f"<div style='font-size:0.62rem;color:#3FB950;font-weight:700;"
+                        f"<div style='background:#ECFDF5;border-radius:12px;padding:14px 20px;"
+                        f"border:1px solid #A7F3D0;margin:12px 0;text-align:center;'>"
+                        f"<div style='font-size:0.62rem;color:#2F9E54;font-weight:700;"
                         f"letter-spacing:2px;'>TOTAL ESTIMADO</div>"
-                        f"<div style='font-size:2rem;font-weight:800;color:#3FB950;margin-top:4px;'>"
+                        f"<div style='font-size:2rem;font-weight:800;color:#2F9E54;margin-top:4px;'>"
                         f"💰 ${_pb_total_live:,.0f}</div></div>",
                         unsafe_allow_html=True,
                     )
@@ -1680,23 +1672,23 @@ def render():
                 _pb_numero  = _get_wa_numero(_pb_lid, engine)
 
                 st.markdown(
-                    f"<div style='background:#161B22;border-radius:14px;padding:20px 24px;"
-                    f"border:1px solid #21262D;border-left:4px solid {_pb_color};margin-bottom:16px;'>"
+                    f"<div style='background:#FAF8F3;border-radius:14px;padding:20px 24px;"
+                    f"border:1px solid #DCD5C7;border-left:4px solid {_pb_color};margin-bottom:16px;'>"
                     f"<div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;"
                     f"text-transform:uppercase;color:{_pb_color};margin-bottom:12px;'>"
                     f"📋 PRESUPUESTO · {_pb_nombre.upper()}</div>"
                     + "".join(
-                        f"<div style='font-size:0.85rem;color:#E6EDF3;padding:5px 0;"
-                        f"border-bottom:1px solid #21262D;'>"
+                        f"<div style='font-size:0.85rem;color:#16181F;padding:5px 0;"
+                        f"border-bottom:1px solid #DCD5C7;'>"
                         f"• {it['cantidad']}x <b>{it['nombre']}</b>"
-                        f"<span style='float:right;color:#3FB950;font-weight:700;'>"
+                        f"<span style='float:right;color:#2F9E54;font-weight:700;'>"
                         f"${float(it.get('precio_reventa') or it['precio']) * int(it['cantidad']):,.0f}</span></div>"
                         for it in _pb_items_f
                     )
-                    + f"<div style='font-size:1.1rem;font-weight:800;color:#3FB950;text-align:right;"
-                    f"margin-top:12px;padding-top:8px;border-top:2px solid #21262D;'>"
+                    + f"<div style='font-size:1.1rem;font-weight:800;color:#2F9E54;text-align:right;"
+                    f"margin-top:12px;padding-top:8px;border-top:2px solid #DCD5C7;'>"
                     f"TOTAL: ${_pb_total_f:,.0f}</div>"
-                    f"<div style='font-size:0.68rem;color:#6B7280;margin-top:8px;'>"
+                    f"<div style='font-size:0.68rem;color:#74798A;margin-top:8px;'>"
                     f"Válido por 48 horas · Entrega bajo pedido 48-72hs · El Pasaje 3D Studio</div></div>",
                     unsafe_allow_html=True,
                 )
@@ -1726,9 +1718,9 @@ def render():
 <div style='background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:16px;
      padding:20px 24px;border:1px solid #0F3460;margin-bottom:12px;'>
   <div style='font-size:0.62rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;
-       color:#58A6FF;'>ASISTENTE IA</div>
+       color:#FF4B4B;'>ASISTENTE IA</div>
   <div style='font-size:1.4rem;font-weight:800;color:white;margin-top:6px;'>🤖 Mike para {hdr_nombre}</div>
-  <div style='font-size:0.78rem;color:#8B949E;margin-top:4px;'>
+  <div style='font-size:0.78rem;color:#74798A;margin-top:4px;'>
     Mike conoce tu línea, tus productos y tu historial — preguntale lo que quieras.
   </div>
 </div>""", unsafe_allow_html=True)
@@ -1792,6 +1784,11 @@ def render():
                 st.session_state[_smk_key] = []
                 st.rerun()
 
+    # ══ TAB PUBLICAR ══
+    with _t_pub:
+        from modules.publicar import render as _pub_render
+        _pub_render(uid, lineas_activas, prod, hdr_color, hdr_nombre, hdr_emoji)
+
     # ══ TAB MI LÍNEA ══
     with _t_linea:
         if role == "socio_multi" and len(lineas_activas) > 1:
@@ -1829,7 +1826,7 @@ def render():
 
         with st.form(f"form_linea_cfg_{_lc_lid}"):
             st.markdown(
-                "<div style='font-size:0.75rem;color:#8B949E;margin-bottom:12px;'>"
+                "<div style='font-size:0.75rem;color:#74798A;margin-bottom:12px;'>"
                 "Número de WhatsApp de tu línea — se usa para generar los links de contacto "
                 "en 🏪 Mi Tienda y 🧮 Presupuesto.</div>",
                 unsafe_allow_html=True,
@@ -1868,7 +1865,7 @@ def render():
             unsafe_allow_html=True,
         )
         st.markdown(
-            "<div style='font-size:0.75rem;color:#8B949E;margin-bottom:14px;'>"
+            "<div style='font-size:0.75rem;color:#74798A;margin-bottom:14px;'>"
             "Lo que vos cobrás a tus clientes. No afecta el precio de El Pasaje. "
             "Se usa en presupuestos y links de WhatsApp.</div>",
             unsafe_allow_html=True,
@@ -1900,9 +1897,9 @@ def render():
                     ) if _prr_mk > 0 else ""
                     st.markdown(
                         f"<div style='padding:6px 0;'>"
-                        f"<span style='font-size:0.82rem;font-weight:600;color:#E6EDF3;'>{_prr['name']}</span>"
+                        f"<span style='font-size:0.82rem;font-weight:600;color:#16181F;'>{_prr['name']}</span>"
                         f"{_mk_badge}<br>"
-                        f"<span style='font-size:0.65rem;color:#8B949E;'>Precio EP: "
+                        f"<span style='font-size:0.65rem;color:#74798A;'>Precio EP: "
                         f"<b style='color:#F59E0B;'>${_prr_ep:,.0f}</b></span></div>",
                         unsafe_allow_html=True,
                     )
@@ -1917,7 +1914,7 @@ def render():
                         help=f"Mínimo ${_prr_ep:,.0f}",
                     )
                 _pr_inputs[_prr["sku"]] = (_inp_val, _prr_cur, _prr_ep)
-                st.markdown("<div style='border-bottom:1px solid #21262D;margin:2px 0 6px;'></div>",
+                st.markdown("<div style='border-bottom:1px solid #DCD5C7;margin:2px 0 6px;'></div>",
                             unsafe_allow_html=True)
 
             if st.button("💾 Guardar todos los precios", type="primary",
@@ -1952,7 +1949,7 @@ def render():
             unsafe_allow_html=True,
         )
         st.markdown(
-            "<div style='font-size:0.78rem;color:#8B949E;margin-bottom:16px;'>"
+            "<div style='font-size:0.78rem;color:#74798A;margin-bottom:16px;'>"
             "Subí una foto por producto. Aparecerá en los cards de 🛒 Cargar Pedido y en el catálogo. "
             "Tamaño máximo: 5 MB. Formatos: JPG, PNG, WEBP.</div>",
             unsafe_allow_html=True,

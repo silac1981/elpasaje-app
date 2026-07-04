@@ -446,10 +446,23 @@ def _dash_main():
                                 _n_precio += 1
                 from utils.pricing import cargar_productos as _cp_dash
                 _cp_dash.clear()
+                try:
+                    from utils.exports import exportar_catalogo_json
+                    _lineas_cambiadas = _changed["sku"].apply(
+                        lambda s: df_g[df_g["sku"] == s]["client_id"].values[0]
+                        if not df_g[df_g["sku"] == s].empty else None
+                    ).dropna().unique()
+                    for _lc_exp in _lineas_cambiadas:
+                        try:
+                            exportar_catalogo_json(_lc_exp)
+                        except Exception:
+                            pass
+                except Exception:
+                    pass
                 _msg = f"{len(_changed)} producto(s) guardados"
                 if _n_precio:
                     _msg += f" · {_n_precio} precio(s) actualizado(s) con historial"
-                st.success(_msg)
+                st.success(_msg + " · catálogo web actualizado")
                 st.rerun()
 
     # ── Revenue Sharing — Reglas activas ──────────────────────────
