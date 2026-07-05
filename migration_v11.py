@@ -8,6 +8,9 @@ DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "elpasaje_v2.
 
 
 def run():
+    from utils.db import dialect as _dialect
+    if _dialect == "postgresql":
+        return
     conn = sqlite3.connect(DB_PATH)
     cur  = conn.cursor()
 

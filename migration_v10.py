@@ -36,6 +36,9 @@ FOTOS_FSP = {
 
 
 def run():
+    from utils.db import dialect as _dialect
+    if _dialect == "postgresql":
+        return
     conn = sqlite3.connect(DB_PATH)
     cur  = conn.cursor()
 

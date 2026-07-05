@@ -286,7 +286,7 @@ def _step_confirmar():
                     try:
                         conn.execute(
                             text("""INSERT INTO stock_movements (product_sku, tipo, cantidad, fecha, referencia)
-                                    VALUES (:sku, 'pedido', :qty_neg, date('now'), :ref)"""),
+                                    VALUES (:sku, 'pedido', :qty_neg, CURRENT_DATE, :ref)"""),
                             {"sku": _sel_sku, "qty_neg": -_sel_qty, "ref": f"order_{_oid}"},
                         )
                     except Exception:

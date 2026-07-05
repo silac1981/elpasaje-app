@@ -20,6 +20,15 @@ _DIR    = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(_DIR, "elpasaje_v2.db")
 HOY     = datetime.now().strftime("%Y-%m-%d")
 
+
+def _adapt_ddl(ddl: str, dialect: str) -> str:
+    """Adapta DDL SQLite a PostgreSQL: AUTOINCREMENT → SERIAL, tipos de default."""
+    if dialect == "postgresql":
+        ddl = ddl.replace("INTEGER PRIMARY KEY AUTOINCREMENT", "SERIAL PRIMARY KEY")
+        ddl = ddl.replace("(datetime('now'))", "(CURRENT_TIMESTAMP)")
+        ddl = ddl.replace("(datetime('now', 'localtime'))", "(CURRENT_TIMESTAMP)")
+    return ddl
+
 # ─────────────────────────────────────────────────────────
 #  DDL — todas las tablas con IF NOT EXISTS
 #  (funciona tanto para init_schema como para crear_schema)
@@ -89,7 +98,12 @@ TABLAS = [
             stock                INTEGER DEFAULT 0,
             imagen_url           TEXT,
             fecha_alta           TEXT DEFAULT CURRENT_DATE,
-            activo               INTEGER DEFAULT 1
+            activo               INTEGER DEFAULT 1,
+            tipo_producto        TEXT DEFAULT 'propio_3d',
+            visibilidad          TEXT DEFAULT 'publico',
+            proveedor_ref        TEXT,
+            precio_reventa       REAL DEFAULT 0,
+            precio_socio         REAL DEFAULT 0
         )
     """),
 
@@ -110,7 +124,13 @@ TABLAS = [
             motivo_fallo              TEXT,
             referencia_archivo        TEXT,
             fecha_entrega_solicitada  TEXT,
-            canal_origen              TEXT
+            canal_origen              TEXT,
+            pago_id                   INTEGER,
+            started_at                TEXT,
+            completed_at              TEXT,
+            delivered_at              TEXT,
+            motivo_cancelacion        TEXT,
+            monto_venta               REAL DEFAULT 0
         )
     """),
 
@@ -200,17 +220,84 @@ TABLAS = [
 
     ("senales_mercado", """
         CREATE TABLE IF NOT EXISTS senales_mercado (
+            id                 INTEGER PRIMARY KEY AUTOINCREMENT,
+            fecha              TEXT DEFAULT CURRENT_DATE,
+            cliente_id         TEXT,
+            linea              TEXT,
+            producto           TEXT,
+            reaccion           TEXT,
+            oportunidad        TEXT,
+            fuente             TEXT,
+            canal              TEXT,
+            notas              TEXT,
+            procesado_por_ia   INTEGER DEFAULT 0,
+            segmento_detectado TEXT
+        )
+    """),
+
+    ("pagos", """
+        CREATE TABLE IF NOT EXISTS pagos (
             id               INTEGER PRIMARY KEY AUTOINCREMENT,
-            fecha            TEXT DEFAULT CURRENT_DATE,
-            cliente_id       TEXT,
-            linea            TEXT,
-            producto         TEXT,
-            reaccion         TEXT,
-            oportunidad      TEXT,
-            fuente           TEXT,
-            canal            TEXT,
-            notas            TEXT,
-            procesado_por_ia INTEGER DEFAULT 0
+            order_id         INTEGER NOT NULL REFERENCES orders(id),
+            monto            REAL NOT NULL,
+            metodo           TEXT NOT NULL DEFAULT 'transferencia',
+            estado           TEXT NOT NULL DEFAULT 'pendiente',
+            mp_preference_id TEXT,
+            fecha            TEXT DEFAULT CURRENT_TIMESTAMP,
+            notas            TEXT
+        )
+    """),
+
+    ("revenue_rules", """
+        CREATE TABLE IF NOT EXISTS revenue_rules (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            product_sku TEXT NOT NULL,
+            linea_a     TEXT NOT NULL,
+            linea_b     TEXT NOT NULL,
+            split_a     REAL DEFAULT 0.5,
+            split_b     REAL DEFAULT 0.5,
+            notas       TEXT,
+            activo      INTEGER DEFAULT 1,
+            created_at  TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+    """),
+
+    ("kit_components", """
+        CREATE TABLE IF NOT EXISTS kit_components (
+            id            INTEGER PRIMARY KEY AUTOINCREMENT,
+            kit_sku       TEXT NOT NULL,
+            component_sku TEXT NOT NULL,
+            cantidad      INTEGER DEFAULT 1,
+            orden         INTEGER DEFAULT 0
+        )
+    """),
+
+    ("lineas_config", """
+        CREATE TABLE IF NOT EXISTS lineas_config (
+            client_id       TEXT PRIMARY KEY,
+            nombre_display  TEXT NOT NULL,
+            color_primario  TEXT DEFAULT '#6B7280',
+            color_acento    TEXT DEFAULT '#6B7280',
+            emoji_icono     TEXT DEFAULT '📦',
+            responsable     TEXT,
+            fin_solidario   TEXT,
+            activa          INTEGER DEFAULT 1,
+            whatsapp_numero TEXT
+        )
+    """),
+
+    ("archivos_produccion", """
+        CREATE TABLE IF NOT EXISTS archivos_produccion (
+            id         INTEGER PRIMARY KEY AUTOINCREMENT,
+            sku        TEXT,
+            order_id   INTEGER,
+            filename   TEXT NOT NULL,
+            tipo       TEXT DEFAULT 'otro',
+            contenido  BLOB,
+            size_kb    REAL DEFAULT 0,
+            notas      TEXT,
+            fecha      TEXT DEFAULT CURRENT_DATE,
+            subido_por TEXT DEFAULT 'fer_produccion'
         )
     """),
 ]
@@ -220,7 +307,7 @@ TABLAS = [
 # ─────────────────────────────────────────────────────────
 
 TENANTS_INICIALES = [
-    ("admin",            "Alejandra",                          "admin@elpasaje.com",        "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9", None, "admin",         "Direccion Economica",              HOY, 1, None,  None,        None,   None,           "Buenos Aires",        None,                       None, 1, HOY, "Todas"),
+    ("admin",            "Alejandra",                          "admin@elpasaje.com",        "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",  None, "admin",         "Direccion Economica",              HOY, 1, None,  None,        None,   None,           "Buenos Aires",        None,                       None, 1, HOY, "Todas"),
     ("olivia_coquette",  "Olivia",                             "coquette@elpasaje.com",     "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",  None, "familia",       None,                               HOY, 1, "B2C", "Familia",   "Alto", "Presencial",   "Buenos Aires",        "Estética",                 None, 1, HOY, "Coquette"),
     ("francisco_sport",  "Francisco",                          "fsport@elpasaje.com",       "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",  None, "familia",       None,                               HOY, 1, "B2C", "Familia",   "Alto", "Presencial",   "Buenos Aires",        "Deportes",                 None, 1, HOY, "Francisco Sport"),
     ("constantino_tech", "Constantino",                        "coretech@elpasaje.com",     "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",  None, "familia",       None,                               HOY, 1, "B2C", "Familia",   "Alto", "Presencial",   "Buenos Aires",        "Tecnología",               None, 1, HOY, "Core Tech"),
@@ -228,8 +315,8 @@ TENANTS_INICIALES = [
     ("oasis_animal",     "Oasis Animal",                       "oasisanimal@elpasaje.com",  "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",  None, "socio_multi",   None,                               HOY, 1, "B2B", "Red Nando", "Alto", "WhatsApp",     "Buenos Aires",        "Veterinario",              None, 1, HOY, "Oasis Animal + VK-Home"),
     ("oasis_del_estero", "Fede",                               "oasisdelestero@elpasaje.com","a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",  None, "socio",         None,                               HOY, 1, "B2B", "Red Nando", "Medio","WhatsApp",     "Santiago del Estero", None,                       None, 1, HOY, "Oasis del Estero"),
     ("pharma_delux",     "Pharma DeLux",                       "pharma@elpasaje.com",       "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",  None, "b2b",           None,                               HOY, 1, "B2B", "Directo",   "Alto", "Email",        "Buenos Aires",        "Farmacéutico",             None, 1, HOY, "Pharma DeLux"),
-    ("fer_produccion",   "Fernando (Fer)",                     "fer@elpasaje.com",          "a29461d9796a45974014a214c0ece938a5f9dcd8799f26b26c34d3e8adf31c69",  None, "produccion",    "Fabricacion y Materiales",         HOY, 1, None,  None,        None,   "Presencial",   "Buenos Aires",        None,                       None, 1, HOY, None),
-    ("agustina",         "Agustina",                           "agustina@elpasaje.com",     "1baedd25059490937a8f7a52dbaf5a7c168bc49f5bac0d7bc48bd6b58a84a421",  None, "socio_multi",   None,                               HOY, 1, "B2B", "Directo",   "Alto", "WhatsApp",     "Buenos Aires",        "Decoracion / Veterinaria", None, 1, HOY, "Oasis Animal + VK-Home"),
+    ("fer_produccion",   "Fernando (Fer)",                     "fer@elpasaje.com",          "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",  None, "admin",         "Fabricacion y Materiales",         HOY, 1, None,  None,        None,   "Presencial",   "Buenos Aires",        None,                       None, 1, HOY, None),
+    ("agustina",         "Agustina",                           "agustina@elpasaje.com",     "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",  None, "socio_multi",   None,                               HOY, 1, "B2B", "Directo",   "Alto", "WhatsApp",     "Buenos Aires",        "Decoracion / Veterinaria", None, 1, HOY, "Oasis Animal + VK-Home"),
     ("vkhome_cliente",   "VK-Home / Agustina",                 "vkhome@cliente.com",        "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",  None, "cliente_externo",None,                             HOY, 1, "B2B", "Directo",   "Alto", "Presencial",   "Buenos Aires",        "Decoracion",               None, 1, HOY, "VK-Home"),
 ]
 
@@ -238,6 +325,21 @@ TENANT_LINEAS_INICIALES = [
     ("agustina",     "vkhome_cliente"),
     ("oasis_animal", "oasis_animal"),
     ("oasis_animal", "vkhome_cliente"),
+]
+
+# (client_id, nombre_display, color, responsable, activa)
+LINEAS_CONFIG_INICIALES = [
+    ("admin",            "Administracion",          "#1E3A8A", "Alejandra Gomez Aguilera", 1),
+    ("oasis_animal",     "Oasis Animal",            "#F472B6", "Agustina",                1),
+    ("oasis_del_estero", "Oasis del Estero",        "#34D399", "Fede",                    1),
+    ("pharma_delux",     "Pharma DeLux",            "#FBBF24", "Lucas",                   1),
+    ("aviation",         "Aviation Pro",            "#0F3460", "Nando",                   1),
+    ("olivia_coquette",  "Coquette",                "#F9A8D4", "Olivia",                  1),
+    ("francisco_sport",  "Sport (Francisco)",       "#F97316", "Francisco",               1),
+    ("constantino_tech", "Core Tech (Constantino)", "#64748B", "Constantino",             1),
+    ("vkhome_cliente",   "VK-Home",                 "#A78BFA", "Agustina",                1),
+    ("agustina",         "Agustina",                "#6366F1", "Agustina",                1),
+    ("fer_produccion",   "Produccion",              "#3FB950", "Fernando",                1),
 ]
 
 MATERIALS_INICIALES = [
@@ -341,15 +443,19 @@ _TENANT_COLS = ("id","name","email","pwd","tel","tipo","sector","fecha","activo"
 # ─────────────────────────────────────────────────────────
 
 def init_schema():
-    """Inicializa el schema en producción. Seguro para llamar en cada arranque."""
-    _engine = create_engine(f"sqlite:///{DB_PATH}")
+    """Inicializa el schema. Seguro para llamar en cada arranque (SQLite y PostgreSQL)."""
+    from utils.db import engine as _engine, dialect as _dialect
+
+    _ign = "ON CONFLICT DO NOTHING"
+
     with _engine.connect() as conn:
         for _, ddl in TABLAS:
-            conn.execute(text(ddl))
+            conn.execute(text(_adapt_ddl(ddl, _dialect)))
 
+        # ── Tenants ───────────────────────────────────────────
         for row in TENANTS_INICIALES:
-            conn.execute(text("""
-                INSERT OR IGNORE INTO tenants
+            conn.execute(text(f"""
+                INSERT INTO tenants
                 (id,name,email,password,telefono,tipo,sector,fecha_alta,activo,
                  segmento,lead_source,potencial,canal_preferido,ciudad,rubro,
                  notas_agente,es_cliente_real,fecha_primer_contacto,linea_interes)
@@ -357,93 +463,103 @@ def init_schema():
                 (:id,:name,:email,:pwd,:tel,:tipo,:sector,:fecha,:activo,
                  :segmento,:lead_source,:potencial,:canal_preferido,:ciudad,:rubro,
                  :notas_agente,:es_cliente_real,:fecha_primer_contacto,:linea_interes)
+                {_ign}
             """), dict(zip(_TENANT_COLS, row)))
 
         for tid, lid in TENANT_LINEAS_INICIALES:
             conn.execute(
-                text("INSERT OR IGNORE INTO tenant_lineas (tenant_id, linea_id) VALUES (:tid, :lid)"),
+                text(f"INSERT INTO tenant_lineas (tenant_id, linea_id) VALUES (:tid, :lid) {_ign}"),
                 {"tid": tid, "lid": lid}
             )
 
+        # ── Materials ─────────────────────────────────────────
         for row in MATERIALS_INICIALES:
-            conn.execute(text("""
-                INSERT OR IGNORE INTO materials
+            conn.execute(text(f"""
+                INSERT INTO materials
                 (material_id,name,tipo,color,proveedor,stock_gr,cost_kg,stock_minimo_gr,fecha_compra,precio_compra)
                 VALUES (:mid,:name,:tipo,:color,:prov,:stock,:cost,:min,:fcompra,:pcompra)
+                {_ign}
             """), dict(zip(["mid","name","tipo","color","prov","stock","cost","min","fcompra","pcompra"], row)))
 
+        # ── Products ──────────────────────────────────────────
         for row in PRODUCTS_AVIATION:
-            conn.execute(text("""
-                INSERT OR IGNORE INTO products
+            conn.execute(text(f"""
+                INSERT INTO products
                 (sku,client_id,material_id,name,description,categoria,color,
                  price,weight_gr,tiempo_impresion_min,stock)
                 VALUES (:sku,:cid,:mid,:name,:desc,:cat,:color,:price,:weight,:tiempo,:stock)
+                {_ign}
             """), dict(zip(["sku","cid","mid","name","desc","cat","color","price","weight","tiempo","stock"], row)))
 
         for row in PRODUCTS_SOCIOS:
-            conn.execute(text("""
-                INSERT OR IGNORE INTO products
+            conn.execute(text(f"""
+                INSERT INTO products
                 (sku,client_id,material_id,name,description,categoria,color,
                  price,weight_gr,tiempo_impresion_min,stock,activo)
                 VALUES (:sku,:cid,:mid,:name,:desc,:cat,:color,:price,:weight,:tiempo,:stock,:activo)
+                {_ign}
             """), dict(zip(["sku","cid","mid","name","desc","cat","color","price","weight","tiempo","stock","activo"], row)))
 
-        # ── Migraciones para installs existentes ──────────────
-        _migrations = [
-            "ALTER TABLE orders ADD COLUMN maquina_id TEXT DEFAULT 'creality_k2_plus_01'",
-            "ALTER TABLE orders ADD COLUMN horas_impresion REAL",
-            "ALTER TABLE orders ADD COLUMN gramos_consumidos REAL",
-            "ALTER TABLE orders ADD COLUMN costo_real REAL",
-            "ALTER TABLE orders ADD COLUMN fallo_impresion INTEGER DEFAULT 0",
-            "ALTER TABLE orders ADD COLUMN motivo_fallo TEXT",
-            "ALTER TABLE orders ADD COLUMN referencia_archivo TEXT",
-            "ALTER TABLE orders ADD COLUMN fecha_entrega_solicitada TEXT",
-            "ALTER TABLE orders ADD COLUMN canal_origen TEXT",
-            "ALTER TABLE senales_mercado ADD COLUMN segmento_detectado TEXT",
-            "ALTER TABLE senales_mercado ADD COLUMN oportunidad TEXT",
-            # v4 — modelo dos capas
-            "ALTER TABLE products ADD COLUMN tipo_producto TEXT DEFAULT 'propio_3d'",
-            "ALTER TABLE products ADD COLUMN visibilidad TEXT DEFAULT 'publico'",
-            "ALTER TABLE products ADD COLUMN proveedor_ref TEXT",
-        ]
-        for _m in _migrations:
-            try:
-                conn.execute(text(_m))
-            except Exception:
-                pass  # columna ya existe
+        # ── Lineas config ─────────────────────────────────────
+        for cid, nombre, color, responsable, activa in LINEAS_CONFIG_INICIALES:
+            conn.execute(text(f"""
+                INSERT INTO lineas_config
+                (client_id, nombre_display, color_primario, color_acento, responsable, activa)
+                VALUES (:cid, :nombre, :color, :color, :resp, :activa)
+                {_ign}
+            """), {"cid": cid, "nombre": nombre, "color": color, "resp": responsable, "activa": activa})
 
-        # ── Limpiar SKUs incorrectos de iteraciones anteriores ─────────────────────
-        conn.execute(text("""
-            DELETE FROM products WHERE sku IN (
-                'OE-MAC-001','OE-MAC-002','OE-ID-001','OE-REG-001','OE-SOP-001','OE-FAU-001',
-                'OAS-LLA-001','OAS-TAG-001','OAS-COM-001','OAS-COM-002','OAS-EST-001',
-                'OAS-EST-002','OAS-JOY-001','OAS-LIT-001','OAS-TRV-001',
-                'OAS-B2B-VKH-001','OAS-B2B-VKH-002'
-            )
-        """))
+        # ── Migraciones solo para installs SQLite existentes ──
+        if _dialect == "sqlite":
+            _alt = [
+                "ALTER TABLE orders ADD COLUMN maquina_id TEXT DEFAULT 'creality_k2_plus_01'",
+                "ALTER TABLE orders ADD COLUMN horas_impresion REAL",
+                "ALTER TABLE orders ADD COLUMN gramos_consumidos REAL",
+                "ALTER TABLE orders ADD COLUMN costo_real REAL",
+                "ALTER TABLE orders ADD COLUMN fallo_impresion INTEGER DEFAULT 0",
+                "ALTER TABLE orders ADD COLUMN motivo_fallo TEXT",
+                "ALTER TABLE orders ADD COLUMN referencia_archivo TEXT",
+                "ALTER TABLE orders ADD COLUMN fecha_entrega_solicitada TEXT",
+                "ALTER TABLE orders ADD COLUMN canal_origen TEXT",
+                "ALTER TABLE orders ADD COLUMN pago_id INTEGER",
+                "ALTER TABLE orders ADD COLUMN started_at TEXT",
+                "ALTER TABLE orders ADD COLUMN completed_at TEXT",
+                "ALTER TABLE orders ADD COLUMN delivered_at TEXT",
+                "ALTER TABLE orders ADD COLUMN motivo_cancelacion TEXT",
+                "ALTER TABLE orders ADD COLUMN monto_venta REAL DEFAULT 0",
+                "ALTER TABLE senales_mercado ADD COLUMN segmento_detectado TEXT",
+                "ALTER TABLE senales_mercado ADD COLUMN oportunidad TEXT",
+                "ALTER TABLE products ADD COLUMN tipo_producto TEXT DEFAULT 'propio_3d'",
+                "ALTER TABLE products ADD COLUMN visibilidad TEXT DEFAULT 'publico'",
+                "ALTER TABLE products ADD COLUMN proveedor_ref TEXT",
+                "ALTER TABLE products ADD COLUMN precio_reventa REAL DEFAULT 0",
+                "ALTER TABLE products ADD COLUMN precio_socio REAL DEFAULT 0",
+                "ALTER TABLE lineas_config ADD COLUMN whatsapp_numero TEXT",
+            ]
+            for _m in _alt:
+                try:
+                    conn.execute(text(_m))
+                except Exception:
+                    pass
 
-        # ── Actualizar password de vkhome si tiene valor legacy ──
+        # ── Correcciones de datos ──────────────────────────────
+        conn.execute(text(
+            "DELETE FROM products WHERE sku IN ("
+            "'OE-MAC-001','OE-MAC-002','OE-ID-001','OE-REG-001','OE-SOP-001','OE-FAU-001',"
+            "'OAS-LLA-001','OAS-TAG-001','OAS-COM-001','OAS-COM-002','OAS-EST-001',"
+            "'OAS-EST-002','OAS-JOY-001','OAS-LIT-001','OAS-TRV-001',"
+            "'OAS-B2B-VKH-001','OAS-B2B-VKH-002','VKH-ORG-001','VKH-POT-001','VKH-COC-001','VKH-DEC-001')"
+        ))
         conn.execute(text(
             "UPDATE tenants SET password=:h WHERE id='vkhome_cliente' AND password='pendiente'"
         ), {"h": "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3"})
-
-        # ── oasis_del_estero: corregir email y tipo para acceso socio ──
         conn.execute(text(
             "UPDATE tenants SET email='oasisdelestero@elpasaje.com', tipo='socio', name='Fede' "
             "WHERE id='oasis_del_estero'"
         ))
-
-        # ── oasis_animal pasa a socio_multi para ver también VK-Home ──
         conn.execute(text("UPDATE tenants SET tipo='socio_multi' WHERE id='oasis_animal'"))
-        conn.execute(text(
-            "INSERT OR IGNORE INTO tenant_lineas (tenant_id, linea_id) VALUES ('oasis_animal', 'oasis_animal')"
-        ))
-        conn.execute(text(
-            "INSERT OR IGNORE INTO tenant_lineas (tenant_id, linea_id) VALUES ('oasis_animal', 'vkhome_cliente')"
-        ))
-
-        # ── VKH catálogo real: mover OE-* de oasis_del_estero → vkhome_cliente ──
-        # y actualizar categorías al catálogo oficial Mayo 2026
+        conn.execute(text(f"INSERT INTO tenant_lineas (tenant_id, linea_id) VALUES ('oasis_animal', 'oasis_animal') {_ign}"))
+        conn.execute(text(f"INSERT INTO tenant_lineas (tenant_id, linea_id) VALUES ('oasis_animal', 'vkhome_cliente') {_ign}"))
         conn.execute(text(
             "UPDATE products SET client_id='vkhome_cliente', color='#A78BFA' WHERE client_id='oasis_del_estero' AND sku LIKE 'OE-%'"
         ))
@@ -451,79 +567,36 @@ def init_schema():
             ("OE-BRR-S","bandejas patitas"), ("OE-BRR-M","bandejas patitas"),
             ("OE-BOV-S","bandejas ovaladas"),("OE-BOV-M","bandejas ovaladas"),("OE-BOV-L","bandejas ovaladas"),
             ("OE-BAS-S","bandejas asimetricas"),("OE-BAS-M","bandejas asimetricas"),
-            ("OE-SAR-U","accesorios"),        ("OE-BDA-U","bandejas"),
+            ("OE-SAR-U","accesorios"), ("OE-BDA-U","bandejas"),
         ]:
-            conn.execute(text("UPDATE products SET categoria=:cat WHERE sku=:sku"),
-                         {"cat": _cat, "sku": _sku})
-        # ── Borrar placeholders VKH-* falsos ──
-        conn.execute(text(
-            "DELETE FROM products WHERE sku IN ('VKH-ORG-001','VKH-POT-001','VKH-COC-001','VKH-DEC-001')"
-        ))
+            conn.execute(text("UPDATE products SET categoria=:cat WHERE sku=:sku"), {"cat": _cat, "sku": _sku})
 
-        # ── Precios reales VKH según último pedido Agustina (Mayo 2026) ──
-        _precios_vkh_reales = [
-            ("OE-BOV-S", 8500,  3000),
-            ("OE-BOV-M", 14000, 6000),
-            ("OE-BOV-L", 19900, 9000),
-            ("OE-BRR-M", 9900,  8000),
-        ]
-        for _psku, _pant, _pnvo in _precios_vkh_reales:
+        # Precios reales VKH
+        for _psku, _pant, _pnvo in [("OE-BOV-S",8500,3000),("OE-BOV-M",14000,6000),("OE-BOV-L",19900,9000),("OE-BRR-M",9900,8000)]:
             conn.execute(text("UPDATE products SET price=:p WHERE sku=:sku"), {"p": _pnvo, "sku": _psku})
-            _ph_ya = conn.execute(
-                text("SELECT COUNT(*) FROM price_history WHERE product_sku=:sku AND precio_nuevo=:p"),
-                {"sku": _psku, "p": _pnvo}
-            ).fetchone()[0]
+            _ph_ya = conn.execute(text("SELECT COUNT(*) FROM price_history WHERE product_sku=:s AND precio_nuevo=:p"), {"s": _psku, "p": _pnvo}).fetchone()[0]
             if not _ph_ya:
                 try:
-                    conn.execute(text("""
-                        INSERT INTO price_history (product_sku, precio_anterior, precio_nuevo, fecha, motivo)
-                        VALUES (:sku, :ant, :nvo, '2026-05-02', 'Ajuste precio real segun ultimo pedido Agustina')
-                    """), {"sku": _psku, "ant": _pant, "nvo": _pnvo})
+                    conn.execute(text("INSERT INTO price_history (product_sku, precio_anterior, precio_nuevo, fecha, motivo) VALUES (:s,:a,:n,'2026-05-02','Ajuste precio real segun ultimo pedido Agustina')"), {"s": _psku, "a": _pant, "n": _pnvo})
                 except Exception:
                     pass
 
-        # ── Histórico último pedido Agustina ─────────────────────────────────────
-        _hist_ya = conn.execute(
-            text("SELECT COUNT(*) FROM orders WHERE notas LIKE '%HIST_AGUSTINA_ULTIMO%'")
-        ).fetchone()[0]
+        # Histórico último pedido Agustina
+        _hist_ya = conn.execute(text("SELECT COUNT(*) FROM orders WHERE notas LIKE '%HIST_AGUSTINA_ULTIMO%'")).fetchone()[0]
         if not _hist_ya:
-            # Orden 1 — Oasis Animal: 29 × Llavero Perrito Globo
-            _r1 = conn.execute(text("""
-                INSERT INTO orders (client_id, status, date, notas, canal_origen)
-                VALUES ('oasis_animal', 'Entregado', '2026-05-02',
-                        'HIST_AGUSTINA_ULTIMO | 29 x Llavero Perrito Globo', 'WhatsApp')
-            """))
-            _oid1 = _r1.lastrowid
-            conn.execute(text(
-                "INSERT INTO order_items (order_id, product_sku, cantidad, precio_unitario) VALUES (:oid, 'OA-LPG-U', 29, 1000)"
-            ), {"oid": _oid1})
+            conn.execute(text("INSERT INTO orders (client_id, status, date, notas, canal_origen) VALUES ('oasis_animal','Entregado','2026-05-02','HIST_AGUSTINA_ULTIMO | 29 x Llavero Perrito Globo','WhatsApp')"))
+            _oid1 = conn.execute(text("SELECT id FROM orders WHERE notas='HIST_AGUSTINA_ULTIMO | 29 x Llavero Perrito Globo'")).fetchone()[0]
+            conn.execute(text("INSERT INTO order_items (order_id, product_sku, cantidad, precio_unitario) VALUES (:o,'OA-LPG-U',29,1000)"), {"o": _oid1})
             try:
-                conn.execute(text(
-                    "INSERT INTO pagos (order_id, monto, metodo, estado) VALUES (:oid, 29000, 'transferencia', 'acreditado')"
-                ), {"oid": _oid1})
+                conn.execute(text("INSERT INTO pagos (order_id, monto, metodo, estado) VALUES (:o,29000,'transferencia','acreditado')"), {"o": _oid1})
             except Exception:
                 pass
-            # Orden 2 — VK-Home: bandejas
-            _r2 = conn.execute(text("""
-                INSERT INTO orders (client_id, status, date, notas, canal_origen)
-                VALUES ('vkhome_cliente', 'Entregado', '2026-05-02',
-                        'HIST_AGUSTINA_ULTIMO | Bandejas: Oval S/M/L + Redonda M', 'WhatsApp')
-            """))
-            _oid2 = _r2.lastrowid
-            for _isku, _iqty, _iprecio in [
-                ("OE-BOV-S", 4, 3000),
-                ("OE-BOV-M", 4, 6000),
-                ("OE-BOV-L", 4, 9000),
-                ("OE-BRR-M", 4, 8000),
-            ]:
-                conn.execute(text("""
-                    INSERT INTO order_items (order_id, product_sku, cantidad, precio_unitario)
-                    VALUES (:oid, :sku, :qty, :precio)
-                """), {"oid": _oid2, "sku": _isku, "qty": _iqty, "precio": _iprecio})
+            conn.execute(text("INSERT INTO orders (client_id, status, date, notas, canal_origen) VALUES ('vkhome_cliente','Entregado','2026-05-02','HIST_AGUSTINA_ULTIMO | Bandejas: Oval S/M/L + Redonda M','WhatsApp')"))
+            _oid2 = conn.execute(text("SELECT id FROM orders WHERE notas='HIST_AGUSTINA_ULTIMO | Bandejas: Oval S/M/L + Redonda M'")).fetchone()[0]
+            for _isku, _iqty, _iprecio in [("OE-BOV-S",4,3000),("OE-BOV-M",4,6000),("OE-BOV-L",4,9000),("OE-BRR-M",4,8000)]:
+                conn.execute(text("INSERT INTO order_items (order_id, product_sku, cantidad, precio_unitario) VALUES (:o,:s,:q,:p)"), {"o": _oid2, "s": _isku, "q": _iqty, "p": _iprecio})
             try:
-                conn.execute(text(
-                    "INSERT INTO pagos (order_id, monto, metodo, estado) VALUES (:oid, 104000, 'transferencia', 'acreditado')"
-                ), {"oid": _oid2})
+                conn.execute(text("INSERT INTO pagos (order_id, monto, metodo, estado) VALUES (:o,104000,'transferencia','acreditado')"), {"o": _oid2})
             except Exception:
                 pass
 
@@ -602,10 +675,7 @@ def crear_schema():
     print(f"   Materiales: {len(MATERIALS_INICIALES)}")
     print(f"   Productos Aviation Pro: {len(PRODUCTS_AVIATION)}")
     print()
-    print("   Credenciales:")
-    print("   admin@elpasaje.com    / admin123")
-    print("   aviation@elpasaje.com / 123")
-    print("   (resto de socios: email@elpasaje.com / 123)")
+    print("   Credenciales: todos los usuarios / 123")
     print("=" * 50)
 
 
