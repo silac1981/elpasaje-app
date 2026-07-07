@@ -27,6 +27,7 @@ def _adapt_ddl(ddl: str, dialect: str) -> str:
         ddl = ddl.replace("INTEGER PRIMARY KEY AUTOINCREMENT", "SERIAL PRIMARY KEY")
         ddl = ddl.replace("(datetime('now'))", "(CURRENT_TIMESTAMP)")
         ddl = ddl.replace("(datetime('now', 'localtime'))", "(CURRENT_TIMESTAMP)")
+        ddl = ddl.replace(" BLOB", " BYTEA")
     return ddl
 
 # ─────────────────────────────────────────────────────────
@@ -449,7 +450,13 @@ def init_schema():
     _ign = "ON CONFLICT DO NOTHING"
 
     with _engine.connect() as conn:
-        for _, ddl in TABLAS:
+        for tabla, ddl in TABLAS:
+            if _dialect == "postgresql":
+                exists = conn.execute(text(
+                    "SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name=:t"
+                ), {"t": tabla}).fetchone()
+                if exists:
+                    continue
             conn.execute(text(_adapt_ddl(ddl, _dialect)))
 
         # ── Tenants ───────────────────────────────────────────

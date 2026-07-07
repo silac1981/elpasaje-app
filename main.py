@@ -303,21 +303,25 @@ h1, h2, h3, h4, h5, h6,
 </style>
 """)
 
-# ── DB + Schema init ───────────────────────────────────────────────────────
-from crear_schema_v3 import init_schema as _init_schema
-_init_schema()
-from migration_v7 import run as _migration_v7
-_migration_v7()
-from migration_v8 import run as _migration_v8
-_migration_v8()
-from migration_v9 import run as _migration_v9
-_migration_v9()
-from migration_v10 import run as _migration_v10
-_migration_v10()
-from migration_v11 import run as _migration_v11
-_migration_v11()
-from migration_v12 import run as _migration_v12
-_migration_v12()
+# ── DB + Schema init — corre UNA vez por sesión de servidor ───────────────
+@st.cache_resource
+def _run_migrations():
+    from crear_schema_v3 import init_schema as _init_schema
+    _init_schema()
+    from migration_v7 import run as _migration_v7
+    _migration_v7()
+    from migration_v8 import run as _migration_v8
+    _migration_v8()
+    from migration_v9 import run as _migration_v9
+    _migration_v9()
+    from migration_v10 import run as _migration_v10
+    _migration_v10()
+    from migration_v11 import run as _migration_v11
+    _migration_v11()
+    from migration_v12 import run as _migration_v12
+    _migration_v12()
+
+_run_migrations()
 
 # ── Autenticación ──────────────────────────────────────────────────────────
 if "auth" not in st.session_state:
