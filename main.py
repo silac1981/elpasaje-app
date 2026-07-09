@@ -320,6 +320,8 @@ def _run_migrations():
     _migration_v11()
     from migration_v12 import run as _migration_v12
     _migration_v12()
+    from migration_v13 import run as _migration_v13
+    _migration_v13()
 
 _run_migrations()
 
