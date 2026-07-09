@@ -1,6 +1,9 @@
 """utils/db.py — Motor SQLAlchemy compartido. Soporta SQLite (local) y PostgreSQL (Supabase)."""
 import os
+from dotenv import load_dotenv
 from sqlalchemy import create_engine, event
+
+load_dotenv()
 
 def _get_database_url() -> str:
     """Retorna DATABASE_URL desde Streamlit secrets o variable de entorno, o SQLite por defecto."""

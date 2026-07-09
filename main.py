@@ -322,6 +322,8 @@ def _run_migrations():
     _migration_v12()
     from migration_v13 import run as _migration_v13
     _migration_v13()
+    from migration_v14 import run as _migration_v14
+    _migration_v14()
 
 _run_migrations()
 
