@@ -936,6 +936,27 @@ def _dash_m19():
         f"text-transform:uppercase;margin-bottom:12px;'>📤 EXPORTAR PARA WEB</div>",
         unsafe_allow_html=True,
     )
+
+    _TODAS_LAS_LINEAS_EXPORT = [
+        "admin", "fer_produccion", "olivia_coquette", "francisco_sport",
+        "constantino_tech", "pharma_delux", "oasis_animal", "oasis_del_estero", "aviation",
+    ]
+
+    if st.button("🔄 Regenerar TODOS los catálogos (9 líneas)", use_container_width=True, type="primary"):
+        from utils.exports import exportar_catalogo_json
+        _ok, _err = [], []
+        for _lid in _TODAS_LAS_LINEAS_EXPORT:
+            try:
+                _, _path = exportar_catalogo_json(_lid)
+                _ok.append(f"✅ {_path.split('/')[-1].split(chr(92))[-1]}")
+            except Exception as _e:
+                _err.append(f"❌ {_lid}: {_e}")
+        if _ok:
+            st.success(f"Regenerados: {len(_ok)}/9 · " + " | ".join(_ok))
+        if _err:
+            st.error("\n".join(_err))
+
+    st.markdown("<div style='height:6px;'></div>", unsafe_allow_html=True)
     _exp_col1, _exp_col2 = st.columns(2)
     with _exp_col1:
         if st.button("📤 Exportar magnitud19-catalog.json", use_container_width=True):
