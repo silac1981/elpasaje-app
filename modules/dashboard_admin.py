@@ -943,18 +943,29 @@ def _dash_m19():
     ]
 
     if st.button("🔄 Regenerar TODOS los catálogos (9 líneas)", use_container_width=True, type="primary"):
-        from utils.exports import exportar_catalogo_json
-        _ok, _err = [], []
+        from utils.exports import exportar_catalogo_json, push_exports_to_github
+        _ok, _err, _pairs = [], [], []
         for _lid in _TODAS_LAS_LINEAS_EXPORT:
             try:
-                _, _path = exportar_catalogo_json(_lid)
-                _ok.append(f"✅ {_path.split('/')[-1].split(chr(92))[-1]}")
+                _cat, _path = exportar_catalogo_json(_lid)
+                _slug = _path.split("/")[-1].split(chr(92))[-1].replace("-catalog.json", "")
+                _pairs.append((_slug, _cat))
+                _ok.append(_slug)
             except Exception as _e:
                 _err.append(f"❌ {_lid}: {_e}")
         if _ok:
-            st.success(f"Regenerados: {len(_ok)}/9 · " + " | ".join(_ok))
+            st.success(f"Generados: {len(_ok)}/9 — {', '.join(_ok)}")
         if _err:
             st.error("\n".join(_err))
+        if _pairs:
+            with st.spinner("Publicando en GitHub Pages..."):
+                _pushed, _skipped, _gh_err = push_exports_to_github(_pairs)
+            if _pushed:
+                st.success(f"GitHub ✅ {len(_pushed)} commiteados: {', '.join(_pushed)}")
+            if _skipped:
+                st.info(f"GitHub ⏭ {len(_skipped)} sin cambios: {', '.join(_skipped)}")
+            if _gh_err:
+                st.error("GitHub errores:\n" + "\n".join(_gh_err))
 
     st.markdown("<div style='height:6px;'></div>", unsafe_allow_html=True)
     _exp_col1, _exp_col2 = st.columns(2)

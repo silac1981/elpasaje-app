@@ -1,10 +1,16 @@
 """utils/exports.py — Genera JSON de catálogo web por línea (Capa 1 + Capa 2)."""
 import os
 import json
+import base64
+import urllib.request
+import urllib.error
 import pandas as pd
 from sqlalchemy import text
 from utils.db import engine
 from utils.lineas import LINEAS, PAGINAS_SOCIOS
+
+_GH_OWNER = "silac1981"
+_GH_REPO  = "elpasaje-app"
 
 _BASE_DIR    = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _EXPORTS_DIR = os.path.join(_BASE_DIR, "exports")
@@ -128,3 +134,79 @@ def exportar_catalogo_json(linea_id: str) -> tuple:
         json.dump(catalog, f, ensure_ascii=False, indent=2)
 
     return catalog, out_path
+
+
+def push_exports_to_github(slug_catalog_pairs: list) -> tuple:
+    """Commit catalog JSONs to GitHub via Contents API.
+
+    Compares data excluding the 'generado' timestamp; skips files with no real changes.
+    Requires GITHUB_TOKEN env var (fine-grained, Contents: read+write on this repo).
+
+    Returns (pushed, skipped, errors) — lists of slugs or error strings.
+    """
+    token = os.environ.get("GITHUB_TOKEN", "")
+    if not token:
+        return [], [], ["GITHUB_TOKEN no configurado en Streamlit Secrets"]
+
+    api_base = f"https://api.github.com/repos/{_GH_OWNER}/{_GH_REPO}/contents"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+        "Content-Type": "application/json",
+    }
+
+    pushed, skipped, errors = [], [], []
+
+    for slug, catalog in slug_catalog_pairs:
+        path = f"exports/{slug}-catalog.json"
+        url  = f"{api_base}/{path}"
+
+        # Canonical representation for diffing (sin 'generado' para evitar falsos positivos)
+        def _canonical(d):
+            return json.dumps({k: v for k, v in d.items() if k != "generado"},
+                              ensure_ascii=False, sort_keys=True)
+
+        new_canonical = _canonical(catalog)
+        full_json     = json.dumps(catalog, ensure_ascii=False, indent=2)
+        new_b64       = base64.b64encode(full_json.encode("utf-8")).decode("ascii")
+
+        # GET current file from repo
+        sha = None
+        try:
+            req = urllib.request.Request(url, headers=headers)
+            with urllib.request.urlopen(req) as resp:
+                current = json.loads(resp.read())
+            sha = current["sha"]
+            current_bytes   = base64.b64decode(current["content"].replace("\n", ""))
+            current_data    = json.loads(current_bytes.decode("utf-8"))
+            current_canonical = _canonical(current_data)
+            if current_canonical == new_canonical:
+                skipped.append(slug)
+                continue
+        except urllib.error.HTTPError as e:
+            if e.code != 404:
+                errors.append(f"{slug}: GET HTTP {e.code}")
+                continue
+            # 404 → archivo nuevo, sha queda None
+
+        # PUT (create or update)
+        body = {
+            "message": f"chore(exports): regenerar {slug}-catalog.json [bot]",
+            "content": new_b64,
+        }
+        if sha:
+            body["sha"] = sha
+
+        try:
+            req = urllib.request.Request(
+                url, data=json.dumps(body).encode("utf-8"),
+                headers=headers, method="PUT",
+            )
+            with urllib.request.urlopen(req):
+                pass
+            pushed.append(slug)
+        except urllib.error.HTTPError as e:
+            errors.append(f"{slug}: PUT HTTP {e.code} — {e.read().decode()[:200]}")
+
+    return pushed, skipped, errors
