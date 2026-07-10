@@ -6,22 +6,24 @@ from sqlalchemy import create_engine, event
 load_dotenv()
 
 def _get_database_url() -> str:
-    """Retorna DATABASE_URL desde Streamlit secrets (solo en runtime real), .env, o SQLite."""
-    # Solo usar st.secrets si Streamlit está corriendo como servidor (no en scripts directos)
-    try:
-        from streamlit.runtime.scriptrunner import get_script_run_ctx
-        if get_script_run_ctx() is not None:
-            import streamlit as st
-            url = st.secrets.get("DATABASE_URL", "")
-            if url:
-                return url
-    except Exception:
-        pass
+    """Retorna DATABASE_URL desde .env local o st.secrets (Streamlit Cloud).
+    Lanza RuntimeError si no se encuentra — sin fallback silencioso a SQLite.
+    """
     url = os.environ.get("DATABASE_URL", "")
     if url:
         return url
-    db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "elpasaje_v2.db")
-    return f"sqlite:///{db_path}"
+    try:
+        import streamlit as st
+        url = st.secrets.get("DATABASE_URL", "")
+        if url:
+            return url
+    except Exception:
+        pass
+    raise RuntimeError(
+        "DATABASE_URL no configurada. "
+        "Local: descomentá DATABASE_URL en .env. "
+        "Cloud: configurá el secret en Streamlit Cloud > Settings > Secrets."
+    )
 
 _db_url = _get_database_url()
 dialect = "postgresql" if _db_url.startswith("postgresql") else "sqlite"
