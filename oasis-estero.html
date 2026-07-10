@@ -750,31 +750,20 @@ function setFn(el,tipo,texto){
   if(inp){inp.value=texto;inp.focus()}
 }
 
-const SYS=`Sos el asistente de Oasis del Estero, la línea de Fede dentro de El Pasaje 3D Studio, Buenos Aires. Fede es de Buenos Aires y diseña macetas innovadoras, soportes para esquejes y accesorios de cultivo impresos en 3D.
+const SYS=`Sos el asistente de Oasis del Estero, la línea de Fede dentro de El Pasaje 3D Studio, Buenos Aires. Fede diseña macetas y accesorios de cultivo impresos en 3D — naturaleza inteligente, sin complicaciones.
 
-Productos disponibles:
-- Maceta Modular ($1.200): geométrica minimalista, drenaje integrado, apilable
-- Maceta Colgante ($1.500): con sistema de sujeción integrado para balcón/ventana
-- Identificadores de Plantas ($400): estacas con nombre en tipografía elegante
-- Soporte Propagación Simple ($800): base 3D para 1 tubo de ensayo
-- Rack Propagación x4 ($2.200): para 4 esquejes simultáneos
-- Kit Huerta de Balcón ($2.800): se engancha en barandas/ventanas, aromáticas
-- Auto-riego Estético: a cotizar
-- Canastas de Cultivo: a cotizar
-- Piezas a medida: a cotizar
+CATÁLOGO OFICIAL (SKU | Producto | Precio):
+ODE-MAC-S | Maceta Orgánica Textura S | $4.500 · ODE-MAC-M | Maceta Orgánica Textura M | $7.500 · ODE-MAC-BC-M | Maceta Bicolor Diagonal M | $9.500 · ODE-SEL-S | Soporte Elevador para Maceta S | $3.200 · ODE-SEL-M | Soporte Elevador para Maceta M | $4.800 · ODE-TUT-S | Tutor Espiral S (plantas 20-40cm) | $800 · ODE-TUT-M | Tutor Espiral M (plantas 40-70cm) | $1.200 · ODE-TUT-3PK | Pack 3 Tutores Espiral S+M+L | $3.200 · ODE-MRP-3 | Set 3 Marcadores de Plantas | $1.800 · ODE-MRP-5 | Set 5 Marcadores Personalizados | $2.800 · ODE-MRP-10 | Set 10 Marcadores Personalizados | $4.500 · ODE-SEM-U | Organizador de Semillas (6 compartimentos) | $3.500 · ODE-CAR-U | Cartelito Identificador de Maceta | $600 · ODE-KIT-JAR | Kit Jardinero Urbano | $12.000 · ODE-KIT-SUC | Kit Suculentas | $18.000
 
-Fede y Agustina (Oasis Animal) son pareja. Sinergias: con Ánima (Nely) para bienestar, con Coquette (Olivia) para regalo elegante, con Core Tech (Constantino) para proyectos técnicos.
-
-WA: +54 11 6549-7234. Entrega 48hs.
-
-Respondés en español rioplatense, tono cálido y natural, máximo 3 oraciones. Siempre mencionás un producto concreto. El espíritu es: naturaleza inteligente, sin complicaciones.`;
+Piezas a medida: cotizar. Fede y Agustina (Oasis Animal) son pareja. Sinergias: con Ánima (Nely) para bienestar, con Coquette (Olivia) para regalo elegante.
+WA: +54 11 6549-7234. Entrega 48hs. Respondés en español rioplatense, tono cálido, máximo 3 oraciones. Siempre mencionás un producto concreto.`;
 
 const FB={
-  mac:['Para un balcón con aromáticas, el Kit Huerta de Balcón es perfecto — se engancha sin herramientas y no ocupa espacio.','Para interior con suculentas, la Maceta Modular apilable es la más pedida. En verde botánico queda impresionante.'],
-  esq:['Para reproducir pothos, el Rack de Propagación x4 te permite tener varios esquejes en proceso al mismo tiempo — muy decorativo en la mesada.','El Soporte Simple para 1 tubo es el más minimalista. Ideal para el escritorio.'],
-  proy:['Para optimizar el riego en balcón, el Auto-riego Estético es el próximo lanzamiento. Consultanos para reservar.','Si necesitás piezas específicas para tu sistema, Fede las diseña a medida. Contanos qué necesitás.'],
-  sin:['Para alguien que ama las plantas y el bienestar: Soporte de esquejes (Oasis) + Cuenco de Intenciones (Ánima). Kit de calma completo.','Kit regalo elegante: Maceta Modular verde (Oasis) + Llavero Peonía (Coquette). Naturaleza y diseño en un solo paquete.'],
-  hist:['Para quien se le mueren las plantas: el Auto-riego Estético soluciona eso. Y mientras tanto, las suculentas con la Maceta Modular son prácticamente indestructibles.']
+  mac:['Para interior con suculentas, la Maceta Orgánica Textura S a $4.500 es la más pedida — la textura natural se ve increíble en verde botánico.','Para algo más statement, la Maceta Bicolor Diagonal M a $9.500 combina dos colores y queda como pieza de diseño en cualquier espacio.'],
+  esq:['El Kit Jardinero Urbano a $12.000 viene con todo para empezar: maceta, tutores y marcadores ya elegidos. Fede lo armó pensando en el primer jardín de balcón.','Para organizar semillas y esquejes, el Organizador de Semillas con 6 compartimentos a $3.500 es el punto de partida — todo ordenado, a mano.'],
+  proy:['Si necesitás piezas específicas para tu sistema, Fede las diseña a medida. Contanos qué necesitás y te mandamos presupuesto.','El Kit Suculentas a $18.000 incluye todo para armar una colección con estilo — maceta, soporte y marcadores coordinados.'],
+  sin:['Para alguien que ama las plantas y el bienestar: Set Marcadores Personalizados (Oasis) + Cuenco de Intenciones (Ánima). Kit de calma completo.','Kit regalo elegante: Maceta Orgánica Textura S (Oasis) + Llavero Peonía (Coquette). Naturaleza y diseño en un solo paquete.'],
+  hist:['Para quien cuida suculentas, la Maceta Orgánica Textura con drenaje integrado es la base correcta — con el Soporte Elevador arriba quedan perfectas.']
 };
 
 async function callIA(tipo){
