@@ -6,12 +6,15 @@ from sqlalchemy import create_engine, event
 load_dotenv()
 
 def _get_database_url() -> str:
-    """Retorna DATABASE_URL desde Streamlit secrets o variable de entorno, o SQLite por defecto."""
+    """Retorna DATABASE_URL desde Streamlit secrets (solo en runtime real), .env, o SQLite."""
+    # Solo usar st.secrets si Streamlit está corriendo como servidor (no en scripts directos)
     try:
-        import streamlit as st
-        url = st.secrets.get("DATABASE_URL", "")
-        if url:
-            return url
+        from streamlit.runtime.scriptrunner import get_script_run_ctx
+        if get_script_run_ctx() is not None:
+            import streamlit as st
+            url = st.secrets.get("DATABASE_URL", "")
+            if url:
+                return url
     except Exception:
         pass
     url = os.environ.get("DATABASE_URL", "")
