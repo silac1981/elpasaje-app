@@ -270,6 +270,7 @@ footer{padding:16px 64px;background:rgba(0,0,0,.7);border-top:1px solid var(--br
   <p class="sec-body">El anclaje sensorial es neurociencia aplicada al objeto. La textura correcta activa el sistema de atención sin esfuerzo consciente.</p>
 </div>
 <div class="sec sec-deep reveal" style="padding-top:0"><div class="ia-wrap"><div><div class="ia-chip">&#10022; Performance Advisor · IA</div><h3 class="ia-ttl">¿Qué anclaje necesitás?</h3><p class="ia-sub">Describime cómo funciona tu mente en alta carga.</p></div><div><div class="ia-fn-grid"><div class="ia-fn" onclick="setFn(this,'Me cuesta quedarme quieta en reuniones largas')">Reuniones largas</div><div class="ia-fn" onclick="setFn(this,'Mi mente se dispersa cuando leo')">Dispersión lectora</div><div class="ia-fn" onclick="setFn(this,'Tengo un hijo con TDAH y busco herramientas para el colegio')">Hijo en el aula</div><div class="ia-fn" onclick="setFn(this,'Soy psicopedagoga y busco herramientas')">Psicopedagoga</div></div><input class="ia-inp" id="ia-sen" placeholder="Describí cómo funciona tu mente…"/><button class="ia-btn" onclick="callIA('ia-sen','r-sen')">Consultar →</button><div class="ia-resp" id="r-sen"></div></div></div></div>
+<div id="m19-cat-sensorial" class="sec"></div>
 </div>
 
 <div id="tab-motor" class="tab-panel">
@@ -285,6 +286,7 @@ footer{padding:16px 64px;background:rgba(0,0,0,.7);border-top:1px solid var(--br
 
 </div>
 <div class="sec sec-deep reveal" style="padding-top:0"><div class="ia-wrap"><div><div class="ia-chip">&#10022; Performance Advisor · IA</div><h3 class="ia-ttl">¿Qué libera tu energía motora?</h3><p class="ia-sub">El Performance Advisor analiza tu patrón kinestésico.</p></div><div><div class="ia-fn-grid"><div class="ia-fn" onclick="setFn(this,'Muevo las piernas todo el tiempo')">Energía en piernas</div><div class="ia-fn" onclick="setFn(this,'Necesito algo para las manos en reuniones')">Reuniones formales</div><div class="ia-fn" onclick="setFn(this,'Mi hijo toca todo')">Niño inquieto</div><div class="ia-fn" onclick="setFn(this,'¿Diferencia entre las piezas motor?')">Comparar</div></div><input class="ia-inp" id="ia-mot" placeholder="Describí tu energía kinestésica…"/><button class="ia-btn" onclick="callIA('ia-mot','r-mot')">Consultar →</button><div class="ia-resp" id="r-mot"></div></div></div></div>
+<div id="m19-cat-motor" class="sec"></div>
 </div>
 
 <div id="tab-visual" class="tab-panel">
@@ -294,6 +296,7 @@ footer{padding:16px 64px;background:rgba(0,0,0,.7);border-top:1px solid var(--br
   <p class="sec-body">Los sistemas visuales correctos eliminan la decisión de "dónde va esto" y liberan la memoria de trabajo.</p>
 </div>
 <div class="sec sec-deep reveal" style="padding-top:0"><div class="ia-wrap"><div><div class="ia-chip">&#10022; Performance Advisor · IA</div><h3 class="ia-ttl">¿Cómo organiza tu mente el espacio?</h3><p class="ia-sub">Describime el caos de tu escritorio.</p></div><div><div class="ia-fn-grid"><div class="ia-fn" onclick="setFn(this,'Mi escritorio siempre está lleno de papeles')">Escritorio caótico</div><div class="ia-fn" onclick="setFn(this,'Lo urgente me tapa lo importante')">Urgente vs importante</div><div class="ia-fn" onclick="setFn(this,'Quiero un sistema de gestión del tiempo')">Gestión tiempo</div><div class="ia-fn" onclick="setFn(this,'¿Primera pieza visual recomendada?')">¿Por dónde arranco?</div></div><input class="ia-inp" id="ia-vis" placeholder="Describí tu espacio de trabajo…"/><button class="ia-btn" onclick="callIA('ia-vis','r-vis')">Consultar →</button><div class="ia-resp" id="r-vis"></div></div></div></div>
+<div id="m19-cat-visual" class="sec"></div>
 </div>
 
 <div id="tab-red" class="tab-panel">
@@ -417,42 +420,33 @@ async function callIA(inputId,respId){const inp=document.getElementById(inputId)
 
 /* ── Catálogo dinámico desde EPCC ── */
 const _WA_NUM="541165497234";
+const _EMPTY_M19="Diseño en fase de prototipado. Consultar disponibilidad para preventa exclusiva.";
+const _M19_TABS={
+  sensorial:['M19-FDE-S','M19-FDE-T','M19-KRS-U'],
+  motor:    ['M19-FDE-R','M19-FCO-U'],
+  visual:   ['M19-BAN-U','M19-ORD-U','M19-PNE-U','M19-STB-U']
+};
 function _fmtP(n){return new Intl.NumberFormat('es-AR').format(n)}
 function _waLink(nom,sku,precio){return`https://wa.me/${_WA_NUM}?text=${encodeURIComponent(`Hola! Me interesa ${nom} (SKU: ${sku}) — $${_fmtP(precio)}. ¿Está disponible?`)}`}
+function _cardM19(p){const sc=p.stock>5?'var(--verde)':(p.stock>0?'#F59E0B':'#EF4444');const stk=p.stock>0?`${p.stock} u`:'Bajo pedido';return`<div style="background:var(--carbono);padding:22px 20px;transition:background .3s" onmouseenter="this.style.background='var(--acero)'" onmouseleave="this.style.background='var(--carbono)'"><div style="font-size:.5rem;color:var(--gris2);letter-spacing:2px;margin-bottom:6px">${p.sku}</div><div style="font-family:'Cormorant Garamond',serif;font-size:1rem;font-weight:600;color:var(--blanco);margin-bottom:6px">${p.name}</div><div style="font-size:.78rem;color:var(--gris3);line-height:1.5;margin-bottom:14px">${(p.description||'').substring(0,80)}</div><div style="display:flex;justify-content:space-between;align-items:center"><span style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:var(--oro)">$${_fmtP(p.price)}</span><span style="font-size:.6rem;color:${sc}">${stk}</span></div><a href="${_waLink(p.name,p.sku,p.price)}" target="_blank" style="display:inline-flex;align-items:center;gap:6px;margin-top:12px;font-size:.5rem;letter-spacing:3px;text-transform:uppercase;color:var(--gris);text-decoration:none;transition:color .2s" onmouseenter="this.style.color='var(--oro)'" onmouseleave="this.style.color='var(--gris)'">Consultar →</a></div>`}
+function _renderM19(id,prods){const w=document.getElementById(id);if(!w)return;if(!prods.length){w.innerHTML=`<p style="padding:32px;text-align:center;color:var(--gris2);font-size:.84rem;font-style:italic">${_EMPTY_M19}</p>`;w.style.display='block';return;}w.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1px;background:var(--brd)">${prods.map(_cardM19).join('')}</div>`;w.style.display='block';}
 async function loadCatalogoM19(){
   try{
     const r=await fetch('./exports/magnitud19-catalog.json');
     if(!r.ok)return;
-    const d=await r.json();
-    const prods=[...(d.productos_3d||[])].filter(p=>p.stock>0||true);
-    if(!prods.length)return;
+    const all=(await r.json()).productos_3d||[];
+    if(!all.length)return;
     const cats={};
-    prods.forEach(p=>{const c=p.categoria||'Otros';if(!cats[c])cats[c]=[];cats[c].push(p)});
+    all.forEach(p=>{const c=p.categoria||'Otros';if(!cats[c])cats[c]=[];cats[c].push(p)});
     const wrap=document.getElementById('m19-catalog-json');
-    if(!wrap)return;
-    let html=`<div style="margin-bottom:16px"><div style="font-size:.5rem;letter-spacing:5px;text-transform:uppercase;color:var(--oro);display:flex;align-items:center;gap:10px;margin-bottom:20px"><span style="width:18px;height:1px;background:var(--oro);display:inline-block"></span>CATÁLOGO ACTUALIZADO DESDE SISTEMA</div>`;
-    Object.entries(cats).forEach(([cat,items])=>{
-      html+=`<div style="margin-bottom:28px"><div style="font-size:.7rem;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--gris3);margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--brd)">${cat}</div>`;
-      html+=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1px;background:var(--brd)">`;
-      items.forEach(p=>{
-        const sc=p.stock>5?'var(--verde)':(p.stock>0?'#F59E0B':'#EF4444');
-        const stk=p.stock>0?`${p.stock} u`:'Bajo pedido';
-        html+=`<div style="background:var(--carbono);padding:22px 20px;transition:background .3s" onmouseenter="this.style.background='var(--acero)'" onmouseleave="this.style.background='var(--carbono)'">
-          <div style="font-size:.5rem;color:var(--gris2);letter-spacing:2px;margin-bottom:6px">${p.sku}</div>
-          <div style="font-family:'Cormorant Garamond',serif;font-size:1rem;font-weight:600;color:var(--blanco);margin-bottom:6px">${p.name}</div>
-          <div style="font-size:.78rem;color:var(--gris3);line-height:1.5;margin-bottom:14px">${(p.description||'').substring(0,80)}</div>
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <span style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:var(--oro)">$${_fmtP(p.price)}</span>
-            <span style="font-size:.6rem;color:${sc}">${stk}</span>
-          </div>
-          <a href="${_waLink(p.name,p.sku,p.price)}" target="_blank" style="display:inline-flex;align-items:center;gap:6px;margin-top:12px;font-size:.5rem;letter-spacing:3px;text-transform:uppercase;color:var(--gris);text-decoration:none;transition:color .2s" onmouseenter="this.style.color='var(--oro)'" onmouseleave="this.style.color='var(--gris)'">Consultar →</a>
-        </div>`;
-      });
-      html+=`</div></div>`;
-    });
-    html+=`</div>`;
-    wrap.innerHTML=html;
-    wrap.style.display='block';
+    if(wrap){
+      let html=`<div><div style="font-size:.5rem;letter-spacing:5px;text-transform:uppercase;color:var(--oro);display:flex;align-items:center;gap:10px;margin-bottom:20px"><span style="width:18px;height:1px;background:var(--oro);display:inline-block"></span>CATÁLOGO ACTUALIZADO DESDE SISTEMA</div>`;
+      Object.entries(cats).forEach(([cat,items])=>{html+=`<div style="margin-bottom:28px"><div style="font-size:.7rem;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--gris3);margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--brd)">${cat}</div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1px;background:var(--brd)">${items.map(_cardM19).join('')}</div></div>`});
+      wrap.innerHTML=html+'</div>';wrap.style.display='block';
+    }
+    _renderM19('m19-cat-sensorial',all.filter(p=>_M19_TABS.sensorial.includes(p.sku)));
+    _renderM19('m19-cat-motor',    all.filter(p=>_M19_TABS.motor.includes(p.sku)));
+    _renderM19('m19-cat-visual',   all.filter(p=>_M19_TABS.visual.includes(p.sku)));
   }catch(e){}
 }
 loadCatalogoM19();

@@ -687,9 +687,8 @@ document.querySelectorAll("a,button,.pcard,.scard,.fondo-item,.ia-fn,.b2b-item")
 const obs=new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting)x.target.classList.add("visible")})},{threshold:.05});
 document.querySelectorAll(".reveal").forEach(el=>obs.observe(el));
 
-setTimeout(()=>{
-  let v=0;const t=setInterval(()=>{v=Math.min(v+1,10);const el=document.getElementById("cnt-ph");if(el)el.textContent=v;if(v>=10)clearInterval(t)},90);
-},400);
+// Counter — driven from JSON
+fetch('./exports/pharma-delux-catalog.json').then(r=>r.json()).then(d=>{const n=(d.productos_3d||[]).length;let v=0;const t=setInterval(()=>{v=Math.min(v+1,n);const el=document.getElementById("cnt-ph");if(el)el.textContent=v;if(v>=n)clearInterval(t)},90)}).catch(()=>{});
 
 setTimeout(()=>{
   [["don-bar-1","don-val-1",62,50000],["don-bar-2","don-val-2",48,40000],["don-bar-3","don-val-3",35,30000]].forEach(([bid,vid,pct,meta])=>{

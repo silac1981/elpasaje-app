@@ -902,10 +902,8 @@ document.querySelectorAll("a,button,.pcard,.scard,.sport-card,.fondo-card,.ia-fn
 const obs=new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting)x.target.classList.add("visible")})},{threshold:.05});
 document.querySelectorAll(".reveal").forEach(el=>obs.observe(el));
 
-// Counter SKUs
-setTimeout(()=>{
-  let v=0;const t=setInterval(()=>{v=Math.min(v+1,16);const el=document.getElementById("cnt-skus");if(el)el.textContent=v;if(v>=16)clearInterval(t)},70);
-},400);
+// Counter SKUs — driven from JSON
+fetch('./exports/aero-tech-catalog.json').then(r=>r.json()).then(d=>{const n=(d.productos_3d||[]).length;let v=0;const t=setInterval(()=>{v=Math.min(v+1,n);const el=document.getElementById("cnt-skus");if(el)el.textContent=v;if(v>=n)clearInterval(t)},70)}).catch(()=>{});
 
 // Termómetros donación
 setTimeout(()=>{

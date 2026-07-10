@@ -391,6 +391,7 @@ footer{padding:18px 64px;background:rgba(0,0,0,.8);border-top:1px solid rgba(184
     </div>
   </div>
 </div>
+<div id="mel-cat-vinilo" class="sec sec-light"></div>
 </div><!-- /vinilo -->
 
 
@@ -425,6 +426,7 @@ footer{padding:18px 64px;background:rgba(0,0,0,.8);border-top:1px solid rgba(184
     </div>
   </div>
 </div>
+<div id="mel-cat-hifi" class="sec sec-light"></div>
 </div><!-- /hifi -->
 
 
@@ -583,10 +585,7 @@ document.querySelectorAll("a,button,.pcard,.scard,.fondo-item,.ia-fn").forEach(e
 const obs=new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting)x.target.classList.add("visible")})},{threshold:.05});
 document.querySelectorAll(".reveal").forEach(el=>obs.observe(el));
 
-// Counter
-setTimeout(()=>{
-  let v=0;const t=setInterval(()=>{v=Math.min(v+1,12);const el=document.getElementById("cnt-mel");if(el)el.textContent=v;if(v>=12)clearInterval(t)},80);
-},400);
+// Counter → driven from JSON in loadCatalogoMel()
 
 // Termómetros
 setTimeout(()=>{
@@ -621,13 +620,10 @@ function setFn(el,texto){
   if(inp){inp.value=texto;inp.focus()}
 }
 
-const SYS=`Sos el Acoustic Advisor de Melómano — la línea de accesorios 3D premium para audiófilos y coleccionistas de vinilo de El Pasaje 3D Studio. Diseñada por Fernando Peluffo, perfeccionista del sonido que aplica la lógica anti-vibración de la aviación al sancutario del audio.
+const SYS=`Sos el Acoustic Advisor de Melómano — la línea de accesorios 3D premium para audiófilos y coleccionistas de vinilo de El Pasaje 3D Studio. Diseñada por Fernando Peluffo, perfeccionista del sonido que aplica la lógica anti-vibración de la aviación al santuario del audio.
 
 CATÁLOGO OFICIAL (SKU | Producto | Precio):
 MEL-VSO-U | Vinyl Sommelier — 27 divisores A-Z+# en CFS dorado | $67.000 · MEL-HWS-U | Heavyweight Stabilizer — peso de plato 320-350g, iniciales grabadas | $30.000 · MEL-ISQ-U | Iso-Spike Quartet — 4 desacoplantes PETG+TPU para parlantes | $27.000 · MEL-NPP-U | Now Playing Premium — exhibidor vinilo con base corcho, silueta personalizable | $23.000 · MEL-ADH-U | Audiophile Desk Hub — estación completa: auriculares+cartuchos+cables+stylus | $42.000 · MEL-SAU-U | Stand armónica y ukelele | $15.000 · MEL-PNB-U | Porta-notebook Negro/Cobre | $16.000
-
-GAMA ANTERIOR (también disponible):
-Soportes LP Wall-Art $2.800 u / $7.200 pack x3 · Turbine Feet $4.500 (x4) · Now Playing básico $3.200 · Pista de Despegue $4.200 · Patas Anti-Vibración Bafles $5.200 · Soporte DAC/Amplificador $4.800
 
 PERSONALIZACIÓN: nombre, iniciales o texto en relieve en cualquier pieza.
 Todo por pedido: entrega 48-72hs. Contacto WA: +54 11 6549-7234.
@@ -655,42 +651,30 @@ async function callIA(inputId,respId){
 
 /* ── Catálogo dinámico desde EPCC ── */
 const _WA_MEL="541165497234";
+const _EMPTY_MEL="Diseño en fase de prototipado. Consultar disponibilidad para preventa exclusiva.";
+const _MEL_TABS={vinilo:['Display','Organización','Instrumento'],hifi:['Audio técnico','Escritorio']};
 function _fmtPM(n){return new Intl.NumberFormat('es-AR').format(n)}
 function _waLinkM(nom,sku,precio){return`https://wa.me/${_WA_MEL}?text=${encodeURIComponent(`Hola! Me interesa ${nom} (SKU: ${sku}) — $${_fmtPM(precio)} ¿Está disponible?`)}`}
+function _cardMel(p){const sc=p.stock>5?'#10B981':(p.stock>0?'#F59E0B':'var(--gris2)');const stk=p.stock>0?`${p.stock} u`:'Bajo pedido';return`<div style="background:var(--carbono);border:1px solid rgba(184,115,51,.1);border-top:2px solid var(--cobre);padding:22px 20px;transition:all .3s" onmouseenter="this.style.borderColor='var(--cobre)';this.style.transform='translateY(-2px)'" onmouseleave="this.style.borderColor='rgba(184,115,51,.1)';this.style.transform='translateY(0)'"><div style="font-size:.48rem;color:var(--gris);letter-spacing:2px;margin-bottom:6px">${p.sku}</div><div style="font-family:'Playfair Display',serif;font-size:1rem;font-weight:600;color:var(--blanco);margin-bottom:6px">${p.name}</div><div style="font-size:.78rem;font-weight:300;color:var(--gris3);line-height:1.55;margin-bottom:14px">${(p.description||'').substring(0,90)}</div><div style="display:flex;justify-content:space-between;align-items:center"><span style="font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--cobre)">$${_fmtPM(p.price)}</span><span style="font-size:.58rem;color:${sc}">${stk}</span></div><a href="${_waLinkM(p.name,p.sku,p.price)}" target="_blank" style="display:inline-flex;align-items:center;gap:6px;margin-top:12px;font-size:.52rem;font-weight:500;letter-spacing:3px;text-transform:uppercase;color:var(--gris);text-decoration:none;transition:color .2s" onmouseenter="this.style.color='var(--cobre)'" onmouseleave="this.style.color='var(--gris)'">Consultar →</a></div>`}
+function _renderMel(id,prods){const w=document.getElementById(id);if(!w)return;if(!prods.length){w.innerHTML=`<p style="padding:32px;text-align:center;color:var(--gris2);font-size:.84rem;font-style:italic">${_EMPTY_MEL}</p>`;w.style.display='block';return;}w.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px">${prods.map(_cardMel).join('')}</div>`;w.style.display='block';}
 async function loadCatalogoMel(){
   try{
     const r=await fetch('./exports/melomano-catalog.json');
     if(!r.ok)return;
-    const d=await r.json();
-    const prods=(d.productos_3d||[]);
-    if(!prods.length)return;
+    const all=(await r.json()).productos_3d||[];
+    if(!all.length)return;
+    const el=document.getElementById('cnt-mel');
+    if(el){let v=0;const t=setInterval(()=>{v=Math.min(v+1,all.length);el.textContent=v;if(v>=all.length)clearInterval(t)},80)}
     const cats={};
-    prods.forEach(p=>{const c=p.categoria||'Colección';if(!cats[c])cats[c]=[];cats[c].push(p)});
+    all.forEach(p=>{const c=p.categoria||'Colección';if(!cats[c])cats[c]=[];cats[c].push(p)});
     const wrap=document.getElementById('mel-catalog-json');
-    if(!wrap)return;
-    let html=`<div style="margin-bottom:16px"><div style="font-size:.52rem;font-weight:500;letter-spacing:5px;text-transform:uppercase;color:var(--cobre);display:flex;align-items:center;gap:12px;margin-bottom:24px"><span style="width:20px;height:1px;background:var(--cobre);display:inline-block"></span>CATÁLOGO OFICIAL ACTUALIZADO</div>`;
-    Object.entries(cats).forEach(([cat,items])=>{
-      html+=`<div style="margin-bottom:32px"><div style="font-size:.6rem;font-weight:500;letter-spacing:4px;text-transform:uppercase;color:var(--gris3);margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid rgba(184,115,51,.2)">${cat}</div>`;
-      html+=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px">`;
-      items.forEach(p=>{
-        const sc=p.stock>5?'#10B981':(p.stock>0?'#F59E0B':'var(--gris2)');
-        const stk=p.stock>0?`${p.stock} u`:'Bajo pedido';
-        html+=`<div style="background:var(--carbono);border:1px solid rgba(184,115,51,.1);border-top:2px solid var(--cobre);padding:22px 20px;transition:all .3s" onmouseenter="this.style.borderColor='var(--cobre)';this.style.transform='translateY(-2px)'" onmouseleave="this.style.borderColor='rgba(184,115,51,.1)';this.style.transform='translateY(0)'">
-          <div style="font-size:.48rem;color:var(--gris);letter-spacing:2px;margin-bottom:6px">${p.sku}</div>
-          <div style="font-family:'Playfair Display',serif;font-size:1rem;font-weight:600;color:var(--blanco);margin-bottom:6px">${p.name}</div>
-          <div style="font-size:.78rem;font-weight:300;color:var(--gris3);line-height:1.55;margin-bottom:14px">${(p.description||'').substring(0,90)}</div>
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <span style="font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--cobre)">$${_fmtPM(p.price)}</span>
-            <span style="font-size:.58rem;color:${sc}">${stk}</span>
-          </div>
-          <a href="${_waLinkM(p.name,p.sku,p.price)}" target="_blank" style="display:inline-flex;align-items:center;gap:6px;margin-top:12px;font-size:.52rem;font-weight:500;letter-spacing:3px;text-transform:uppercase;color:var(--gris);text-decoration:none;transition:color .2s" onmouseenter="this.style.color='var(--cobre)'" onmouseleave="this.style.color='var(--gris)'">Consultar →</a>
-        </div>`;
-      });
-      html+=`</div></div>`;
-    });
-    html+=`</div>`;
-    wrap.innerHTML=html;
-    wrap.style.display='block';
+    if(wrap){
+      let html=`<div><div style="font-size:.52rem;font-weight:500;letter-spacing:5px;text-transform:uppercase;color:var(--cobre);display:flex;align-items:center;gap:12px;margin-bottom:24px"><span style="width:20px;height:1px;background:var(--cobre);display:inline-block"></span>CATÁLOGO OFICIAL ACTUALIZADO</div>`;
+      Object.entries(cats).forEach(([cat,items])=>{html+=`<div style="margin-bottom:32px"><div style="font-size:.6rem;font-weight:500;letter-spacing:4px;text-transform:uppercase;color:var(--gris3);margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid rgba(184,115,51,.2)">${cat}</div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px">${items.map(_cardMel).join('')}</div></div>`});
+      wrap.innerHTML=html+'</div>';wrap.style.display='block';
+    }
+    _renderMel('mel-cat-vinilo',all.filter(p=>_MEL_TABS.vinilo.includes(p.categoria)));
+    _renderMel('mel-cat-hifi',  all.filter(p=>_MEL_TABS.hifi.includes(p.categoria)));
   }catch(e){}
 }
 loadCatalogoMel();
