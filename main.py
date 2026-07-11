@@ -306,18 +306,20 @@ h1, h2, h3, h4, h5, h6,
 # ── DB + Schema init — corre UNA vez por sesión de servidor ───────────────
 @st.cache_resource
 def _run_migrations():
-    from crear_schema_v3 import init_schema as _init_schema
-    _init_schema()
-    # Migraciones Python legacy (v7-v14) — idempotentes, corren siempre al arrancar
-    from migration_v7 import run as _migration_v7; _migration_v7()
-    from migration_v8 import run as _migration_v8; _migration_v8()
-    from migration_v9 import run as _migration_v9; _migration_v9()
-    from migration_v10 import run as _migration_v10; _migration_v10()
-    from migration_v11 import run as _migration_v11; _migration_v11()
-    from migration_v12 import run as _migration_v12; _migration_v12()
-    from migration_v13 import run as _migration_v13; _migration_v13()
-    from migration_v14 import run as _migration_v14; _migration_v14()
-    # SQL migrations (v14+) — runner automático, ejecuta solo pendientes
+    from utils.db import dialect
+    if dialect == "sqlite":
+        # Migraciones Python legacy — solo SQLite local, Supabase usa SQL runner
+        from crear_schema_v3 import init_schema as _init_schema
+        _init_schema()
+        from migration_v7 import run as _migration_v7; _migration_v7()
+        from migration_v8 import run as _migration_v8; _migration_v8()
+        from migration_v9 import run as _migration_v9; _migration_v9()
+        from migration_v10 import run as _migration_v10; _migration_v10()
+        from migration_v11 import run as _migration_v11; _migration_v11()
+        from migration_v12 import run as _migration_v12; _migration_v12()
+        from migration_v13 import run as _migration_v13; _migration_v13()
+        from migration_v14 import run as _migration_v14; _migration_v14()
+    # SQL migrations — runner automático, ejecuta solo pendientes (SQLite y PostgreSQL)
     from utils.migration_runner import run_pending_migrations
     run_pending_migrations()
 
