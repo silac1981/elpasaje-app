@@ -112,7 +112,7 @@ def render():
 
     try:
         _hist_mes = pd.read_sql(f"""
-            SELECT strftime('%Y-%m', o.date) AS mes,
+            SELECT SUBSTR(o.date, 1, 7) AS mes,
                    COUNT(DISTINCT o.id) AS pedidos,
                    SUM(oi.cantidad * oi.precio_unitario) AS facturado
             FROM orders o

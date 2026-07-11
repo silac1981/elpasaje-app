@@ -164,7 +164,7 @@ def _dash_main():
 
     try:
         _df_fac = pd.read_sql("""
-            SELECT strftime('%Y-%m', o.date) AS mes,
+            SELECT SUBSTR(o.date, 1, 7) AS mes,
                    o.client_id,
                    COUNT(DISTINCT o.id) AS pedidos,
                    SUM(oi.cantidad * oi.precio_unitario) AS facturado,
@@ -179,7 +179,7 @@ def _dash_main():
             ORDER BY mes
         """, engine)
         _df_fac_mes = pd.read_sql("""
-            SELECT strftime('%Y-%m', o.date) AS mes,
+            SELECT SUBSTR(o.date, 1, 7) AS mes,
                    SUM(oi.cantidad * oi.precio_unitario) AS facturado
             FROM orders o
             JOIN order_items oi ON oi.order_id = o.id
