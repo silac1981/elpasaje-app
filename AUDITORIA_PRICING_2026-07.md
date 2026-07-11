@@ -1,13 +1,35 @@
 # AUDITORIA DE PRICING — El Pasaje 3D Studio
 # Generado: 2026-07-10
 #
+# ⚠️  ESTADO: PRELIMINAR — NO REPRECIAR CON ESTOS DATOS ⚠️
+#
+# VICIO DE ORIGEN: Los weight_gr del catálogo fueron calculados inversamente
+# desde el precio usando la fórmula: weight_gr = price * 1000 / (1.10 * 2350 * 4)
+# (ver seed_catalogo.py, nota "⚖️ Confirmar pesos reales con la balanza")
+# Los pesos NUNCA fueron verificados con balanza real.
+# Consecuencia: recalcular con costo real da pérdida proporcional en todos los casos
+# porque los pesos se fabricaron para que dieran exactamente 75% de margen a $2.350/kg.
+# Esta tabla mide el ARTEFACTO DEL SEED, no la realidad del negocio.
+#
+# EJEMPLO CONCRETO: OA-MLI-U (Litofanía) aparece con 3.386g.
+# Una litofanía real (placa fina, marco) pesa 150-400g.
+# A $21.000/kg eso son $3.500-$9.000 de material — $35.000 de precio puede estar bien.
+#
+# PRÓXIMOS PASOS (antes de tomar cualquier decisión de pricing):
+# 1. Fer pesa los 10-15 productos más vendidos con balanza real
+# 2. Fer confirma ticket real del último rollo de MakerPanda
+# 3. Code regenera auditoría con datos reales → recién ahí el comité decide
+#
+# PLAN FASE P: editor de catálogo señaliza visualmente productos con
+# peso_verificado=FALSE hasta que Fer los pese (campo nuevo en migration_v17)
+#
 # PROBLEMA: COSTO_KG_DEFAULT en utils/pricing.py = .350/kg
 # COSTO REAL segun LEGACY materials (MakerPanda, mayo 2026) = ~0.000-24.000/kg
 # Promedio usado en esta auditoria: 1.000/kg (conservador)
 #
 # Productos propio_3d con peso definido: 82
-# PIERDEN PLATA (precio < costo material): 24
-# Margen OK a costo real (precio > 4x costo): 12
+# PIERDEN PLATA (precio < costo material): 24 ← DATO NO CONFIABLE (ver arriba)
+# Margen OK a costo real (precio > 4x costo): 12 ← DATO NO CONFIABLE (ver arriba)
 
 ## TABLA COMPLETA
 SKU | Nombre | Peso(g) | PrecioActual | CostoReal | PrecioMin(x4) | Descalce | MargenReal%
@@ -95,8 +117,17 @@ MEL-NPP-U       | Now Playing Premium                 |    160g | $  23,000 | $ 
 MEL-ISQ-U       | Iso-Spike Quartet — 4 spikes        |    180g | $  27,000 | $   4,158 | $  16,632 | +$ -10,367 |   84.6%
 MEL-VSO-U       | Vinyl Sommelier — 27 divisores A-Z+ |    420g | $  67,000 | $   9,702 | $  38,808 | +$ -28,191 |   85.5%
 
-## DECISION PENDIENTE (Comite antes de Fase C)
-1. Verificar con Fer: cuanto costo el ultimo rollo? (ticket MakerPanda)
-2. Si ~0.000/kg es correcto: actualizar COSTO_KG_DEFAULT y repreciar catalogo
-3. Productos mas urgentes: OE-BOV-* (bandejas), OA-MLI-U (litofania), FSP-* (ya en interno)
-4. Regla: precio < 2x costo material = venta a perdida. Hoy hay 24 productos en esa zona.
+## DECISION PENDIENTE (Comite antes de Fase C) — CON DATOS REALES
+
+⚠️ NO TOMAR DECISIONES DE PRICING HASTA COMPLETAR ESTOS PASOS:
+
+1. Fer pesa productos más vendidos (balanza, no estimado):
+   Prioritarios: bandejas OE-BOV-*, litofanía OA-MLI-U, sopor gaming FZ-SGB-U,
+   kits OA-KIT-*, teclado M19-TKN-*, porta-notebook M19-PNE-U
+2. Fer confirma: ¿cuánto pagó el último rollo en MakerPanda? (ticket o factura)
+3. Code corre auditoría con weight_gr reales + costo_kg real
+4. Comité decide reprecio SOLO con tabla actualizada
+5. Actualizar COSTO_KG_DEFAULT en utils/pricing.py solo después del paso 4
+
+REGLA DE FALLBACK: si un producto tiene precio < 2x costo material VERIFICADO = venta a pérdida.
+Hoy ese número es 24 pero puede ser 0 o 40 — no se sabe hasta pesar.
