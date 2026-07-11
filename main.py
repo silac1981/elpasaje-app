@@ -5,7 +5,7 @@ import hashlib
 from datetime import datetime
 from sqlalchemy import text
 
-from utils.db import engine
+from utils.db import engine, dialect
 from utils.lineas import LINEAS, get_linea, get_lineas_usuario
 from utils.mike import get_alertas_dashboard
 
@@ -306,7 +306,6 @@ h1, h2, h3, h4, h5, h6,
 # ── DB + Schema init — corre UNA vez por sesión de servidor ───────────────
 @st.cache_resource
 def _run_migrations():
-    from utils.db import dialect
     if dialect == "sqlite":
         # Migraciones Python legacy — solo SQLite local, Supabase usa SQL runner
         from crear_schema_v3 import init_schema as _init_schema
