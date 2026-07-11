@@ -223,12 +223,13 @@ details{{background:#161B22!important;border:1px solid #21262D!important;border-
                 text("""INSERT INTO orders (client_id, status, date, notas, color_pedido,
                                            fecha_entrega_solicitada, referencia_archivo, canal_origen)
                         VALUES (:cid, 'Pendiente', :fecha, :notas, :color,
-                                :entrega, :archivos, :canal)"""),
+                                :entrega, :archivos, :canal)
+                        RETURNING id"""),
                 {"cid": linea_pedido, "fecha": datetime.now().isoformat(),
                  "notas": _notas_str, "color": _cp_color_txt or "",
                  "entrega": _fecha_str, "archivos": _archivos_str, "canal": _cp_canal}
             )
-            order_id = result.lastrowid
+            order_id = result.scalar()
             prod_q = pd.read_sql(
                 text("SELECT price FROM products WHERE sku=:sku"),
                 _conn2, params={"sku": _sel_sku}

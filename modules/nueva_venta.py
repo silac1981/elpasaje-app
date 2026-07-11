@@ -267,11 +267,12 @@ def _step_confirmar():
                 with engine.begin() as conn:
                     _res = conn.execute(
                         text("""INSERT INTO orders (client_id, status, date, notas, canal_origen)
-                                VALUES (:cid, 'Pendiente', :fecha, :notas, :canal)"""),
+                                VALUES (:cid, 'Pendiente', :fecha, :notas, :canal)
+                                RETURNING id"""),
                         {"cid": _sel_lid, "fecha": datetime.now().isoformat(),
                          "notas": _notas_str, "canal": _canal_str},
                     )
-                    _oid = _res.lastrowid
+                    _oid = _res.scalar()
                     conn.execute(
                         text("INSERT INTO order_items (order_id, product_sku, cantidad, precio_unitario) VALUES (:oid, :sku, :qty, :precio)"),
                         {"oid": _oid, "sku": _sel_sku, "qty": _sel_qty, "precio": _precio},
