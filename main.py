@@ -317,7 +317,6 @@ def _run_migrations():
         from migration_v11 import run as _migration_v11; _migration_v11()
         from migration_v12 import run as _migration_v12; _migration_v12()
         from migration_v13 import run as _migration_v13; _migration_v13()
-        from migration_v14 import run as _migration_v14; _migration_v14()
     # SQL migrations — runner automático, ejecuta solo pendientes (SQLite y PostgreSQL)
     from utils.migration_runner import run_pending_migrations
     run_pending_migrations()
