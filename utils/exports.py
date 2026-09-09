@@ -37,7 +37,7 @@ def exportar_catalogo_json(linea_id: str) -> tuple:
         df_3d = pd.read_sql(
             text("""
                 SELECT sku, name, price,
-                       weight_gr AS peso_gr, stock, categoria,
+                       weight_gr AS peso_gr, stock, categoria, imagen_url,
                        COALESCE(description, '') AS description
                 FROM products
                 WHERE client_id = :cid
@@ -51,7 +51,7 @@ def exportar_catalogo_json(linea_id: str) -> tuple:
         # Capa 2 — productos de línea / compartidos / kits (solo públicos)
         df_c2 = pd.read_sql(
             text("""
-                SELECT sku, name, price, stock, tipo_producto, categoria,
+                SELECT sku, name, price, stock, tipo_producto, categoria, imagen_url,
                        COALESCE(description, '') AS description
                 FROM products
                 WHERE client_id = :cid
@@ -87,12 +87,12 @@ def exportar_catalogo_json(linea_id: str) -> tuple:
         return out
 
     productos_3d = [
-        _clean(r, ["sku", "name", "price", "peso_gr", "stock", "categoria", "description"])
+        _clean(r, ["sku", "name", "price", "peso_gr", "stock", "categoria", "imagen_url", "description"])
         for _, r in df_3d.iterrows()
     ]
 
     productos_linea = [
-        _clean(r, ["sku", "name", "price", "stock", "tipo_producto", "categoria", "description"])
+        _clean(r, ["sku", "name", "price", "stock", "tipo_producto", "categoria", "imagen_url", "description"])
         for _, r in df_c2[df_c2["tipo_producto"] != "kit_mixto"].iterrows()
     ]
 
@@ -108,12 +108,14 @@ def exportar_catalogo_json(linea_id: str) -> tuple:
             }
             for _, c in comps_df.iterrows()
         ]
+        _kr_img = kr.get("imagen_url")
         kits.append({
             "sku":         kr["sku"],
             "nombre":      kr["name"],
             "precio":      float(kr["price"]),
             "stock":       int(kr.get("stock") or 0),
             "descripcion": kr.get("description") or "",
+            "imagen_url":  None if (_kr_img is not None and pd.isna(_kr_img)) else _kr_img,
             "componentes": comps,
         })
 
