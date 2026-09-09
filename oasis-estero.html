@@ -792,7 +792,7 @@ async function callIA(tipo){
   const section = document.getElementById('oe-catalog-section');
   const grid = document.getElementById('oe-catalog-grid');
   if (!section || !grid) return;
-  const WA = '541165497234';
+  const WA = '5491165497234';
   function fmt(n) { return new Intl.NumberFormat('es-AR').format(n); }
   function waLink(nom, sku, precio) {
     return `https://wa.me/${WA}?text=${encodeURIComponent(`Hola! Me interesa ${nom} (SKU: ${sku}) — $${fmt(precio)} 🌿. ¿Está disponible?`)}`;

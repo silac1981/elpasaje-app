@@ -419,7 +419,7 @@ const FB=["Para reuniones largas, las Placas Hápticas Fractales en PLA Seda Bro
 async function callIA(inputId,respId){const inp=document.getElementById(inputId),resp=document.getElementById(respId);if(!inp||!resp)return;const t=inp.value.trim();if(!t){inp.focus();return}resp.style.display="block";resp.textContent="···";try{const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:220,system:SYS,messages:[{role:"user",content:t}]})});const d=await r.json();resp.textContent=d.content?.[0]?.text||"Escribinos al WA."}catch(e){resp.textContent=FB[Math.floor(Math.random()*FB.length)]}}
 
 /* ── Catálogo dinámico desde EPCC ── */
-const _WA_NUM="541165497234";
+const _WA_NUM="5491165497234";
 const _EMPTY_M19="Diseño en fase de prototipado. Consultar disponibilidad para preventa exclusiva.";
 const _M19_TABS={
   sensorial:['M19-FDE-S','M19-FDE-T','M19-KRS-U'],

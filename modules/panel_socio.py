@@ -324,7 +324,7 @@ def render():
                     st.markdown(f"<div style='background:#FAF8F3;border-radius:10px;padding:10px 14px;margin-bottom:6px;border:1px solid #DCD5C7;'><div style='font-size:0.8rem;font-weight:600;color:#16181F;'>{_p3['name']}</div><div style='font-size:0.72rem;color:#74798A;margin-top:3px;'>${_p3['price']:,.0f} · <span style='color:{_stk_c3};font-weight:700;'>{_pstk3} u stock</span></div></div>", unsafe_allow_html=True)
                 _stock_bajo = prod[prod["stock"] <= 2] if "stock" in prod.columns else pd.DataFrame()
                 if not _stock_bajo.empty:
-                    st.markdown(f"<div style='background:#FEF3C7;border-radius:10px;padding:10px 14px;border-left:3px solid #F59E0B;margin-top:6px;border:1px solid #3D2B0A;'><span style='color:#F59E0B;font-weight:700;font-size:0.8rem;'>⚠️ Stock bajo: {', '.join(_stock_bajo['name'].tolist()[:3])}</span></div>", unsafe_allow_html=True)
+                    st.markdown(f"<div style='background:#FEF3C7;border-radius:10px;padding:10px 14px;border-left:3px solid #F59E0B;margin-top:6px;border:1px solid #F0D9A6;'><span style='color:#F59E0B;font-weight:700;font-size:0.8rem;'>⚠️ Stock bajo: {', '.join(_stock_bajo['name'].tolist()[:3])}</span></div>", unsafe_allow_html=True)
         if not _fab_socio.empty:
             st.markdown("<div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#FF4B4B;margin-top:20px;margin-bottom:10px;'>ÚLTIMAS FABRICACIONES</div>", unsafe_allow_html=True)
             _fab_show = _fab_socio.head(5).copy()

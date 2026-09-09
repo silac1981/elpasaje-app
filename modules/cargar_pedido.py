@@ -42,7 +42,7 @@ def render():
     prods_socio = pd.concat(_frames, ignore_index=True) if _frames else pd.DataFrame()
 
     if prods_socio.empty:
-        st.markdown("<div style='background:#161B22;border-radius:12px;padding:20px;border:1px solid #21262D;text-align:center;color:#8B949E;'>Sin productos cargados todavía. Contactá a Alejandra para agregarlos.</div>", unsafe_allow_html=True)
+        st.markdown("<div style='background:#FFFFFF;border-radius:12px;padding:20px;border:1px solid #DCD5C7;text-align:center;color:#74798A;'>Sin productos cargados todavía. Contactá a Alejandra para agregarlos.</div>", unsafe_allow_html=True)
         st.stop()
 
     if "cp_sel_sku" not in st.session_state:
@@ -78,15 +78,15 @@ def render():
                     _img_tag = (f"<img src='{_img_url_cp}' style='width:100%;height:90px;object-fit:cover;"
                                 f"border-radius:8px;margin-bottom:8px;' onerror=\"this.style.display='none'\">") if _has_img_cp else ""
                     with _cp_cols[_cpi % 3]:
-                        st.markdown(f"""<div style='border:1px solid {_lcolor}44;background:#161B22;border-radius:14px;padding:14px;margin-bottom:8px;'>
+                        st.markdown(f"""<div style='border:1px solid {_lcolor}44;background:#FFFFFF;border-radius:14px;padding:14px;margin-bottom:8px;'>
 {_img_tag}
 <div style='font-size:0.6rem;color:{_lcolor};font-weight:700;letter-spacing:1px;text-transform:uppercase;'>{_cpr['sku']}</div>
-<div style='font-size:0.88rem;font-weight:700;color:#E6EDF3;margin-top:3px;'>{_cpr['name']}</div>
-<div style='font-size:0.68rem;color:#8B949E;margin-top:2px;'>{_cpr.get('categoria','') or ''}</div>
+<div style='font-size:0.88rem;font-weight:700;color:#16181F;margin-top:3px;'>{_cpr['name']}</div>
+<div style='font-size:0.68rem;color:#74798A;margin-top:2px;'>{_cpr.get('categoria','') or ''}</div>
 <div style='margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:4px;'>
-  <div><div style='font-size:0.52rem;color:#8B949E;text-transform:uppercase;'>Precio EP</div>
+  <div><div style='font-size:0.52rem;color:#74798A;text-transform:uppercase;'>Precio EP</div>
   <div style='font-size:0.92rem;font-weight:800;color:{_lcolor};'>${float(_cpr['price']):,.0f}</div></div>
-  <div><div style='font-size:0.52rem;color:#8B949E;text-transform:uppercase;'>Costo fab.</div>
+  <div><div style='font-size:0.52rem;color:#74798A;text-transform:uppercase;'>Costo fab.</div>
   <div style='font-size:0.92rem;font-weight:800;color:#94A3B8;'>${round(float(_cpr.get("weight_gr",0) or 0)*1.10*2350/1000):,.0f}</div></div>
 </div>
 <div style='font-size:0.65rem;color:#6B7280;'>{float(_cpr.get('weight_gr',0) or 0):.0f} g · {str(_cpr.get('description','') or '')[:50]}</div>
@@ -109,14 +109,14 @@ def render():
         _bn_img_html = f"<div style='width:56px;height:56px;background:{_cpc_s}22;border-radius:8px;display:flex;align-items:center;justify-content:center;margin-right:14px;flex-shrink:0;font-size:1.5rem;'>{cfg.get('emoji','📦')}</div>"
 
     st.markdown(
-        f"<div style='background:#161B22;border-radius:14px;padding:14px 18px;border:2px solid {_cpc_s};"
+        f"<div style='background:#FFFFFF;border-radius:14px;padding:14px 18px;border:2px solid {_cpc_s};"
         f"margin-bottom:16px;display:flex;align-items:center;'>"
         f"{_bn_img_html}"
         f"<div style='flex:1;min-width:0;'>"
         f"<div style='font-size:0.6rem;color:{_cpc_s};font-weight:700;letter-spacing:1px;text-transform:uppercase;'>"
         f"✓ SELECCIONADO · {_sel_prod['sku']}</div>"
-        f"<div style='font-size:1rem;font-weight:800;color:#E6EDF3;margin-top:2px;'>{_sel_prod['name']}</div>"
-        f"<div style='font-size:0.72rem;color:#8B949E;margin-top:2px;'>"
+        f"<div style='font-size:1rem;font-weight:800;color:#16181F;margin-top:2px;'>{_sel_prod['name']}</div>"
+        f"<div style='font-size:0.72rem;color:#74798A;margin-top:2px;'>"
         f"{str(_sel_prod.get('description','') or '')} · ${float(_sel_prod['price']):,.0f} · "
         f"{float(_sel_prod.get('weight_gr',0) or 0):.0f} g</div></div></div>",
         unsafe_allow_html=True,
@@ -160,7 +160,7 @@ def render():
         list(_canal_icons.keys()),
         index=0, key="cp_canal", label_visibility="collapsed"
     )
-    st.markdown(f"<div style='background:#161B22;border-radius:8px;padding:8px 14px;border:1px solid #21262D;font-size:0.8rem;color:#8B949E;'>{_canal_icons[_cp_canal]} <b style='color:#C9D1D9;'>{_cp_canal}</b> — esto ayuda a saber por dónde llegan los pedidos</div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='background:#FFFFFF;border-radius:8px;padding:8px 14px;border:1px solid #DCD5C7;font-size:0.8rem;color:#74798A;'>{_canal_icons[_cp_canal]} <b style='color:#16181F;'>{_cp_canal}</b> — esto ayuda a saber por dónde llegan los pedidos</div>", unsafe_allow_html=True)
 
     st.markdown("<div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#58A6FF;margin-top:16px;margin-bottom:8px;'>REFERENCIAS E IMÁGENES (opcional)</div>", unsafe_allow_html=True)
     _cp_files = st.file_uploader(
@@ -170,7 +170,7 @@ def render():
     )
     if _cp_files:
         _fnames = [f.name for f in _cp_files]
-        st.markdown(f"<div style='background:#0D2818;border-radius:8px;padding:8px 14px;border:1px solid #238636;'><span style='color:#3FB950;font-size:0.8rem;'>📎 {len(_cp_files)} archivo{'s' if len(_cp_files)>1 else ''} adjunto{'s' if len(_cp_files)>1 else ''}: {', '.join(_fnames)}</span></div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='background:#EAF7EE;border-radius:8px;padding:8px 14px;border:1px solid #238636;'><span style='color:#3FB950;font-size:0.8rem;'>📎 {len(_cp_files)} archivo{'s' if len(_cp_files)>1 else ''} adjunto{'s' if len(_cp_files)>1 else ''}: {', '.join(_fnames)}</span></div>", unsafe_allow_html=True)
 
     st.markdown("<div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#58A6FF;margin-top:16px;margin-bottom:8px;'>MÉTODO DE PAGO</div>", unsafe_allow_html=True)
     _cp_metodo_opts = ["Transferencia", "Efectivo", "MercadoPago (próximamente)"]
@@ -185,11 +185,11 @@ def render():
 
     _total_est = float(_sel_prod["price"]) * _cp_qty
     st.markdown(f"""
-<div style='background:#161B22;border-radius:14px;padding:16px 20px;border:1px solid {_cp_color}44;
+<div style='background:#FFFFFF;border-radius:14px;padding:16px 20px;border:1px solid {_cp_color}44;
      border-left:4px solid {_cp_color};margin-top:16px;margin-bottom:16px;'>
   <div style='font-size:0.65rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:{_cp_color};margin-bottom:8px;'>RESUMEN DEL PEDIDO</div>
-  <div style='font-size:0.9rem;font-weight:700;color:#E6EDF3;'>{_cp_qty}x {_sel_prod['name']}</div>
-  <div style='font-size:0.75rem;color:#8B949E;margin-top:2px;'>{_cp_color_txt or "Color por defecto"} · {("🔴 URGENTE" if _cp_urgente else "Sin urgencia")} · {_canal_icons.get(_cp_canal,"")}{_cp_canal}</div>
+  <div style='font-size:0.9rem;font-weight:700;color:#16181F;'>{_cp_qty}x {_sel_prod['name']}</div>
+  <div style='font-size:0.75rem;color:#74798A;margin-top:2px;'>{_cp_color_txt or "Color por defecto"} · {("🔴 URGENTE" if _cp_urgente else "Sin urgencia")} · {_canal_icons.get(_cp_canal,"")}{_cp_canal}</div>
   <div style='font-size:1.2rem;font-weight:800;color:{_cp_color};margin-top:8px;'>${_total_est:,.0f}</div>
 </div>""", unsafe_allow_html=True)
 
