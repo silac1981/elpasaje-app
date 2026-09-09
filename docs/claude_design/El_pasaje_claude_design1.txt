@@ -1,0 +1,60 @@
+
+## El Pasaje 3D Studio
+
+### Arquitectura
+```
+main.py (router)  ???  módulos (modules/)  ???  elpasaje_v2.db (SQLite)
+```
+Sistema de gestión integral: inventario, pedidos, socios, fondos solidarios, catálogo web.
+
+### Comandos
+
+```powershell
+cd C:\Users\ar028883\Documents\La_Piedad_Tech_Design\magnitud19-backend-share
+```
+```powershell
+.venv\Scripts\Activate.ps1
+```
+```powershell
+streamlit run main.py
+```
+
+### Accesos (usuarios del sistema)
+
+| Usuario | Rol |
+|---|---|
+| admin | Alejandra — dashboard completo |
+| fer_produccion | Fernando — panel de producción |
+| olivia_coquette | Olivia — panel socio |
+| francisco_sport | Francisco — panel socio |
+| constantino_tech | Constantino — panel socio |
+| aviation | Nando — panel socio |
+| agustina | Socio multi (oasis_animal + vkhome_cliente) |
+| oasis_del_estero | Fede — panel socio |
+| pharma_delux | Lucas — panel socio |
+
+### Archivos clave
+
+| Archivo | Descripción |
+|---|---|
+| `main.py` | Router principal: auth, CSS, sidebar, llama a módulos |
+| `elpasaje_v2.db` | Base de datos SQLite activa |
+| `utils/db.py` | Engine SQLAlchemy |
+| `utils/pricing.py` | Cálculo de costos y splits |
+| `modules/dashboard_admin.py` | Dashboard Alejandra |
+| `modules/panel_fer.py` | Panel Fernando (producción) |
+
+### Páginas web (GitHub Pages)
+Base: `https://silac1981.github.io/elpasaje-app`
+
+| Línea | Slug |
+|---|---|
+| olivia_coquette | coquette |
+| oasis_animal | oasis-animal |
+| francisco_sport | sport |
+| constantino_tech | core-tech |
+| pharma_delux | pharma-delux |
+| oasis_del_estero | oasis-estero |
+| aviation | aero-tech |
+
+---

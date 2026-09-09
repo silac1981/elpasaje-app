@@ -71,6 +71,13 @@ build/
 .DS_Store
 Thumbs.db
 
+# Logs, builds anidados y archivos ajenos al proyecto (auditoría 09/09/2026)
+*.log
+elpasaje-app-win/
+Context.py/
+El_Pasaje_3D.html
+El_Pasaje_3D_files/
+
 # Streamlit
 .streamlit/secrets.toml
 
