@@ -21,21 +21,7 @@ def render():
     _cp_color = cfg.get("color", "#6366F1")
 
     st.markdown(f"""<style>
-.stApp,[data-testid="stAppViewContainer"],[data-testid="stMain"]{{background-color:#0D1117!important}}
-.stTabs [data-baseweb="tab-list"]{{background:#161B22!important;border-radius:12px!important;padding:4px!important}}
-.stTabs [data-baseweb="tab"]{{color:#8B949E!important;font-weight:600!important;border-radius:8px!important}}
-.stTabs [aria-selected="true"]{{background:#21262D!important;color:#F0F6FC!important}}
-[data-testid="stFileUploaderDropzone"]{{background:#161B22!important;border-color:{_cp_color}44!important}}
-.stMarkdown p,.stMarkdown span{{color:#C9D1D9!important}}
-.stMarkdown strong,.stMarkdown b{{color:#F0F6FC!important}}
-.stSelectbox label,.stTextInput label,.stTextArea label,.stNumberInput label,.stDateInput label,.stFileUploader label{{color:#8B949E!important;font-weight:500!important}}
-[data-testid="stAlert"] p,[data-testid="stAlert"] div{{color:#C9D1D9!important}}
-[data-testid="stAlert"]{{background:#1a2332!important;border-color:#30363D!important}}
-details{{background:#161B22!important;border:1px solid #21262D!important;border-radius:12px!important}}
-[data-testid="stTextInput"] input,[data-testid="stNumberInput"] input,[data-testid="stTextArea"] textarea{{background:#161B22!important;color:#E6EDF3!important;border-color:#30363D!important}}
-[data-testid="stSelectbox"] div[data-baseweb="select"] div{{background:#161B22!important;color:#E6EDF3!important;border-color:#30363D!important}}
-[data-testid="stDateInput"] input{{background:#161B22!important;color:#E6EDF3!important;border-color:#30363D!important}}
-[data-testid="stTextInput"] input::placeholder,[data-testid="stTextArea"] textarea::placeholder{{color:#6B7280!important}}
+[data-testid="stFileUploaderDropzone"]{{border-color:{_cp_color}44!important}}
 </style>""", unsafe_allow_html=True)
 
     st.markdown(f"""

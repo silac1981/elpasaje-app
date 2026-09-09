@@ -1,4 +1,4 @@
-"""modules/inventario.py — Inventario Pro con dark theme, filamentos y catálogo."""
+"""modules/inventario.py — Inventario Pro con filamentos y catálogo."""
 import base64
 import streamlit as st
 import pandas as pd
@@ -8,11 +8,11 @@ from utils.db import engine
 from utils.lineas import LINEAS, get_linea
 from utils.pricing import cargar_productos, cargar_materiales
 
-_DARK = "#0D1117"
-_CARD = "#161B22"
-_BORDER = "#21262D"
-_TEXT  = "#E6EDF3"
-_MUTED = "#8B949E"
+_DARK = "#EBE6DC"
+_CARD = "#FFFFFF"
+_BORDER = "#DCD5C7"
+_TEXT  = "#16181F"
+_MUTED = "#74798A"
 _BLUE  = "#58A6FF"
 
 _TIPO_COLORS = {
@@ -24,28 +24,6 @@ _TIPO_COLORS = {
     "Nylon":"#34D399",
     "otro": "#6B7280",
 }
-
-
-def _dark_css():
-    st.markdown("""<style>
-.stApp,[data-testid="stAppViewContainer"],[data-testid="stMain"]{background-color:#0D1117!important}
-.stTabs [data-baseweb="tab-list"]{background:#161B22!important;border-radius:12px!important;padding:4px!important}
-.stTabs [data-baseweb="tab"]{color:#8B949E!important;font-weight:600!important;border-radius:8px!important}
-.stTabs [aria-selected="true"]{background:#21262D!important;color:#F0F6FC!important}
-[data-testid="stMetricValue"]{color:#E6EDF3!important}
-[data-testid="stMetricLabel"]{color:#8B949E!important}
-.stMarkdown p,.stMarkdown span{color:#C9D1D9!important}
-.stMarkdown strong{color:#F0F6FC!important}
-.stTextInput label,.stSelectbox label,.stNumberInput label{color:#8B949E!important;font-weight:500!important}
-details{background:#161B22!important;border-radius:12px!important;border:1px solid #21262D!important}
-details summary{color:#E6EDF3!important}
-[data-testid="stAlert"]{background:#1a2332!important;border-color:#30363D!important}
-[data-testid="stFileUploaderDropzone"]{background:#161B22!important;border-color:#30363D!important}
-[data-testid="stTextInput"] input,[data-testid="stNumberInput"] input,[data-testid="stTextArea"] textarea{background:#161B22!important;color:#E6EDF3!important;border-color:#30363D!important}
-[data-testid="stSelectbox"] div[data-baseweb="select"] div{background:#161B22!important;color:#E6EDF3!important;border-color:#30363D!important}
-[data-testid="stDateInput"] input{background:#161B22!important;color:#E6EDF3!important;border-color:#30363D!important}
-[data-testid="stTextInput"] input::placeholder,[data-testid="stTextArea"] textarea::placeholder{color:#6B7280!important}
-</style>""", unsafe_allow_html=True)
 
 
 def _kpi(col, valor, label, sub, color):
@@ -60,11 +38,9 @@ def _kpi(col, valor, label, sub, color):
 
 
 def render():
-    _dark_css()
-
     # ── Header ────────────────────────────────────────────────────
     st.markdown(
-        f"<div style='background:linear-gradient(135deg,#161B22,#0D1117);border-radius:16px;"
+        f"<div style='background:linear-gradient(135deg,{_CARD},{_DARK});border-radius:16px;"
         f"padding:22px 28px;border:1px solid {_BORDER};border-left:4px solid {_BLUE};margin-bottom:16px;'>"
         f"<div style='font-size:0.65rem;font-weight:700;letter-spacing:3px;color:{_BLUE};text-transform:uppercase;'>EL PASAJE 3D STUDIO</div>"
         f"<div style='font-size:1.7rem;font-weight:800;color:{_TEXT};margin-top:6px;'>📦 Inventario Pro</div>"
@@ -115,18 +91,18 @@ def render():
                         labels=_por_tipo[_tipo_col],
                         values=_por_tipo["kg"],
                         hole=0.62,
-                        marker=dict(colors=_colors_list, line=dict(color="#0D1117", width=3)),
+                        marker=dict(colors=_colors_list, line=dict(color=_CARD, width=3)),
                         textinfo="none",
                         hovertemplate="<b>%{label}</b><br>%{value:.2f} kg<br>%{percent}<extra></extra>",
                     ))
                     fig_donut.update_layout(
-                        paper_bgcolor="#0D1117", plot_bgcolor="#0D1117",
+                        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
                         margin=dict(t=10, b=10, l=10, r=10),
                         showlegend=True,
-                        legend=dict(font=dict(color="#C9D1D9", size=11), bgcolor="rgba(0,0,0,0)"),
+                        legend=dict(font=dict(color=_MUTED, size=11), bgcolor="rgba(0,0,0,0)"),
                         annotations=[dict(
                             text=f"<b>{_total_kg:.1f}</b><br><span style='font-size:10px'>kg</span>",
-                            x=0.5, y=0.5, font_size=18, font_color="#E6EDF3",
+                            x=0.5, y=0.5, font_size=18, font_color=_TEXT,
                             showarrow=False,
                         )],
                         height=260,
@@ -144,17 +120,17 @@ def render():
                             name=row[_tipo_col],
                             text=[f"{row['kg']:.2f} kg"],
                             textposition="outside",
-                            textfont=dict(color="#C9D1D9", size=11),
+                            textfont=dict(color=_MUTED, size=11),
                             hovertemplate=f"<b>{row[_tipo_col]}</b><br>{row['kg']:.2f} kg<extra></extra>",
                         ))
                     fig_bar.update_layout(
-                        paper_bgcolor="#0D1117", plot_bgcolor="#161B22",
+                        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
                         bargap=0.3, showlegend=False,
                         margin=dict(t=24, b=8, l=0, r=0),
                         height=260,
-                        yaxis=dict(gridcolor="#21262D", color="#8B949E", tickformat=".1f", ticksuffix=" kg"),
-                        xaxis=dict(color="#8B949E"),
-                        font=dict(color="#8B949E"),
+                        yaxis=dict(gridcolor=_BORDER, color=_MUTED, tickformat=".1f", ticksuffix=" kg"),
+                        xaxis=dict(color=_MUTED),
+                        font=dict(color=_MUTED),
                     )
                     st.plotly_chart(fig_bar, use_container_width=True, config={"displayModeBar": False})
 
@@ -190,7 +166,7 @@ def render():
                         f"<div style='display:flex;justify-content:space-between;margin-bottom:4px;'>"
                         f"<span style='font-size:0.72rem;color:{_mc};font-weight:700;'>{_stock:.0f} g de ~{int(_min_g*5)} g referencia</span>"
                         f"<span style='font-size:0.7rem;color:{_tc};font-weight:700;background:{_tc}22;padding:2px 8px;border-radius:99px;'>{_tipo}</span></div>"
-                        f"<div style='background:#21262D;border-radius:999px;height:10px;overflow:hidden;'>"
+                        f"<div style='background:{_BORDER};border-radius:999px;height:10px;overflow:hidden;'>"
                         f"<div style='width:{_pct:.0f}%;background:{_mc};height:100%;border-radius:999px;transition:width 0.3s;'></div></div>"
                         f"{'<div style=\"font-size:0.7rem;color:#6B7280;margin-top:4px;\">Color: ' + _color_mat + '</div>' if _color_mat else ''}"
                         f"</div>",

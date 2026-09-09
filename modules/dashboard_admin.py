@@ -810,8 +810,8 @@ def _dash_m19():
         f"<div style='background:linear-gradient(135deg,{_LC}22,{_LC}08);border-radius:16px;"
         f"padding:20px 28px;margin-bottom:16px;border:1px solid {_LC}33;'>"
         f"<div style='font-size:0.58rem;font-weight:700;letter-spacing:4px;color:{_LC};text-transform:uppercase;'>EL PASAJE 3D STUDIO · LÍNEA MADRE</div>"
-        f"<div style='font-size:1.8rem;font-weight:800;color:#E6EDF3;margin-top:6px;'>⚡ Magnitud 19</div>"
-        f"<div style='font-size:0.78rem;color:rgba(240,236,228,0.6);margin-top:4px;'>Ancla tu mente. Expande tu vuelo.</div>"
+        f"<div style='font-size:1.8rem;font-weight:800;color:#16181F;margin-top:6px;'>⚡ Magnitud 19</div>"
+        f"<div style='font-size:0.78rem;color:#74798A;margin-top:4px;'>Ancla tu mente. Expande tu vuelo.</div>"
         f"</div>",
         unsafe_allow_html=True,
     )
@@ -849,10 +849,10 @@ def _dash_m19():
     ]:
         with _kc:
             st.markdown(
-                f"<div style='background:#161B22;border-radius:12px;padding:14px;border:1px solid #21262D;"
+                f"<div style='background:#FFFFFF;border-radius:12px;padding:14px;border:1px solid #DCD5C7;"
                 f"border-top:3px solid {_kcol};text-align:center;margin-bottom:12px;'>"
                 f"<div style='font-size:1.4rem;font-weight:800;color:{_kcol};line-height:1;'>{_kv}</div>"
-                f"<div style='font-size:0.58rem;color:#8B949E;margin-top:6px;text-transform:uppercase;letter-spacing:0.5px;'>{_kl}</div>"
+                f"<div style='font-size:0.58rem;color:#74798A;margin-top:6px;text-transform:uppercase;letter-spacing:0.5px;'>{_kl}</div>"
                 f"</div>",
                 unsafe_allow_html=True,
             )
@@ -871,17 +871,17 @@ def _dash_m19():
                     _desc = str(_row.get("description", "") or "").strip()
                     with _ccols[_i % 3]:
                         st.markdown(
-                            f"<div style='background:#161B22;border-radius:12px;padding:16px;"
-                            f"border:1px solid #21262D;border-top:2px solid {_LC};margin-bottom:10px;'>"
+                            f"<div style='background:#FFFFFF;border-radius:12px;padding:16px;"
+                            f"border:1px solid #DCD5C7;border-top:2px solid {_LC};margin-bottom:10px;'>"
                             f"<div style='font-size:0.56rem;color:{_LC};letter-spacing:1px;text-transform:uppercase;font-weight:700;'>{_row.get('sku','')}</div>"
-                            f"<div style='font-size:0.9rem;font-weight:700;color:#E6EDF3;margin-top:4px;line-height:1.2;'>{_row['name']}</div>"
-                            f"<div style='font-size:0.7rem;color:#8B949E;margin-top:4px;line-height:1.4;'>{_desc[:80]}{'…' if len(_desc)>80 else ''}</div>"
+                            f"<div style='font-size:0.9rem;font-weight:700;color:#16181F;margin-top:4px;line-height:1.2;'>{_row['name']}</div>"
+                            f"<div style='font-size:0.7rem;color:#74798A;margin-top:4px;line-height:1.4;'>{_desc[:80]}{'…' if len(_desc)>80 else ''}</div>"
                             f"<div style='display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:10px;'>"
-                            f"<div style='background:#0D1117;border-radius:6px;padding:7px;text-align:center;'>"
-                            f"<div style='font-size:0.5rem;color:#8B949E;margin-bottom:1px;'>PRECIO</div>"
+                            f"<div style='background:#F2EEE5;border-radius:6px;padding:7px;text-align:center;'>"
+                            f"<div style='font-size:0.5rem;color:#74798A;margin-bottom:1px;'>PRECIO</div>"
                             f"<div style='font-size:0.82rem;font-weight:700;color:{_LC};'>${float(_row['price']):,.0f}</div></div>"
-                            f"<div style='background:#0D1117;border-radius:6px;padding:7px;text-align:center;'>"
-                            f"<div style='font-size:0.5rem;color:#8B949E;margin-bottom:1px;'>STOCK</div>"
+                            f"<div style='background:#F2EEE5;border-radius:6px;padding:7px;text-align:center;'>"
+                            f"<div style='font-size:0.5rem;color:#74798A;margin-bottom:1px;'>STOCK</div>"
                             f"<div style='font-size:0.82rem;font-weight:700;color:{_sc};'>{_stk} u</div></div>"
                             f"</div></div>",
                             unsafe_allow_html=True,
@@ -893,7 +893,7 @@ def _dash_m19():
                         except Exception:
                             pass
 
-    st.markdown("<div style='height:8px;border-top:1px solid #21262D;margin:16px 0;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height:8px;border-top:1px solid #DCD5C7;margin:16px 0;'></div>", unsafe_allow_html=True)
 
     # ── Presupuestador rápido ──────────────────────────────────────────────────
     st.markdown(
@@ -928,7 +928,7 @@ def _dash_m19():
         except Exception:
             pass
 
-    st.markdown("<div style='height:8px;border-top:1px solid #21262D;margin:16px 0;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height:8px;border-top:1px solid #DCD5C7;margin:16px 0;'></div>", unsafe_allow_html=True)
 
     # ── Exportación JSON para web ──────────────────────────────────────────────
     st.markdown(

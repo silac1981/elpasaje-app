@@ -10,35 +10,8 @@ from utils.orders import avanzar_estado as _avanzar_estado, verificar_material_d
 
 
 def render():
-    st.markdown("""<style>
-.stApp,[data-testid="stAppViewContainer"],[data-testid="stMain"]{background-color:#0D1117!important}
-.stTabs [data-baseweb="tab-list"]{background:#161B22!important;border-radius:12px!important;padding:4px!important;gap:2px!important}
-.stTabs [data-baseweb="tab"]{color:#8B949E!important;font-weight:600!important;border-radius:8px!important}
-.stTabs [aria-selected="true"]{background:#21262D!important;color:#F0F6FC!important}
-[data-testid="stMetricValue"]{color:#E6EDF3!important}
-[data-testid="stMetricLabel"]{color:#8B949E!important}
-details{background:#161B22!important;border-radius:12px!important;border:1px solid #21262D!important}
-details summary{color:#E6EDF3!important;padding:8px 12px!important}
-[data-testid="stChatMessage"]{background:#161B22!important;border-radius:12px!important;margin-bottom:8px!important}
-[data-testid="stChatMessageContent"] p{color:#E6EDF3!important}
-.stRadio label{color:#8B949E!important}
-[data-testid="stFileUploaderDropzone"]{background:#161B22!important;border-color:#30363D!important}
-.stMarkdown p,.stMarkdown span{color:#C9D1D9!important}
-.stMarkdown strong,.stMarkdown b{color:#F0F6FC!important}
-.stNumberInput label,.stTextInput label,.stSelectbox label,.stTextArea label,.stFileUploader label,.stCheckbox label{color:#8B949E!important;font-weight:500!important}
-.stExpander summary p{color:#E6EDF3!important;font-weight:600!important}
-.stExpander details{background:#161B22!important}
-.stCaption p,.stCaption span{color:#6B7280!important}
-[data-testid="stAlert"] p,[data-testid="stAlert"] div,[data-testid="stAlert"] span{color:#C9D1D9!important}
-[data-testid="stAlert"]{background:#1a2332!important;border-color:#30363D!important}
-.stDataFrame,[data-testid="stDataFrame"]{background:#161B22!important}
-[data-testid="stTextInput"] input,[data-testid="stNumberInput"] input,[data-testid="stTextArea"] textarea{background:#161B22!important;color:#E6EDF3!important;border-color:#30363D!important}
-[data-testid="stSelectbox"] div[data-baseweb="select"] div{background:#161B22!important;color:#E6EDF3!important;border-color:#30363D!important}
-[data-testid="stDateInput"] input{background:#161B22!important;color:#E6EDF3!important;border-color:#30363D!important}
-[data-testid="stTextInput"] input::placeholder,[data-testid="stTextArea"] textarea::placeholder{color:#6B7280!important}
-</style>""", unsafe_allow_html=True)
-
-    st.markdown(f"<div style='background:#161B22;border-radius:16px;padding:22px 28px;border:1px solid #21262D;border-left:4px solid #3FB950;margin-bottom:8px;'><div style='font-size:0.65rem;font-weight:700;letter-spacing:3px;color:#3FB950;text-transform:uppercase;'>EL PASAJE 3D STUDIO · PRODUCCION</div><div style='font-size:1.7rem;font-weight:800;color:#F0F6FC;margin-top:6px;'>🖨️ Centro de Fabricacion</div><div style='font-size:0.78rem;color:#8B949E;margin-top:6px;'>Fernando · {datetime.now().strftime('%A %d/%m/%Y')} · {datetime.now().strftime('%H:%M')}</div></div>", unsafe_allow_html=True)
+    
+    st.markdown(f"<div style='background:#FFFFFF;border-radius:16px;padding:22px 28px;border:1px solid #DCD5C7;border-left:4px solid #3FB950;margin-bottom:8px;'><div style='font-size:0.65rem;font-weight:700;letter-spacing:3px;color:#3FB950;text-transform:uppercase;'>EL PASAJE 3D STUDIO · PRODUCCION</div><div style='font-size:1.7rem;font-weight:800;color:#16181F;margin-top:6px;'>🖨️ Centro de Fabricacion</div><div style='font-size:0.78rem;color:#74798A;margin-top:6px;'>Fernando · {datetime.now().strftime('%A %d/%m/%Y')} · {datetime.now().strftime('%H:%M')}</div></div>", unsafe_allow_html=True)
 
     _hoy_str = datetime.now().strftime("%Y-%m-%d")
     from utils.pricing import cargar_materiales
@@ -80,7 +53,7 @@ details summary{color:#E6EDF3!important;padding:8px 12px!important}
             (k4, "⚠️ Criticos",   str(_criticos),     "bajo minimo",     "#EF4444"),
         ]:
             with _col:
-                st.markdown(f"<div style='background:#161B22;border-radius:14px;padding:20px 16px;border:1px solid #21262D;border-top:3px solid {_color};text-align:center;margin-bottom:8px;'><div style='font-size:2.2rem;font-weight:800;color:{_color};line-height:1;'>{_val}</div><div style='font-size:0.75rem;font-weight:600;color:#C9D1D9;margin-top:8px;'>{_title}</div><div style='font-size:0.64rem;color:#6B7280;margin-top:4px;letter-spacing:0.5px;'>{_sub}</div></div>", unsafe_allow_html=True)
+                st.markdown(f"<div style='background:#FFFFFF;border-radius:14px;padding:20px 16px;border:1px solid #DCD5C7;border-top:3px solid {_color};text-align:center;margin-bottom:8px;'><div style='font-size:2.2rem;font-weight:800;color:{_color};line-height:1;'>{_val}</div><div style='font-size:0.75rem;font-weight:600;color:#16181F;margin-top:8px;'>{_title}</div><div style='font-size:0.64rem;color:#74798A;margin-top:4px;letter-spacing:0.5px;'>{_sub}</div></div>", unsafe_allow_html=True)
         st.markdown("<div style='margin-top:24px;margin-bottom:12px;font-size:0.68rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#58A6FF;'>📋 COLA ACTIVA</div>", unsafe_allow_html=True)
         if _pedidos_activos.empty:
             try:
@@ -95,7 +68,7 @@ details summary{color:#E6EDF3!important;padding:8px 12px!important}
                 _ultima_fab_row = pd.DataFrame()
             _mat_nom = _mat_mas_usado.iloc[0]["name"] if not _mat_mas_usado.empty else "—"
             _ult_f   = str(_ultima_fab_row.iloc[0]["fecha_fin"])[:10] if not _ultima_fab_row.empty else "—"
-            st.markdown("<div style='background:#0D2818;border-radius:16px;padding:20px 24px;border:1px solid #238636;border-left:4px solid #3FB950;margin-bottom:16px;'><div style='font-size:1.05rem;font-weight:700;color:#3FB950;'>Sin pedidos activos — el taller está al día ✅</div><div style='font-size:0.82rem;color:#8B949E;margin-top:6px;'>Podés registrar fabricaciones libres desde la pestaña 📦 Cargar Fabricacion</div></div>", unsafe_allow_html=True)
+            st.markdown("<div style='background:#EAF7EE;border-radius:16px;padding:20px 24px;border:1px solid #238636;border-left:4px solid #3FB950;margin-bottom:16px;'><div style='font-size:1.05rem;font-weight:700;color:#3FB950;'>Sin pedidos activos — el taller está al día ✅</div><div style='font-size:0.82rem;color:#74798A;margin-top:6px;'>Podés registrar fabricaciones libres desde la pestaña 📦 Cargar Fabricacion</div></div>", unsafe_allow_html=True)
             _es1, _es2, _es3 = st.columns(3)
             _es1.metric("Piezas fabricadas", _fab_total)
             _es2.metric("Material más usado", _mat_nom)
@@ -178,13 +151,13 @@ details summary{color:#E6EDF3!important;padding:8px 12px!important}
                         _mc    = "#3FB950" if _mok else "#EF4444"
                         _mind  = "🟢" if _mok else "🔴"
                         st.markdown(
-                            f"<div style='background:#161B22;border-radius:10px;padding:10px 14px;"
-                            f"margin-bottom:6px;border:1px solid #21262D;border-left:3px solid {_mc};'>"
+                            f"<div style='background:#FFFFFF;border-radius:10px;padding:10px 14px;"
+                            f"margin-bottom:6px;border:1px solid #DCD5C7;border-left:3px solid {_mc};'>"
                             f"<div style='display:flex;justify-content:space-between;'>"
-                            f"<span style='font-size:0.82rem;font-weight:700;color:#E6EDF3;'>{_mind} {_mnom}</span>"
+                            f"<span style='font-size:0.82rem;font-weight:700;color:#16181F;'>{_mind} {_mnom}</span>"
                             f"<span style='font-size:0.78rem;color:{_mc};font-weight:700;'>"
                             f"{'OK' if _mok else 'FALTA'}</span></div>"
-                            f"<div style='font-size:0.7rem;color:#8B949E;margin-top:3px;'>"
+                            f"<div style='font-size:0.7rem;color:#74798A;margin-top:3px;'>"
                             f"Necesario: {_mneed:.0f} g · Disponible: {_mstk:.0f} g · Mínimo: {_mmin:.0f} g</div></div>",
                             unsafe_allow_html=True,
                         )
@@ -268,8 +241,8 @@ details summary{color:#E6EDF3!important;padding:8px 12px!important}
                 st.image(_img_f, width=80)
             with _fi_c2:
                 st.markdown(
-                    f"<div style='background:#161B22;border-radius:10px;padding:10px 14px;"
-                    f"border:1px solid #21262D;font-size:0.82rem;color:#C9D1D9;'>"
+                    f"<div style='background:#FFFFFF;border-radius:10px;padding:10px 14px;"
+                    f"border:1px solid #DCD5C7;font-size:0.82rem;color:#16181F;'>"
                     f"SKU: <b style='color:#58A6FF;'>{_sku_f}</b></div>",
                     unsafe_allow_html=True,
                 )
@@ -441,13 +414,13 @@ details summary{color:#E6EDF3!important;padding:8px 12px!important}
                     _mc2.metric("Valor en stock", f"${_valor:,.0f}")
                     _mc3.metric("Consumido este mes", f"{_consumido:.0f} g")
                     _mc4.metric("Dias de stock est.", _dias_est)
-                    _bar_html = (f"<div style='background:#21262D;border-radius:999px;height:8px;overflow:hidden;margin:10px 0 6px;'>"
+                    _bar_html = (f"<div style='background:#DCD5C7;border-radius:999px;height:8px;overflow:hidden;margin:10px 0 6px;'>"
                                  f"<div style='width:{_pct:.0f}%;background:{_mc};height:100%;border-radius:999px;'></div></div>"
-                                 f"<div style='font-size:0.72rem;color:#6B7280;'>{_stock:.0f} g disponibles · Mínimo: {_min_g:.0f} g · {_kg_stock:.2f} kg</div>")
+                                 f"<div style='font-size:0.72rem;color:#74798A;'>{_stock:.0f} g disponibles · Mínimo: {_min_g:.0f} g · {_kg_stock:.2f} kg</div>")
                     if _lineas_nombres:
-                        _bar_html += f"<div style='font-size:0.72rem;color:#6B7280;margin-top:4px;'>Usado en: {_lineas_nombres}</div>"
+                        _bar_html += f"<div style='font-size:0.72rem;color:#74798A;margin-top:4px;'>Usado en: {_lineas_nombres}</div>"
                     if _mat.get("fecha_compra"):
-                        _bar_html += f"<div style='font-size:0.72rem;color:#6B7280;margin-top:2px;'>Ultima compra: {_mat['fecha_compra']}</div>"
+                        _bar_html += f"<div style='font-size:0.72rem;color:#74798A;margin-top:2px;'>Ultima compra: {_mat['fecha_compra']}</div>"
                     st.markdown(_bar_html, unsafe_allow_html=True)
                     st.markdown("**Registrar compra**")
                     _rep_col1, _rep_col2 = st.columns(2)
@@ -526,8 +499,8 @@ details summary{color:#E6EDF3!important;padding:8px 12px!important}
             if _nuevo_marca_final and _nuevo_marca_final not in ("Otra", ""):
                 _nombre_preview += f" · {_nuevo_marca_final}"
             st.markdown(
-                f"<div style='background:#0D1B2E;border-radius:8px;padding:10px 14px;border:1px solid #1B2D4A;margin:8px 0;'>"
-                f"<span style='font-size:0.7rem;color:#8B949E;'>Nombre que se guardará: </span>"
+                f"<div style='background:#EAF2FF;border-radius:8px;padding:10px 14px;border:1px solid #D6E7FF;margin:8px 0;'>"
+                f"<span style='font-size:0.7rem;color:#74798A;'>Nombre que se guardará: </span>"
                 f"<span style='font-size:0.85rem;font-weight:700;color:#58A6FF;'>{_nombre_preview}</span></div>",
                 unsafe_allow_html=True,
             )
@@ -578,8 +551,8 @@ details summary{color:#E6EDF3!important;padding:8px 12px!important}
                     _faltantes.append(_cmat.iloc[0]["name"])
             if _faltantes:
                 st.markdown(
-                    f"<div style='background:#2D2007;border-radius:12px;padding:12px 18px;"
-                    f"border:1px solid #3D2B0A;border-left:4px solid #F59E0B;margin-bottom:12px;'>"
+                    f"<div style='background:#FCF3E3;border-radius:12px;padding:12px 18px;"
+                    f"border:1px solid #F0D9A6;border-left:4px solid #F59E0B;margin-bottom:12px;'>"
                     f"<span style='color:#F59E0B;font-weight:700;'>⚠️ Stock insuficiente para la cola actual: "
                     f"{', '.join(_faltantes)}</span></div>",
                     unsafe_allow_html=True,
@@ -587,10 +560,10 @@ details summary{color:#E6EDF3!important;padding:8px 12px!important}
 
         if _cola_df.empty:
             st.markdown(
-                "<div style='background:#0D2818;border-radius:16px;padding:20px 24px;"
+                "<div style='background:#EAF7EE;border-radius:16px;padding:20px 24px;"
                 "border:1px solid #238636;border-left:4px solid #3FB950;'>"
                 "<div style='font-size:1.05rem;font-weight:700;color:#3FB950;'>Cola vacía — al día ✅</div>"
-                "<div style='font-size:0.82rem;color:#8B949E;margin-top:6px;'>No hay pedidos pendientes ni en proceso.</div></div>",
+                "<div style='font-size:0.82rem;color:#74798A;margin-top:6px;'>No hay pedidos pendientes ni en proceso.</div></div>",
                 unsafe_allow_html=True,
             )
         else:
@@ -639,14 +612,14 @@ details summary{color:#E6EDF3!important;padding:8px 12px!important}
                 _card_col, _img_col = st.columns([5, 1]) if _img_url else (None, None)
                 _card_container = _card_col if _img_url else st
                 _card_container.markdown(
-                    f"<div style='background:#161B22;border-radius:14px;padding:16px 18px;"
-                    f"border:1px solid #21262D;border-left:4px solid {_ecfg['color']};margin-bottom:4px;'>"
+                    f"<div style='background:#FFFFFF;border-radius:14px;padding:16px 18px;"
+                    f"border:1px solid #DCD5C7;border-left:4px solid {_ecfg['color']};margin-bottom:4px;'>"
                     f"<div style='display:flex;justify-content:space-between;align-items:flex-start;'>"
-                    f"<div><span style='font-size:0.95rem;font-weight:700;color:#F0F6FC;'>#{_pid} · {_prod}{_ip_badge}{_arch_badge}</span>"
+                    f"<div><span style='font-size:0.95rem;font-weight:700;color:#16181F;'>#{_pid} · {_prod}{_ip_badge}{_arch_badge}</span>"
                     f"<span style='margin-left:8px;font-size:0.7rem;background:{_ecfg['color']}22;color:{_ecfg['color']};"
                     f"padding:2px 8px;border-radius:99px;font-weight:600;'>{_est}</span></div>"
                     f"<span style='font-size:1.1rem;'>{_mat_ind}</span></div>"
-                    f"<div style='font-size:0.75rem;color:#8B949E;margin-top:6px;'>"
+                    f"<div style='font-size:0.75rem;color:#74798A;margin-top:6px;'>"
                     f"🏷️ {_linea_nom} · ⚖️ {_gramos} · 📅 {_fecha}</div>"
                     f"{_notas_html}</div>",
                     unsafe_allow_html=True,
@@ -755,8 +728,8 @@ details summary{color:#E6EDF3!important;padding:8px 12px!important}
 
         if _arch_lista.empty:
             st.markdown(
-                "<div style='background:#161B22;border-radius:12px;padding:16px 20px;border:1px solid #21262D;'>"
-                "<span style='color:#8B949E;font-size:0.82rem;'>Sin archivos guardados todavía — subí el primero arriba.</span></div>",
+                "<div style='background:#FFFFFF;border-radius:12px;padding:16px 20px;border:1px solid #DCD5C7;'>"
+                "<span style='color:#74798A;font-size:0.82rem;'>Sin archivos guardados todavía — subí el primero arriba.</span></div>",
                 unsafe_allow_html=True,
             )
         else:
@@ -768,9 +741,9 @@ details summary{color:#E6EDF3!important;padding:8px 12px!important}
             if _filt_tipo != "Todos":
                 _arch_show = _arch_show[_arch_show["tipo"] == _filt_tipo]
 
-            _tipo_color = {"gcode": "#3FB950", "3mf": "#58A6FF", "stl": "#F59E0B", "otro": "#8B949E"}
+            _tipo_color = {"gcode": "#3FB950", "3mf": "#58A6FF", "stl": "#F59E0B", "otro": "#74798A"}
             for _, _af in _arch_show.iterrows():
-                _tc = _tipo_color.get(_af["tipo"], "#8B949E")
+                _tc = _tipo_color.get(_af["tipo"], "#74798A")
                 _sku_d = _af["sku"] or "—"
                 _oid_d = f"Pedido #{int(_af['order_id'])}" if pd.notna(_af.get("order_id")) and _af["order_id"] else "Sin pedido"
                 _sz_d  = f"{_af['size_kb']:.1f} KB"
@@ -778,13 +751,13 @@ details summary{color:#E6EDF3!important;padding:8px 12px!important}
                 _fa_c1, _fa_c2 = st.columns([5, 2])
                 with _fa_c1:
                     st.markdown(
-                        f"<div style='background:#161B22;border-radius:12px;padding:14px 16px;"
-                        f"border:1px solid #21262D;border-left:3px solid {_tc};'>"
-                        f"<div style='font-size:0.88rem;font-weight:700;color:#E6EDF3;'>{_af['filename']}</div>"
-                        f"<div style='font-size:0.7rem;color:#8B949E;margin-top:4px;'>"
+                        f"<div style='background:#FFFFFF;border-radius:12px;padding:14px 16px;"
+                        f"border:1px solid #DCD5C7;border-left:3px solid {_tc};'>"
+                        f"<div style='font-size:0.88rem;font-weight:700;color:#16181F;'>{_af['filename']}</div>"
+                        f"<div style='font-size:0.7rem;color:#74798A;margin-top:4px;'>"
                         f"<span style='color:{_tc};font-weight:700;text-transform:uppercase;'>{_af['tipo']}</span>"
                         f" · SKU: {_sku_d} · {_oid_d} · {_sz_d} · {str(_af['fecha'])[:10]}</div>"
-                        f"{'<div style=\"font-size:0.68rem;color:#6B7280;margin-top:3px;\">' + _nota_d + '</div>' if _nota_d else ''}"
+                        f"{'<div style=\"font-size:0.68rem;color:#74798A;margin-top:3px;\">' + _nota_d + '</div>' if _nota_d else ''}"
                         f"</div>",
                         unsafe_allow_html=True,
                     )
@@ -821,12 +794,12 @@ details summary{color:#E6EDF3!important;padding:8px 12px!important}
         _est_color = "#EF4444" if _n_crit > 0 else ("#F59E0B" if _n_atc > 0 else "#3FB950")
         _est_txt   = f"{_n_crit} crítica{'s' if _n_crit!=1 else ''}" if _n_crit > 0 else ("Todo en orden" if not _n_atc else f"{_n_atc} atención")
         st.markdown(f"""
-<div style='background:#161B22;border-radius:16px;padding:20px 24px;border:1px solid #21262D;margin-bottom:4px;'>
+<div style='background:#FFFFFF;border-radius:16px;padding:20px 24px;border:1px solid #DCD5C7;margin-bottom:4px;'>
   <div style='font-size:0.65rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#58A6FF;'>ASISTENTE DE PRODUCCION</div>
-  <div style='font-size:1.5rem;font-weight:800;color:#F0F6FC;margin-top:6px;'>🤖 Mike</div>
+  <div style='font-size:1.5rem;font-weight:800;color:#16181F;margin-top:6px;'>🤖 Mike</div>
   <div style='margin-top:10px;'>
     <span style='background:{_est_color}22;color:{_est_color};padding:4px 12px;border-radius:99px;font-weight:700;font-size:0.78rem;border:1px solid {_est_color}44;'>● {_est_txt}</span>
-    <span style='color:#6B7280;margin-left:12px;font-size:0.72rem;'>{len(_alertas_mike)} alertas · actualizado ahora</span>
+    <span style='color:#74798A;margin-left:12px;font-size:0.72rem;'>{len(_alertas_mike)} alertas · actualizado ahora</span>
   </div>
 </div>""", unsafe_allow_html=True)
         try:
@@ -844,19 +817,19 @@ details summary{color:#E6EDF3!important;padding:8px 12px!important}
             (_mk4, str(_mat_crit_n),           "Mat. críticos",   "#F59E0B" if _mat_crit_n > 0 else "#4B5563"),
         ]:
             with _col:
-                st.markdown(f"<div style='background:#161B22;border-radius:12px;padding:16px;border:1px solid #21262D;border-top:3px solid {_c};text-align:center;margin-bottom:4px;'><div style='font-size:1.8rem;font-weight:800;color:{_c};line-height:1;'>{_v}</div><div style='font-size:0.64rem;color:#8B949E;margin-top:6px;text-transform:uppercase;letter-spacing:1px;'>{_l}</div></div>", unsafe_allow_html=True)
+                st.markdown(f"<div style='background:#FFFFFF;border-radius:12px;padding:16px;border:1px solid #DCD5C7;border-top:3px solid {_c};text-align:center;margin-bottom:4px;'><div style='font-size:1.8rem;font-weight:800;color:{_c};line-height:1;'>{_v}</div><div style='font-size:0.64rem;color:#74798A;margin-top:6px;text-transform:uppercase;letter-spacing:1px;'>{_l}</div></div>", unsafe_allow_html=True)
         st.markdown("<div style='margin:20px 0 10px;font-size:0.65rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#58A6FF;'>ALERTAS ACTIVAS</div>", unsafe_allow_html=True)
         if not _alertas_mike:
-            st.markdown("<div style='background:#0D2818;border-radius:12px;padding:14px 20px;border:1px solid #238636;'><span style='color:#3FB950;font-weight:700;font-size:0.88rem;'>✅ Sin alertas</span><span style='color:#8B949E;margin-left:12px;font-size:0.8rem;'>El taller está en orden — buen trabajo.</span></div>", unsafe_allow_html=True)
+            st.markdown("<div style='background:#EAF7EE;border-radius:12px;padding:14px 20px;border:1px solid #238636;'><span style='color:#3FB950;font-weight:700;font-size:0.88rem;'>✅ Sin alertas</span><span style='color:#74798A;margin-left:12px;font-size:0.8rem;'>El taller está en orden — buen trabajo.</span></div>", unsafe_allow_html=True)
         else:
             _cm = {"critico":"#EF4444","atencion":"#F59E0B","info":"#58A6FF"}
-            _bm = {"critico":"#2D1117","atencion":"#2D2007","info":"#0D1B2E"}
-            _dm = {"critico":"#451B1B","atencion":"#3D2B0A","info":"#1B2D4A"}
+            _bm = {"critico":"#FCEAEA","atencion":"#FCF3E3","info":"#EAF2FF"}
+            _dm = {"critico":"#F5C6C6","atencion":"#F0D9A6","info":"#D6E7FF"}
             for _i, _a in enumerate(_alertas_mike):
-                _c  = _cm.get(_a["nivel"], "#8B949E")
-                _bg = _bm.get(_a["nivel"], "#161B22")
-                _bd = _dm.get(_a["nivel"], "#21262D")
-                st.markdown(f"<div style='background:{_bg};border-radius:12px;padding:14px 18px;border:1px solid {_bd};border-left:4px solid {_c};margin-bottom:8px;'><div style='font-size:0.88rem;font-weight:700;color:{_c};'>{_a['titulo']}</div><div style='font-size:0.75rem;color:#8B949E;margin-top:4px;'>{_a['detalle']}</div><div style='font-size:0.7rem;color:#6B7280;margin-top:3px;'>→ {_a['accion']}</div></div>", unsafe_allow_html=True)
+                _c  = _cm.get(_a["nivel"], "#74798A")
+                _bg = _bm.get(_a["nivel"], "#FFFFFF")
+                _bd = _dm.get(_a["nivel"], "#DCD5C7")
+                st.markdown(f"<div style='background:{_bg};border-radius:12px;padding:14px 18px;border:1px solid {_bd};border-left:4px solid {_c};margin-bottom:8px;'><div style='font-size:0.88rem;font-weight:700;color:{_c};'>{_a['titulo']}</div><div style='font-size:0.75rem;color:#74798A;margin-top:4px;'>{_a['detalle']}</div><div style='font-size:0.7rem;color:#74798A;margin-top:3px;'>→ {_a['accion']}</div></div>", unsafe_allow_html=True)
                 if st.button(f"Preguntarle a Mike →", key=f"ask_a_{_i}", help=_a["titulo"]):
                     st.session_state["mike_auto_q"] = f"Tengo esta alerta activa: {_a['titulo']} — {_a['detalle']}. Acción sugerida: {_a['accion']}. ¿Qué me recomendás hacer exactamente y cómo lo soluciono?"
         st.markdown("<div style='margin:20px 0 10px;font-size:0.65rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#58A6FF;'>PREGUNTAS RÁPIDAS</div>", unsafe_allow_html=True)
