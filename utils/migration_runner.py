@@ -59,8 +59,11 @@ def run_pending_migrations() -> list[str]:
         path = os.path.join(_MIGRATIONS_DIR, filename)
         sql = open(path, encoding="utf-8").read()
 
-        # Filtrar comentarios y líneas vacías para no ejecutar sentencias vacías
-        statements = [s.strip() for s in sql.split(";") if s.strip() and not s.strip().startswith("--")]
+        # Sacar líneas de comentario ANTES de partir por ";": si no, un statement
+        # que queda en el mismo bloque que un comentario de cabecera (mismo split
+        # hasta el primer ";") se descarta entero porque el chunk empieza con "--".
+        sql_sin_comentarios = re.sub(r"^\s*--.*$", "", sql, flags=re.MULTILINE)
+        statements = [s.strip() for s in sql_sin_comentarios.split(";") if s.strip()]
 
         try:
             with engine.begin() as conn:
