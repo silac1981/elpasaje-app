@@ -422,9 +422,12 @@ footer {
     prods.forEach(p => {
       const stk = p.stock > 0 ? `${p.stock} u` : 'A pedido';
       const stkC = p.stock > 5 ? '#2F9E54' : (p.stock > 0 ? '#E0902A' : '#74798A');
+      const imgInner = p.imagen_url
+        ? `<img src="${p.imagen_url}" alt="${p.name}" loading="lazy">`
+        : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;"><span style="font-family:inherit;font-size:2rem;opacity:.4">🐾</span></div>`;
       html += `<article class="card">
-  <div class="card-img" style="background:var(--surface-2,#F2EEE5);display:flex;align-items:center;justify-content:center;min-height:160px;">
-    <span style="font-family:inherit;font-size:2rem;opacity:.4">🐾</span>
+  <div class="card-img">
+    ${imgInner}
     <span class="card-flag">Oasis Animal</span>
     <span class="card-sku">${p.sku}</span>
   </div>
